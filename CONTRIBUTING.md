@@ -202,6 +202,23 @@ Before submitting a pull request, please ensure all tests pass:
 
 We use pre-commit hooks to automate testing and code quality checks. This helps catch issues early and ensures consistent code quality.
 
+#### Quick Setup (Recommended)
+
+Use our update script to install and configure pre-commit hooks that match our CI/CD pipeline:
+
+```bash
+./update_precommit_hooks.sh
+```
+
+This script will:
+- Install pre-commit and all required dependencies
+- Generate hooks that match our CI/CD configuration
+- Install the hooks automatically
+
+#### Manual Setup
+
+If you prefer to set up manually:
+
 1. Install pre-commit:
    ```bash
    pip install pre-commit
@@ -214,6 +231,8 @@ We use pre-commit hooks to automate testing and code quality checks. This helps 
 
 3. The hooks will now run automatically before each commit
 
+#### What the Hooks Do
+
 Pre-commit hooks will:
 - Format your code with Black and isort
 - Check for common issues with flake8
@@ -221,6 +240,35 @@ Pre-commit hooks will:
   - Note: We ignore lazy string interpolation (F541) as it's not a significant gain for this project
 - Verify type hints with mypy
 - Run unit tests to ensure they pass
+- Check if hooks need updating to match CI/CD
+
+#### Keeping Hooks in Sync with CI/CD
+
+Our project uses a dynamic pre-commit hook generator to ensure local checks match CI/CD:
+
+1. **Automatic Check**: Every commit is checked to see if hooks need updating
+2. **Manual Update**: Run this command to update hooks to match CI/CD:
+   ```bash
+   python scripts/dynamic_precommit_generator.py --install
+   ```
+3. **Weekly Updates**: A GitHub Action runs weekly to keep the hooks in sync
+
+This system ensures that checks that pass locally will also pass in CI, preventing surprises when you push your code.
+
+#### Troubleshooting
+
+If your pre-commit hooks are failing in ways that don't match CI:
+
+1. Update your hooks to match CI/CD:
+   ```bash
+   ./update_precommit_hooks.sh
+   ```
+
+2. If you're still having issues, try reinstalling the hooks:
+   ```bash
+   pre-commit uninstall
+   pre-commit install
+   ```
 
 If any checks fail, the commit will be blocked until you fix the issues.
 

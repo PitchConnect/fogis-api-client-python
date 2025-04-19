@@ -278,7 +278,15 @@ Contributions are welcome! Please follow these steps:
 
 ##### Pre-Commit Hooks
 
-We use pre-commit hooks to ensure code quality. To set up pre-commit hooks:
+We use pre-commit hooks to ensure code quality. To set up pre-commit hooks that match our CI/CD pipeline:
+
+```bash
+./update_precommit_hooks.sh
+```
+
+This script will install pre-commit, generate hooks that match our CI/CD configuration, and install them automatically.
+
+Alternatively, you can set up manually:
 
 ```bash
 pip install pre-commit
@@ -290,6 +298,9 @@ The hooks will automatically run before each commit, checking for:
 - Linting issues (flake8)
 - Type checking (mypy)
 - Unit test failures
+- Whether hooks need updating to match CI/CD
+
+For more details on keeping hooks in sync with CI/CD, see [CONTRIBUTING.md](CONTRIBUTING.md#keeping-hooks-in-sync-with-cicd).
 
 ##### Pre-Merge Check
 

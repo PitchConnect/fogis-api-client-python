@@ -45,3 +45,12 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+    # Check if pre-commit hooks need updating to match CI/CD
+    -   id: check-precommit-hooks
+        name: Check if pre-commit hooks need updating
+        entry: python scripts/check_precommit_hooks.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true
