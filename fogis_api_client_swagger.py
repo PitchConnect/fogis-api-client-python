@@ -27,86 +27,86 @@ spec = APISpec(
 class ErrorSchema(Schema):
     """Schema for error responses."""
 
-    error = fields.String(required=True, description="Human-readable error message")
-    message = fields.String(required=True, description="Detailed error information")
-    error_type = fields.String(required=True, description="Error type code")
+    error = fields.String(required=True, metadata={"description": "Human-readable error message"})
+    message = fields.String(required=True, metadata={"description": "Detailed error information"})
+    error_type = fields.String(required=True, metadata={"description": "Error type code"})
 
 
 class MatchSchema(Schema):
     """Schema for match data."""
 
-    id = fields.String(required=True, description="Match ID")
-    home_team = fields.String(required=True, description="Home team name")
-    away_team = fields.String(required=True, description="Away team name")
-    datum = fields.String(description="Match date")
-    tavling = fields.String(description="Competition name")
-    status = fields.String(description="Match status")
+    id = fields.String(required=True, metadata={"description": "Match ID"})
+    home_team = fields.String(required=True, metadata={"description": "Home team name"})
+    away_team = fields.String(required=True, metadata={"description": "Away team name"})
+    datum = fields.String(metadata={"description": "Match date"})
+    tavling = fields.String(metadata={"description": "Competition name"})
+    status = fields.String(metadata={"description": "Match status"})
 
 
 class MatchResultSchema(Schema):
     """Schema for match result data."""
 
-    id = fields.String(required=True, description="Match ID")
-    home_score = fields.Integer(description="Home team score")
-    away_score = fields.Integer(description="Away team score")
+    id = fields.String(required=True, metadata={"description": "Match ID"})
+    home_score = fields.Integer(metadata={"description": "Home team score"})
+    away_score = fields.Integer(metadata={"description": "Away team score"})
 
 
 class EventSchema(Schema):
     """Schema for match event data."""
 
-    id = fields.String(description="Event ID")
-    type = fields.String(description="Event type (e.g., goal, card, substitution)")
-    player = fields.String(description="Player name")
-    team = fields.String(description="Team name")
-    time = fields.String(description="Event time")
+    id = fields.String(metadata={"description": "Event ID"})
+    type = fields.String(metadata={"description": "Event type (e.g., goal, card, substitution)"})
+    player = fields.String(metadata={"description": "Player name"})
+    team = fields.String(metadata={"description": "Team name"})
+    time = fields.String(metadata={"description": "Event time"})
 
 
 class LoginRequestSchema(Schema):
     """Schema for login request."""
 
-    username = fields.String(required=True, description="FOGIS username")
-    password = fields.String(required=True, description="FOGIS password")
+    username = fields.String(required=True, metadata={"description": "FOGIS username"})
+    password = fields.String(required=True, metadata={"description": "FOGIS password"})
 
 
 class TokenSchema(Schema):
     """Schema for authentication token (cookies)."""
 
-    token = fields.Dict(keys=fields.String(), values=fields.String(), description="Session cookies")
+    token = fields.Dict(keys=fields.String(), values=fields.String(), metadata={"description": "Session cookies"})
 
 
 class TokenResponseSchema(Schema):
     """Schema for token response."""
 
-    success = fields.Boolean(required=True, description="Whether the operation was successful")
-    message = fields.String(description="Human-readable message")
-    token = fields.Dict(keys=fields.String(), values=fields.String(), description="Session cookies")
-    error = fields.String(description="Error message if operation failed")
+    success = fields.Boolean(required=True, metadata={"description": "Whether the operation was successful"})
+    message = fields.String(metadata={"description": "Human-readable message"})
+    token = fields.Dict(keys=fields.String(), values=fields.String(), metadata={"description": "Session cookies"})
+    error = fields.String(metadata={"description": "Error message if operation failed"})
 
 
 class TokenValidationResponseSchema(Schema):
     """Schema for token validation response."""
 
-    success = fields.Boolean(required=True, description="Whether the operation was successful")
-    valid = fields.Boolean(description="Whether the token is valid")
-    message = fields.String(description="Human-readable message")
-    error = fields.String(description="Error message if operation failed")
+    success = fields.Boolean(required=True, metadata={"description": "Whether the operation was successful"})
+    valid = fields.Boolean(metadata={"description": "Whether the token is valid"})
+    message = fields.String(metadata={"description": "Human-readable message"})
+    error = fields.String(metadata={"description": "Error message if operation failed"})
 
 
 class PlayerSchema(Schema):
     """Schema for player data."""
 
-    id = fields.String(description="Player ID")
-    name = fields.String(description="Player name")
-    position = fields.String(description="Player position")
-    number = fields.String(description="Player jersey number")
+    id = fields.String(metadata={"description": "Player ID"})
+    name = fields.String(metadata={"description": "Player name"})
+    position = fields.String(metadata={"description": "Player position"})
+    number = fields.String(metadata={"description": "Player jersey number"})
 
 
 class OfficialSchema(Schema):
     """Schema for official data."""
 
-    id = fields.String(description="Official ID")
-    name = fields.String(description="Official name")
-    role = fields.String(description="Official role")
+    id = fields.String(metadata={"description": "Official ID"})
+    name = fields.String(metadata={"description": "Official name"})
+    role = fields.String(metadata={"description": "Official role"})
 
 
 # Register schemas with spec

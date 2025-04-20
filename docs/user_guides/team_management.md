@@ -36,8 +36,10 @@ except FogisLoginError as e:
 
 To get information about players in a team:
 
+> **Note**: The `team_id` parameter must be a match-specific team ID (`matchlagid`), not just the general team ID. You can get this ID from a match object's `hemmalagid` or `bortalagid` properties.
+
 ```python
-team_id = 12345  # Replace with your team ID
+team_id = 12345  # Replace with your team's match-specific ID (matchlagid)
 
 try:
     team_players_response = client.fetch_team_players_json(team_id)
@@ -65,6 +67,8 @@ except FogisAPIRequestError as e:
 ## Step 3: Fetch Team Officials
 
 To get information about team officials (coaches, managers, etc.):
+
+> **Note**: Just like with players, the `team_id` parameter must be a match-specific team ID (`matchlagid`), not just the general team ID.
 
 ```python
 try:

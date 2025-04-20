@@ -7,7 +7,6 @@ that mimic the responses from the FOGIS API, with proper structure but anonymize
 
 import json
 import random
-import string
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union
 
@@ -141,9 +140,7 @@ class MockDataFactory:
         return f"{hours:02d}:{minutes:02d}"
 
     @staticmethod
-    def generate_timestamp(
-        future: bool = True, days_offset: Optional[int] = None
-    ) -> int:
+    def generate_timestamp(future: bool = True, days_offset: Optional[int] = None) -> int:
         """Generate a random timestamp in milliseconds."""
         if days_offset is None:
             days_offset = random.randint(1, 180) if future else -random.randint(1, 180)
@@ -152,9 +149,7 @@ class MockDataFactory:
         return int(date.timestamp() * 1000)
 
     @staticmethod
-    def generate_formatted_timestamp(
-        future: bool = True, days_offset: Optional[int] = None
-    ) -> str:
+    def generate_formatted_timestamp(future: bool = True, days_offset: Optional[int] = None) -> str:
         """Generate a random timestamp in FOGIS format."""
         timestamp = MockDataFactory.generate_timestamp(future, days_offset)
         return f"\\/Date({timestamp})\\/"
@@ -264,8 +259,7 @@ class MockDataFactory:
                 "lag2spelsystem": "4-3-3",
                 "anlaggningid": MockDataFactory.generate_id(),
                 "anlaggningnamn": (
-                    f"{random.choice(['Arena', 'Stadium', 'Park'])} "
-                    f"{random.randint(1, 5)}"
+                    f"{random.choice(['Arena', 'Stadium', 'Park'])} " f"{random.randint(1, 5)}"
                 ),
                 "anlaggningLatitud": round(57.0 + random.random(), 6),
                 "anlaggningLongitud": round(12.0 + random.random(), 6),
@@ -431,7 +425,9 @@ class MockDataFactory:
             birth_year = random.randint(1990, 2005)
             birth_month = random.randint(1, 12)
             birth_day = random.randint(1, 28)  # Simplified to avoid invalid dates
-            personal_number = f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
+            personal_number = (
+                f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
+            )
 
             # Create player with the full structure from real data
             player = {
@@ -474,7 +470,9 @@ class MockDataFactory:
             birth_year = random.randint(1990, 2005)
             birth_month = random.randint(1, 12)
             birth_day = random.randint(1, 28)  # Simplified to avoid invalid dates
-            personal_number = f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
+            personal_number = (
+                f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
+            )
 
             # Create player with the full structure from real data
             player = {
@@ -539,7 +537,9 @@ class MockDataFactory:
             birth_year = random.randint(1960, 1990)  # Staff are typically older
             birth_month = random.randint(1, 12)
             birth_day = random.randint(1, 28)  # Simplified to avoid invalid dates
-            personal_number = f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
+            personal_number = (
+                f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
+            )
 
             # Create official with the full structure from real data
             official = {
@@ -575,7 +575,9 @@ class MockDataFactory:
             birth_year = random.randint(1960, 1990)  # Staff are typically older
             birth_month = random.randint(1, 12)
             birth_day = random.randint(1, 28)  # Simplified to avoid invalid dates
-            personal_number = f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
+            personal_number = (
+                f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
+            )
 
             # Create official with the full structure from real data
             official = {
@@ -668,12 +670,10 @@ class MockDataFactory:
             else:
                 # Select a random event type (weighted towards more common events)
                 weights = [10, 5, 2, 8, 3, 8, 8, 0]  # Higher weight = more likely
-                event_type_index = random.choices(
-                    range(len(event_types)), weights=weights, k=1
-                )[0]
-                event_type_id, event_type_name, affects_score, requires_related = (
-                    event_types[event_type_index]
-                )
+                event_type_index = random.choices(range(len(event_types)), weights=weights, k=1)[0]
+                event_type_id, event_type_name, affects_score, requires_related = event_types[
+                    event_type_index
+                ]
 
                 # For substitution in, we need a related "Byte ut" event
                 if requires_related and event_type_id == 17:  # Byte in
@@ -748,9 +748,7 @@ class MockDataFactory:
                 "tidsangivelse": str(minute),
                 "planpositionx": -1,
                 "planpositiony": -1,
-                "relateradTillMatchhandelseID": (
-                    related_event_id if requires_related else 0
-                ),
+                "relateradTillMatchhandelseID": (related_event_id if requires_related else 0),
             }
 
             # Store event ID for potential related events
@@ -803,6 +801,75 @@ class MockDataFactory:
         }
 
         return [full_time_result, half_time_result]
+
+    @staticmethod
+    def generate_team_players(team_id: Optional[int] = None) -> Dict[str, Any]:
+        """Generate sample team players data."""
+        if team_id is None:
+            team_id = MockDataFactory.generate_id()
+
+        players = []
+        # Generate 15-25 players
+        for _ in range(random.randint(15, 25)):
+            player_id = MockDataFactory.generate_id()
+            first_name = MockDataFactory.generate_name(True)
+            last_name = MockDataFactory.generate_name(False)
+            jersey_number = random.randint(1, 99)
+            position = random.choice(["Målvakt", "Försvarare", "Mittfältare", "Anfallare"])
+
+            player = {
+                "personid": player_id,
+                "fornamn": first_name,
+                "efternamn": last_name,
+                "tshirt": jersey_number,
+                "position": position,
+                "matchlagid": team_id,
+                "fodelsedatum": MockDataFactory.generate_date(False),
+                "licensnummer": f"LIC{random.randint(100000, 999999)}",
+                "spelarregistreringsstrang": "",
+                "spelareAntalAckumuleradeVarningar": random.randint(0, 2),
+                "spelareAvstangningBeskrivning": "",
+            }
+
+            players.append(player)
+
+        return {"spelare": players}
+
+    @staticmethod
+    def generate_team_officials(team_id: Optional[int] = None) -> List[Dict[str, Any]]:
+        """Generate sample team officials data."""
+        if team_id is None:
+            team_id = MockDataFactory.generate_id()
+
+        officials = []
+        # Generate 2-5 officials
+        roles = [
+            "Tränare",
+            "Assisterande tränare",
+            "Lagledare",
+            "Materialförvaltare",
+            "Fysioterapeut",
+        ]
+
+        for i in range(random.randint(2, 5)):
+            official_id = MockDataFactory.generate_id()
+            first_name = MockDataFactory.generate_name(True)
+            last_name = MockDataFactory.generate_name(False)
+            role = roles[i % len(roles)]
+
+            official = {
+                "personid": official_id,
+                "fornamn": first_name,
+                "efternamn": last_name,
+                "roll": role,
+                "matchlagid": team_id,
+                "fodelsedatum": MockDataFactory.generate_date(False),
+                "licensnummer": f"LIC{random.randint(100000, 999999)}",
+            }
+
+            officials.append(official)
+
+        return officials
 
     @staticmethod
     def get_sample_match_list_response() -> str:

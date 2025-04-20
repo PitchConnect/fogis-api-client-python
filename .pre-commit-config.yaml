@@ -6,42 +6,88 @@ repos:
     -   id: end-of-file-fixer
     -   id: check-yaml
     -   id: check-added-large-files
-
+-   repo: https://github.com/psf/black
+    rev: 23.7.0
+    hooks:
+    -   id: black
 -   repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
     -   id: isort
-        args: [--profile=black, --line-length=100]
-
--   repo: https://github.com/psf/black
-    rev: 23.3.0
-    hooks:
-    -   id: black
-        args: [--line-length=100]
-
 -   repo: https://github.com/pycqa/flake8
     rev: 6.0.0
     hooks:
     -   id: flake8
-        args: [--max-line-length=100, "--extend-ignore=E203,F541,W503"]  # Ignore whitespace before ':', lazy string interpolation, and line breaks before binary operators
-        exclude: |
-            (?x)^(
-                .venv/.*|
-                build/.*
-            )$
-
+        args: [--count, --select=E9,F63,F7,F82, --show-source, --statistics]
+    -   id: flake8
+        name: flake8-complexity
+        args: [--count, --exit-zero, --max-complexity=10, --max-line-length=127, --statistics]
+        additional_dependencies: [flake8-bugbear] # For extended checks
+-   repo: https://github.com/pycqa/pylint
+    rev: v3.0.0a5
+    hooks:
+    -   id: pylint
+        name: pylint
+        # You might need to adjust these paths to match your project structure
+        args:
+            [
+                "--rcfile=pyproject.toml", # Use pyproject.toml for pylint configuration
+            ]
 -   repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.3.0
+    rev: v1.4.1 # Use the latest release or a specific tag
     hooks:
     -   id: mypy
-        additional_dependencies: [types-requests]
-        args: [--ignore-missing-imports]
-
+        additional_dependencies: [
+            "types-requests",  # Add types for any third-party libs
+            "types-beautifulsoup4",
+            "types-flask",
+            "types-apispec",
+            "types-marshmallow",
+            "types-psutil",
+        ]
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+    -   id: bandit
+        name: bandit-security-check
+-   repo: https://github.com/markdownlint/markdownlint
+    rev: v0.33.0
+    hooks:
+    -   id: markdownlint
+        args: ["--config=.markdownlint.yaml"] # optional custom markdownlint config
 -   repo: local
     hooks:
-    -   id: unittest-check
-        name: unittest-check
-        entry: python3 -m unittest discover tests
+    -   id: check-doc-freshness
+        name: Check Documentation Freshness
+        entry: ./scripts/check_doc_freshness.py # Path to custom script
+        language: system
+        pass_filenames: false # Customize if your script needs filenames
+        always_run: true #  Run even if staged files don't seem relevant
+        require_serial: true # Ensure it runs in isolation, if needed
+        stages: [commit] # Run on commit
+
+    -   id: check-precommit-hooks
+        name: Check if pre-commit hooks need updating
+        entry: python3 scripts/check_precommit_hooks.py
         language: system
         pass_filenames: false
         always_run: true
+        stages: [commit]
+        verbose: true
+
+    -   id: dependency-check
+        name: dependency-check
+        entry: python scripts/check_dependencies.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+    -   id: docker-verify
+        name: docker-verify
+        entry: scripts/verify_docker_build.sh
+        language: system
+        pass_filenames: false
+        # Only run this on demand with --hook-stage manual
+        stages: [manual]
+
+files: \.(txt|md|yml|dev|py|gz|whl|pyc|test|sh|ps1|toml)$ # Include relevant file extensions

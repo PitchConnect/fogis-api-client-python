@@ -59,8 +59,13 @@ class MockFogisServer:
         @self.app.route("/mdk/Login.aspx", methods=["GET", "POST"])
         def login():
             if request.method == "POST":
-                username = request.form.get("ctl00$cphMain$tbUsername")
-                password = request.form.get("ctl00$cphMain$tbPassword")
+                # Try both field name formats
+                username = request.form.get("ctl00$cphMain$tbUsername") or request.form.get(
+                    "ctl00$MainContent$UserName"
+                )
+                password = request.form.get("ctl00$cphMain$tbPassword") or request.form.get(
+                    "ctl00$MainContent$Password"
+                )
 
                 if username in self.users and self.users[username] == password:
                     # Successful login
@@ -70,9 +75,7 @@ class MockFogisServer:
                     # Set cookies - use the same cookie names as expected by the client
                     # The client checks for FogisMobilDomarKlient.ASPXAUTH (with a dot)
                     resp = Response("Login successful")
-                    resp.set_cookie(
-                        "FogisMobilDomarKlient.ASPXAUTH", "mock_auth_cookie"
-                    )
+                    resp.set_cookie("FogisMobilDomarKlient.ASPXAUTH", "mock_auth_cookie")
                     resp.set_cookie("ASP.NET_SessionId", "mock_session_id")
                     resp.headers["Location"] = "/mdk/"
                     resp.status_code = 302
@@ -84,14 +87,18 @@ class MockFogisServer:
                     <html>
                     <body>
                         <div class="error-message">Invalid username or password</div>
-                        <form method="post">
+                        <form method="post" id="aspnetForm">
                             <input type="hidden" name="__VIEWSTATE"
                                 value="viewstate_value" />
                             <input type="hidden" name="__EVENTVALIDATION"
                                 value="eventvalidation_value" />
                             <input type="text" name="ctl00$cphMain$tbUsername" />
                             <input type="password" name="ctl00$cphMain$tbPassword" />
+                            <input type="text" name="ctl00$MainContent$UserName" />
+                            <input type="password" name="ctl00$MainContent$Password" />
                             <input type="submit" name="ctl00$cphMain$btnLogin" value="Logga in" />
+                            <input type="submit" name="ctl00$MainContent$LoginButton"
+                                value="Logga in" />
                         </form>
                     </body>
                     </html>
@@ -101,14 +108,18 @@ class MockFogisServer:
                 return """
                 <html>
                 <body>
-                    <form method="post">
+                    <form method="post" id="aspnetForm">
                         <input type="hidden" name="__VIEWSTATE"
                             value="viewstate_value" />
                         <input type="hidden" name="__EVENTVALIDATION"
                             value="eventvalidation_value" />
                         <input type="text" name="ctl00$cphMain$tbUsername" />
                         <input type="password" name="ctl00$cphMain$tbPassword" />
+                        <input type="text" name="ctl00$MainContent$UserName" />
+                        <input type="password" name="ctl00$MainContent$Password" />
                         <input type="submit" name="ctl00$cphMain$btnLogin" value="Logga in" />
+                        <input type="submit" name="ctl00$MainContent$LoginButton"
+                            value="Logga in" />
                     </form>
                 </body>
                 </html>
@@ -164,9 +175,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps(players_data)})
 
         # Match officials endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/HamtaMatchFunktionarer", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/HamtaMatchFunktionarer", methods=["POST"])
         def fetch_match_officials():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -183,9 +192,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps(officials_data)})
 
         # Match events endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/HamtaMatchHandelser", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/HamtaMatchHandelser", methods=["POST"])
         def fetch_match_events():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -203,9 +210,7 @@ class MockFogisServer:
             return jsonify({"d": events_data})
 
         # Match result endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/GetMatchresultatlista", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchresultatlista", methods=["POST"])
         def fetch_match_result():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -218,14 +223,13 @@ class MockFogisServer:
             # Generate result data using the factory
             result_data = MockDataFactory.generate_match_result(match_id)
 
-            # For match results, the response format is different - it's a direct array in the "d" field
+            # For match results, the response format is different -
+            # it's a direct array in the "d" field
             # rather than a JSON string
             return jsonify({"d": result_data})
 
         # Report match event endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/SparaMatchhandelse", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/SparaMatchhandelse", methods=["POST"])
         def report_match_event():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -238,14 +242,10 @@ class MockFogisServer:
             self.reported_events.append(event_data)
 
             # Return success response
-            return jsonify(
-                {"d": json.dumps({"success": True, "id": len(self.reported_events)})}
-            )
+            return jsonify({"d": json.dumps({"success": True, "id": len(self.reported_events)})})
 
         # Clear match events endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/RensaMatchhandelser", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/RensaMatchhandelser", methods=["POST"])
         @self.app.route("/mdk/Fogis/Match/ClearMatchEvents", methods=["POST"])
         def clear_match_events():
             auth_result = self._check_auth()
@@ -262,9 +262,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps({"success": True})})
 
         # Mark reporting finished endpoint
-        @self.app.route(
-            "/mdk/Fogis/Match/SparaMatchGodkannDomarrapport", methods=["POST"]
-        )
+        @self.app.route("/mdk/Fogis/Match/SparaMatchGodkannDomarrapport", methods=["POST"])
         def mark_reporting_finished():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -275,6 +273,175 @@ class MockFogisServer:
 
             # Return success response with a dictionary containing success=true
             # This matches what the client expects
+            return jsonify({"d": json.dumps({"success": True})})
+
+        # Team players endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag", methods=["POST"]
+        )
+        def fetch_team_players_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get team ID from request
+            data = request.json or {}
+            team_id = data.get("matchlagid")  # Use the correct parameter name
+
+            # Generate team players data using the factory
+            players_data = MockDataFactory.generate_team_players(team_id)
+
+            # Return the response
+            return jsonify({"d": json.dumps(players_data)})
+
+        # Team officials endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag", methods=["POST"]
+        )
+        def fetch_team_officials_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get team ID from request
+            data = request.json or {}
+            team_id = data.get("matchlagid")  # Use the correct parameter name
+
+            # Generate team officials data using the factory
+            officials_data = MockDataFactory.generate_team_officials(team_id)
+
+            # Return the response
+            return jsonify({"d": json.dumps(officials_data)})
+
+        # Match details endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/GetMatch", methods=["POST"]
+        )
+        def fetch_match_details_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get match ID from request
+            data = request.json or {}
+            match_id = data.get("matchid")
+
+            # Generate match data using the factory
+            match_data = MockDataFactory.generate_match_details(match_id)
+
+            # Return the response
+            return jsonify({"d": json.dumps(match_data)})
+
+        # Match players endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/GetMatchdeltagareLista", methods=["POST"]
+        )
+        def fetch_match_players_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get match ID from request
+            data = request.json or {}
+            match_id = data.get("matchid")
+
+            # Generate match players data using the factory
+            players_data = MockDataFactory.generate_match_players(match_id)
+
+            # Return the response
+            return jsonify({"d": json.dumps(players_data)})
+
+        # Match officials endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/GetMatchfunktionarerLista", methods=["POST"]
+        )
+        def fetch_match_officials_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get match ID from request
+            data = request.json or {}
+            match_id = data.get("matchid")
+
+            # Generate match officials data using the factory
+            officials_data = MockDataFactory.generate_match_officials(match_id)
+
+            # Return the response
+            return jsonify({"d": json.dumps(officials_data)})
+
+        # Match events endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/GetMatchhandelselista", methods=["POST"]
+        )
+        def fetch_match_events_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get match ID from request
+            data = request.json or {}
+            match_id = data.get("matchid")
+
+            # Generate match events data using the factory
+            events_data = MockDataFactory.generate_match_events(match_id)
+
+            # Return the response
+            return jsonify({"d": json.dumps(events_data)})
+
+        # Match result endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/GetMatchresultat", methods=["POST"]
+        )
+        def fetch_match_result_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get match ID from request
+            data = request.json or {}
+            match_id = data.get("matchid")
+
+            # Generate match result data using the factory
+            result_data = MockDataFactory.generate_match_result(match_id)
+
+            # Return the response
+            return jsonify({"d": json.dumps(result_data)})
+
+        # Clear match events endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/ClearMatchEvents", methods=["POST"]
+        )
+        def clear_match_events_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Return success response
+            return jsonify({"d": json.dumps({"success": True})})
+
+        # Report match event endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/SparaMatchhandelse", methods=["POST"]
+        )
+        def report_match_event_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Return success response
+            return jsonify({"d": json.dumps({"success": True})})
+
+        # Mark reporting finished endpoint
+        @self.app.route(
+            "/mdk/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport", methods=["POST"]
+        )
+        def mark_reporting_finished_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Return success response
             return jsonify({"d": json.dumps({"success": True})})
 
         # Main dashboard route after login
@@ -306,9 +473,7 @@ class MockFogisServer:
     def _check_auth(self):
         """Check if the request is authenticated."""
         # Check if the user is authenticated via session or cookies
-        if session.get("authenticated") or request.cookies.get(
-            "FogisMobilDomarKlient.ASPXAUTH"
-        ):
+        if session.get("authenticated") or request.cookies.get("FogisMobilDomarKlient.ASPXAUTH"):
             return True
 
         # For testing purposes, we'll also accept cookie-based authentication

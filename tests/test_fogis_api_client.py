@@ -5,7 +5,11 @@ from unittest.mock import MagicMock, Mock
 
 import requests
 
-from fogis_api_client.fogis_api_client import FogisApiClient, FogisAPIRequestError, FogisLoginError
+from fogis_api_client.fogis_api_client import (
+    FogisApiClient,
+    FogisAPIRequestError,
+    FogisLoginError,
+)
 
 
 class MockResponse:
@@ -24,7 +28,9 @@ class MockResponse:
 
     def raise_for_status(self):
         if 400 <= self.status_code < 600:
-            raise requests.exceptions.HTTPError(f"HTTP Error {self.status_code}", response=self)
+            raise requests.exceptions.HTTPError(
+                f"HTTP Error {self.status_code}", response=self
+            )
 
 
 class TestFogisApiClient(unittest.TestCase):
@@ -79,7 +85,9 @@ class TestFogisApiClient(unittest.TestCase):
         mock_post_response = Mock()
         mock_post_response.status_code = 302
         mock_post_response.headers = {"Location": "/mdk/"}
-        mock_post_response.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
+        mock_post_response.cookies = {
+            "FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"
+        }
         mocked_session.post.return_value = mock_post_response
 
         # Mock the redirect response
@@ -95,7 +103,9 @@ class TestFogisApiClient(unittest.TestCase):
         # Verify the result
         self.assertIn("FogisMobilDomarKlient.ASPXAUTH", cookies)
         self.assertEqual(cookies["FogisMobilDomarKlient.ASPXAUTH"], "mock_auth_cookie")
-        self.assertEqual(mocked_session.get.call_count, 2)  # Initial page load + redirect
+        self.assertEqual(
+            mocked_session.get.call_count, 2
+        )  # Initial page load + redirect
         mocked_session.post.assert_called_once()
 
     def test_login_failure_invalid_credentials(self):
@@ -258,7 +268,7 @@ class TestFogisApiClient(unittest.TestCase):
         """Unit test for fetch_matches_list_json success."""
         # Mock the _api_request method
         self.client._api_request = MagicMock(
-            return_value={"matcher": [{"matchid": 1}, {"matchid": 2}]}
+            return_value={"matchlista": [{"matchid": 1}, {"matchid": 2}]}
         )
 
         # Call fetch_matches_list_json
@@ -266,67 +276,122 @@ class TestFogisApiClient(unittest.TestCase):
 
         # Verify the result
         self.assertEqual(matches_list, [{"matchid": 1}, {"matchid": 2}])
-        self.client._api_request.assert_called_once_with(
-            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatchLista", {}
+
+        # Verify the API call was made once with the correct endpoint
+        self.assertEqual(self.client._api_request.call_count, 1)
+        call_args = self.client._api_request.call_args[0]
+        self.assertEqual(
+            call_args[0],
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatcherAttRapportera",
         )
+
+        # Verify the filter structure without checking exact date values
+        filter_data = call_args[1]["filter"]
+        self.assertIn("datumFran", filter_data)
+        self.assertIn("datumTill", filter_data)
+        self.assertEqual(filter_data["datumTyp"], 0)
+        self.assertEqual(filter_data["typ"], "alla")
+        self.assertEqual(filter_data["status"], ["avbruten", "uppskjuten", "installd"])
+        self.assertEqual(filter_data["alderskategori"], [1, 2, 3, 4, 5])
+        self.assertEqual(filter_data["kon"], [3, 2, 4])
+        self.assertIn("sparadDatum", filter_data)
 
     def test_fetch_matches_list_json_call_args(self):
         """Unit test for fetch_matches_list_json argument verification."""
         # Mock the _api_request method
-        self.client._api_request = MagicMock(return_value={"matcher": []})
+        self.client._api_request = MagicMock(return_value={"matchlista": []})
 
         # Call fetch_matches_list_json
         self.client.fetch_matches_list_json()
 
-        # Verify the API call
-        self.client._api_request.assert_called_once_with(
-            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatchLista", {}
+        # Verify the API call was made once with the correct endpoint
+        self.assertEqual(self.client._api_request.call_count, 1)
+        call_args = self.client._api_request.call_args[0]
+        self.assertEqual(
+            call_args[0],
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatcherAttRapportera",
         )
+
+        # Verify the filter structure without checking exact date values
+        filter_data = call_args[1]["filter"]
+        self.assertIn("datumFran", filter_data)
+        self.assertIn("datumTill", filter_data)
+        self.assertEqual(filter_data["datumTyp"], 0)
+        self.assertEqual(filter_data["typ"], "alla")
+        self.assertEqual(filter_data["status"], ["avbruten", "uppskjuten", "installd"])
+        self.assertEqual(filter_data["alderskategori"], [1, 2, 3, 4, 5])
+        self.assertEqual(filter_data["kon"], [3, 2, 4])
+        self.assertIn("sparadDatum", filter_data)
 
     def test_fetch_matches_list_json_api_call_only(self):
         """Unit test for fetch_matches_list_json verifying API call (no filtering)."""
         # Mock the _api_request method
-        self.client._api_request = MagicMock(return_value={"matcher": []})
+        self.client._api_request = MagicMock(return_value={"matchlista": []})
 
         # Call fetch_matches_list_json WITHOUT filter argument
         self.client.fetch_matches_list_json()
 
-        # Verify the API call
-        self.client._api_request.assert_called_once_with(
-            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatchLista", {}
+        # Verify the API call was made once with the correct endpoint
+        self.assertEqual(self.client._api_request.call_count, 1)
+        call_args = self.client._api_request.call_args[0]
+        self.assertEqual(
+            call_args[0],
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatcherAttRapportera",
         )
+
+        # Verify the filter structure without checking exact date values
+        filter_data = call_args[1]["filter"]
+        self.assertIn("datumFran", filter_data)
+        self.assertIn("datumTill", filter_data)
+        self.assertEqual(filter_data["datumTyp"], 0)
+        self.assertEqual(filter_data["typ"], "alla")
+        self.assertEqual(filter_data["status"], ["avbruten", "uppskjuten", "installd"])
+        self.assertEqual(filter_data["alderskategori"], [1, 2, 3, 4, 5])
+        self.assertEqual(filter_data["kon"], [3, 2, 4])
+        self.assertIn("sparadDatum", filter_data)
 
     def test_fetch_matches_list_json_server_date_filter_call_args(self):
         """Test fetch_matches_list_json with server-side date filter arguments."""
         # Mock the _api_request method
-        self.client._api_request = MagicMock(return_value={"matcher": []})
+        self.client._api_request = MagicMock(return_value={"matchlista": []})
 
         # Call fetch_matches_list_json with filter
-        self.client.fetch_matches_list_json(
-            filter={
-                "datumFran": "2023-01-01",
-                "datumTill": "2023-01-31",
-                "datumTyp": "match",
-                "sparadDatum": "2023-01-15",
-            }
+        custom_filter = {
+            "datumFran": "2023-01-01",
+            "datumTill": "2023-01-31",
+            "datumTyp": "match",
+            "sparadDatum": "2023-01-15",
+        }
+        self.client.fetch_matches_list_json(filter=custom_filter)
+
+        # Verify the API call was made once with the correct endpoint
+        self.assertEqual(self.client._api_request.call_count, 1)
+        call_args = self.client._api_request.call_args[0]
+        self.assertEqual(
+            call_args[0],
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatcherAttRapportera",
         )
 
-        # Verify the API call
-        self.client._api_request.assert_called_once_with(
-            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatchLista",
-            {
-                "datumFran": "2023-01-01",
-                "datumTill": "2023-01-31",
-                "datumTyp": "match",
-                "sparadDatum": "2023-01-15",
-            },
-        )
+        # Verify the filter structure with our custom values
+        filter_data = call_args[1]["filter"]
+        self.assertEqual(filter_data["datumFran"], "2023-01-01")
+        self.assertEqual(filter_data["datumTill"], "2023-01-31")
+        self.assertEqual(filter_data["datumTyp"], "match")
+        self.assertEqual(filter_data["sparadDatum"], "2023-01-15")
+
+        # Verify the default values are still present
+        self.assertEqual(filter_data["typ"], "alla")
+        self.assertEqual(filter_data["status"], ["avbruten", "uppskjuten", "installd"])
+        self.assertEqual(filter_data["alderskategori"], [1, 2, 3, 4, 5])
+        self.assertEqual(filter_data["kon"], [3, 2, 4])
 
     def test_fetch_match_result_json(self):
         """Unit test for fetch_match_result_json method."""
         # Mock the _api_request method
         self.client._api_request = MagicMock(
-            return_value=[{"matchresultattypid": 1, "matchlag1mal": 2, "matchlag2mal": 1}]
+            return_value=[
+                {"matchresultattypid": 1, "matchlag1mal": 2, "matchlag2mal": 1}
+            ]
         )
 
         # Call fetch_match_result_json
@@ -349,7 +414,9 @@ class TestFogisApiClient(unittest.TestCase):
         """Unit test for fetch_match_result_json method with error."""
         # Mock the _api_request method to raise an exception
         error_msg = "API request failed"
-        self.client._api_request = MagicMock(side_effect=FogisAPIRequestError(error_msg))
+        self.client._api_request = MagicMock(
+            side_effect=FogisAPIRequestError(error_msg)
+        )
 
         # Call fetch_match_result_json and expect an exception
         with self.assertRaises(FogisAPIRequestError) as excinfo:
@@ -398,7 +465,9 @@ class TestFogisApiClient(unittest.TestCase):
         """Unit test for report_match_result method with error."""
         # Mock the _api_request method to raise an exception
         error_msg = "API request failed"
-        self.client._api_request = MagicMock(side_effect=FogisAPIRequestError(error_msg))
+        self.client._api_request = MagicMock(
+            side_effect=FogisAPIRequestError(error_msg)
+        )
 
         # Call report_match_result and expect an exception
         result_data = {"matchid": "12345", "hemmamal": 2, "bortamal": 1}
@@ -411,7 +480,11 @@ class TestFogisApiClient(unittest.TestCase):
         # Verify the API call
         self.client._api_request.assert_called_once_with(
             f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista",
-            {"matchid": 12345, "hemmamal": 2, "bortamal": 1},  # Should be converted to int
+            {
+                "matchid": 12345,
+                "hemmamal": 2,
+                "bortamal": 1,
+            },  # Should be converted to int
         )
 
     def test_event_types_dictionary(self):
@@ -447,7 +520,7 @@ class TestFogisApiClient(unittest.TestCase):
         # Call report_team_official_action
         action_data = {
             "matchid": "12345",
-            "lagid": "67890",
+            "lagid": "67890",  # Note: This parameter name is still 'lagid' in this method
             "personid": "54321",
             "matchlagledaretypid": "2",  # Example: Yellow card
             "minut": 65,
@@ -462,6 +535,7 @@ class TestFogisApiClient(unittest.TestCase):
             f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchlagledare",
             {
                 "matchid": 12345,  # Should be converted to int
+                # Note: This parameter name is still 'lagid' in this method
                 "lagid": 67890,  # Should be converted to int
                 "personid": 54321,  # Should be converted to int
                 "matchlagledaretypid": 2,  # Should be converted to int
@@ -473,12 +547,14 @@ class TestFogisApiClient(unittest.TestCase):
         """Unit test for report_team_official_action method with error."""
         # Mock the _api_request method to raise an exception
         error_msg = "API request failed"
-        self.client._api_request = MagicMock(side_effect=FogisAPIRequestError(error_msg))
+        self.client._api_request = MagicMock(
+            side_effect=FogisAPIRequestError(error_msg)
+        )
 
         # Call report_team_official_action and expect an exception
         action_data = {
             "matchid": "12345",
-            "lagid": "67890",
+            "lagid": "67890",  # Note: This parameter name is still 'lagid' in this method
             "personid": "54321",
             "matchlagledaretypid": "2",
         }
@@ -493,6 +569,7 @@ class TestFogisApiClient(unittest.TestCase):
             f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchlagledare",
             {
                 "matchid": 12345,  # Should be converted to int
+                # Note: This parameter name is still 'lagid' in this method
                 "lagid": 67890,  # Should be converted to int
                 "personid": 54321,  # Should be converted to int
                 "matchlagledaretypid": 2,  # Should be converted to int

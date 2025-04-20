@@ -21,6 +21,8 @@ services:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
       - TZ=Europe/Stockholm
+      # Ensure correct dependency versions
+      - PIP_EXTRA_INDEX_URL=https://pypi.org/simple
     healthcheck:
       # Use a verbose health check for development to help diagnose issues
       # Use 0.0.0.0 instead of 127.0.0.1 to ensure it works in all network configurations

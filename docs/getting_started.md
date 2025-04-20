@@ -253,6 +253,27 @@ For development purposes, you can use the provided development script:
 python -m unittest discover tests
 ```
 
+### Development Environment Setup
+
+We provide setup scripts to make it easy to set up your development environment:
+
+On macOS/Linux:
+```bash
+./scripts/setup_dev_env.sh
+```
+
+On Windows (PowerShell):
+```powershell
+.\scripts\setup_dev_env.ps1
+```
+
+These scripts will:
+1. Create a virtual environment (if it doesn't exist)
+2. Install the package in development mode with all dev dependencies
+3. Install pre-commit and set up the hooks
+
+For more details, see the [Development Setup](../README.md#development-setup) section in the README.
+
 ## Next Steps
 
 - Explore the [API Reference](api_reference.md) for detailed information about all available methods

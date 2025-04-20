@@ -448,10 +448,58 @@ If you are an AI assistant reading this:
    - When creating issues or PRs manually, include a link to this document
    - This ensures consistency across all contributions, regardless of who handles them
 
-9. **Remind Users of the Process**:
+9. **Maintaining Documentation and Scripts**:
+   - Keep documentation and scripts up to date with code changes
+   - When adding new features, update relevant documentation
+   - When changing workflows, update related scripts
+   - When fixing bugs, update troubleshooting guides if applicable
+   - Pay special attention to onboarding materials (README, QUICKSTART.md, etc.)
+   - Test setup scripts on a clean environment periodically
+   - Update version numbers and dependencies in documentation
+   - Review documentation for accuracy during the PR review process
+   - Consider documentation and scripts as part of the codebase, not an afterthought
+   - When switching between computers, use it as an opportunity to verify onboarding docs
+
+10. **Remind Users of the Process**:
    - If a user asks you to push directly to main, remind them of the GitFlow process
    - Suggest creating a proper branch and PR instead
    - Reference this document when explaining the process
+
+## Dynamic Pre-commit Hook Generator
+
+This project uses a dynamic pre-commit hook generator powered by Google's Gemini LLM. This tool helps maintain consistent code quality and documentation standards.
+
+### Using the Generator
+
+```bash
+# Generate pre-commit hooks interactively
+python3 scripts/dynamic_precommit_generator.py
+
+# Generate pre-commit hooks non-interactively
+python3 scripts/dynamic_precommit_generator.py --non-interactive
+
+# Generate and install pre-commit hooks
+python3 scripts/dynamic_precommit_generator.py --non-interactive --install
+```
+
+### Documenting Issues
+
+If you encounter issues with the generator:
+
+1. Check the known issues in `scripts/README_DYNAMIC_HOOKS.md`
+2. If it's a new issue, add it to the document
+3. Create a GitHub issue if it requires code changes
+
+### Modifying the Generator
+
+When modifying the generator:
+
+1. Test both interactive and non-interactive modes
+2. Add fallback mechanisms for new features
+3. Update the documentation in `scripts/README_DYNAMIC_HOOKS.md`
+4. Consider the impact on CI/CD pipelines
+
+See issue #107 for plans to extract this as a standalone tool.
 
 ## Getting Help
 

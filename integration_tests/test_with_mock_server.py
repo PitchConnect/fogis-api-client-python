@@ -368,6 +368,70 @@ class TestFogisApiClientWithMockServer:
         # Verify the response
         assert message == "Hello, brave new world!"
 
+    def test_fetch_team_players(
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
+    ):
+        """Test fetching team players."""
+        # Override the base URL to use the mock server
+        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+
+        # Create a client with test credentials
+        client = FogisApiClient(
+            username=test_credentials["username"],
+            password=test_credentials["password"],
+        )
+
+        # Fetch team players
+        team_id = 12345
+        players = client.fetch_team_players_json(team_id)
+
+        # Verify the response
+        assert isinstance(players, dict)
+        assert "spelare" in players
+        assert isinstance(players["spelare"], list)
+        assert len(players["spelare"]) > 0
+
+        # Check the structure of the first player
+        player = players["spelare"][0]
+        assert "personid" in player
+        assert "fornamn" in player
+        assert "efternamn" in player
+        assert "position" in player
+        # Note: matchlagid is not in PlayerDict but is present in the mock server response
+        assert "matchlagid" in player  # type: ignore
+        assert player["matchlagid"] == team_id  # type: ignore
+
+    def test_fetch_team_officials(
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
+    ):
+        """Test fetching team officials."""
+        # Override the base URL to use the mock server
+        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+
+        # Create a client with test credentials
+        client = FogisApiClient(
+            username=test_credentials["username"],
+            password=test_credentials["password"],
+        )
+
+        # Fetch team officials
+        team_id = 12345
+        officials = client.fetch_team_officials_json(team_id)
+
+        # Verify the response
+        assert isinstance(officials, list)
+        assert len(officials) > 0
+
+        # Check the structure of the first official
+        official = officials[0]
+        assert "personid" in official
+        assert "fornamn" in official
+        assert "efternamn" in official
+        assert "roll" in official
+        # Note: matchlagid is not in OfficialDict but is present in the mock server response
+        assert "matchlagid" in official  # type: ignore
+        assert official["matchlagid"] == team_id  # type: ignore
+
     def test_cookie_authentication(self, mock_fogis_server: Dict[str, str]):
         """Test authentication using cookies."""
         # Override the base URL to use the mock server

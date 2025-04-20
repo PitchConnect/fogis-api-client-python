@@ -47,9 +47,26 @@ docker run --rm -v $(pwd):/app \
   python /app/your_script.py
 ```
 
-See the [Docker Usage](docs/getting_started.md#docker-usage) section in the documentation for more details.
+### Development with Docker
+
+For development purposes, you can use the provided development script:
+
+```bash
+# Start the development environment
+./dev.sh
+```
+
+This script will:
+1. Create necessary directories (data, logs, test-results)
+2. Create a default .env.dev file if it doesn't exist
+3. Start the Docker development environment using docker-compose.dev.yml
+4. Show logs from the containers
+
+See the [Docker Usage](docs/getting_started.md#docker-usage) and [Development with Docker](docs/getting_started.md#development-with-docker) sections in the documentation for more details.
 
 ## Quick Start
+
+For new developers, see the [QUICKSTART.md](QUICKSTART.md) guide for step-by-step instructions to get up and running quickly.
 
 ```python
 from fogis_api_client import FogisApiClient, FogisLoginError, FogisAPIRequestError, configure_logging
@@ -276,20 +293,104 @@ Contributions are welcome! Please follow these steps:
 6. Push to the branch: `git push origin feature/your-feature-name`
 7. Create a pull request
 
-##### Pre-Commit Hooks
+#### Development Setup
 
-We use pre-commit hooks to ensure code quality. To set up pre-commit hooks:
+We provide setup scripts to make it easy to set up your development environment, including pre-commit hooks.
 
+##### Using the Setup Script
+
+On macOS/Linux:
 ```bash
-pip install pre-commit
-pre-commit install
+./scripts/setup_dev_env.sh
 ```
 
-The hooks will automatically run before each commit, checking for:
+On Windows (PowerShell):
+```powershell
+.\scripts\setup_dev_env.ps1
+```
+
+This script will:
+1. Create a virtual environment (if it doesn't exist)
+2. Install the package in development mode with all dev dependencies
+3. Install pre-commit and set up the hooks
+
+##### Manual Setup
+
+If you prefer to set up manually:
+
+1. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+2. Install the package in development mode:
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+3. Install pre-commit hooks:
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
+
+##### Pre-Commit Hooks
+
+We use pre-commit hooks to ensure code quality. The hooks will automatically run before each commit, checking for:
 - Code formatting (Black, isort)
 - Linting issues (flake8)
 - Type checking (mypy)
 - Unit test failures
+
+You can also run the hooks manually on all files:
+```bash
+pre-commit run --all-files
+```
+
+##### Verifying Docker Builds Locally
+
+Before pushing changes that might affect Docker builds, you can verify them locally:
+
+```bash
+# Run the Docker verification hook
+pre-commit run docker-verify --hook-stage manual
+
+# Or run the script directly
+./scripts/verify_docker_build.sh
+```
+
+This will build all Docker images locally and ensure they work correctly, preventing CI/CD pipeline failures.
+
+##### Running Integration Tests
+
+To run integration tests locally before pushing changes:
+
+```bash
+# Run the integration tests script
+./scripts/run_integration_tests.sh
+```
+
+This script will:
+1. Set up a virtual environment if needed
+2. Install dependencies
+3. Run the integration tests with the mock server
+
+Running integration tests locally helps catch issues before they reach the CI/CD pipeline.
+
+##### Dynamic Pre-commit Hook Generator
+
+This project uses a dynamic pre-commit hook generator powered by Google's Gemini LLM to maintain consistent code quality and documentation standards.
+
+```bash
+# Generate pre-commit hooks interactively
+python3 scripts/dynamic_precommit_generator.py
+
+# Generate pre-commit hooks non-interactively
+python3 scripts/dynamic_precommit_generator.py --non-interactive --install
+```
+
+See [scripts/README_DYNAMIC_HOOKS.md](scripts/README_DYNAMIC_HOOKS.md) for detailed documentation.
 
 ##### Pre-Merge Check
 
