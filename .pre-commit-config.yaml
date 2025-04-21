@@ -48,6 +48,15 @@ repos:
         always_run: true
         stages: [commit]
 
+    # Check if pre-commit hooks need updating to match CI/CD
+    -   id: check-precommit-hooks
+        name: Check if pre-commit hooks need updating
+        entry: python scripts/check_precommit_hooks.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true
+
 # Add coverage reporting (optional, disabled by default to speed up commits)
 -   repo: local
     hooks:

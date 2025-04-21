@@ -32,10 +32,12 @@ We provide a Docker-based development environment that makes it easy to develop 
    pip install -r requirements-dev.txt
    ```
 
-4. Set up pre-commit hooks:
+4. Set up pre-commit hooks that match our CI/CD pipeline:
    ```bash
-   pre-commit install
+   ./update_precommit_hooks.sh
    ```
+
+   This ensures your local checks match what runs in CI.
 
 5. Start the development environment:
    ```bash
@@ -79,6 +81,11 @@ This will:
    ```bash
    pre-commit run --all-files
    ```
+
+   If the hooks indicate they need updating to match CI/CD, run:
+   ```bash
+   ./update_precommit_hooks.sh
+   ```
 6. Commit your changes when ready
 
 ### Docker Compose Configuration
@@ -117,6 +124,11 @@ The development environment uses `docker-compose.dev.yml`, which includes:
 4. Run pre-commit hooks:
    ```bash
    pre-commit run --all-files
+   ```
+
+   If the hooks indicate they need updating to match CI/CD, run:
+   ```bash
+   ./update_precommit_hooks.sh
    ```
 
 5. Push your branch and submit a pull request

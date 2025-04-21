@@ -297,6 +297,14 @@ Contributions are welcome! Please follow these steps:
 
 We provide setup scripts to make it easy to set up your development environment, including pre-commit hooks.
 
+To set up pre-commit hooks that match our CI/CD pipeline:
+
+```bash
+./update_precommit_hooks.sh
+```
+
+This script will install pre-commit, generate hooks that match our CI/CD configuration, and install them automatically.
+
 ##### Using the Setup Script
 
 On macOS/Linux:
@@ -342,6 +350,9 @@ We use pre-commit hooks to ensure code quality. The hooks will automatically run
 - Linting issues (flake8)
 - Type checking (mypy)
 - Unit test failures
+- Whether hooks need updating to match CI/CD
+
+For more details on keeping hooks in sync with CI/CD, see [CONTRIBUTING.md](CONTRIBUTING.md#keeping-hooks-in-sync-with-cicd).
 
 You can also run the hooks manually on all files:
 ```bash
