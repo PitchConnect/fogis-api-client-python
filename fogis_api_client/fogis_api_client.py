@@ -582,7 +582,7 @@ class FogisApiClient:
         """
         url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag"
         team_id_int = int(team_id) if isinstance(team_id, (str, int)) else team_id
-        payload = {"lagid": team_id_int}
+        payload = {"matchlagid": team_id_int}
 
         response_data = self._api_request(url, payload)
 
@@ -628,7 +628,7 @@ class FogisApiClient:
         """
         url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag"
         team_id_int = int(team_id) if isinstance(team_id, (str, int)) else team_id
-        payload = {"lagid": team_id_int}
+        payload = {"matchlagid": team_id_int}
 
         response_data = self._api_request(url, payload)
 

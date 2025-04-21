@@ -33,6 +33,11 @@ jobs:
           flake8 fogis_api_client tests --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 fogis_api_client tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
+      - name: Check dependency versions
+        run: |
+          source ./.venv/bin/activate
+          python scripts/check_dependencies.py
+
       - name: Test with pytest and coverage
         run: |
           source ./.venv/bin/activate

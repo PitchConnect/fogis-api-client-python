@@ -6,7 +6,11 @@ from unittest.mock import Mock, patch
 
 import requests
 
-from fogis_api_client.fogis_api_client import FogisApiClient, FogisAPIRequestError, FogisDataError
+from fogis_api_client.fogis_api_client import (
+    FogisApiClient,
+    FogisAPIRequestError,
+    FogisDataError,
+)
 
 
 class TestFogisApiClient(unittest.TestCase):
@@ -44,7 +48,9 @@ class TestFogisApiClient(unittest.TestCase):
         mock_post_response = Mock()
         mock_post_response.status_code = 302
         mock_post_response.headers = {"Location": "/mdk/"}
-        mock_post_response.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
+        mock_post_response.cookies = {
+            "FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"
+        }
         mock_post.return_value = mock_post_response
 
         # Mock the redirect response
@@ -52,7 +58,9 @@ class TestFogisApiClient(unittest.TestCase):
         mock_get.side_effect = [mock_get_response, mock_redirect_response]
 
         # Mock the cookies
-        self.api_client.session.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
+        self.api_client.session.cookies = {
+            "FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"
+        }
 
         # Call login
         cookies = self.api_client.login()
@@ -99,7 +107,9 @@ class TestFogisApiClient(unittest.TestCase):
     def test_api_request_error_logging(self, mock_post):
         """Test API request error logging."""
         # Mock the post response to raise an exception
-        mock_post.side_effect = requests.exceptions.RequestException("API request failed")
+        mock_post.side_effect = requests.exceptions.RequestException(
+            "API request failed"
+        )
 
         # Set cookies to simulate being logged in
         self.api_client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
@@ -107,7 +117,8 @@ class TestFogisApiClient(unittest.TestCase):
         # Call _api_request and expect an exception
         with self.assertRaises(FogisAPIRequestError):
             self.api_client._api_request(
-                self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SparaMatchhandelse", {}
+                self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SparaMatchhandelse",
+                {},
             )
 
         # Check the log message contains part of the error
@@ -144,7 +155,8 @@ class TestFogisApiClient(unittest.TestCase):
         # Call _api_request and expect an exception
         with self.assertRaises(FogisDataError) as context:
             self.api_client._api_request(
-                self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SparaMatchhandelse", {}
+                self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SparaMatchhandelse",
+                {},
             )
 
         # Verify the error message
@@ -154,7 +166,7 @@ class TestFogisApiClient(unittest.TestCase):
     def test_fetch_matches_list_json_success(self, mock_api_request):
         """Test successful fetch_matches_list_json."""
         # Mock the _api_request method to return a valid response
-        mock_api_request.return_value = {"matcher": [{"id": "1"}, {"id": "2"}]}
+        mock_api_request.return_value = {"matchlista": [{"id": "1"}, {"id": "2"}]}
 
         # Call the method
         result = self.api_client.fetch_matches_list_json()
@@ -164,17 +176,33 @@ class TestFogisApiClient(unittest.TestCase):
         self.assertEqual(result[0]["id"], "1")
         self.assertEqual(result[1]["id"], "2")
 
+        # Verify the API call was made with the correct endpoint
+        self.assertEqual(mock_api_request.call_count, 1)
+        call_args = mock_api_request.call_args[0]
+        self.assertEqual(
+            call_args[0],
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatcherAttRapportera",
+        )
+
     @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
     def test_fetch_matches_list_json_empty_list(self, mock_api_request):
         """Test fetch_matches_list_json with empty list."""
         # Mock the _api_request method to return an empty list
-        mock_api_request.return_value = {"matcher": []}
+        mock_api_request.return_value = {"matchlista": []}
 
         # Call the method
         result = self.api_client.fetch_matches_list_json()
 
         # Verify the result
         self.assertEqual(len(result), 0)
+
+        # Verify the API call was made with the correct endpoint
+        self.assertEqual(mock_api_request.call_count, 1)
+        call_args = mock_api_request.call_args[0]
+        self.assertEqual(
+            call_args[0],
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatcherAttRapportera",
+        )
 
     @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
     def test_fetch_team_players_json_success(self, mock_api_request):
@@ -189,6 +217,12 @@ class TestFogisApiClient(unittest.TestCase):
         self.assertEqual(result["spelare"][0]["id"], "1")
         self.assertEqual(result["spelare"][1]["id"], "2")
 
+        # Verify the API call used the correct parameter name (matchlagid)
+        mock_api_request.assert_called_once_with(
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag",
+            {"matchlagid": 123},
+        )
+
     @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
     def test_fetch_team_officials_json_failure(self, mock_api_request):
         """Test fetch_team_officials_json failure."""
@@ -198,6 +232,40 @@ class TestFogisApiClient(unittest.TestCase):
         # Call the method and expect an exception
         with self.assertRaises(FogisAPIRequestError):
             self.api_client.fetch_team_officials_json(team_id=123)
+
+        # Verify the API call attempted to use the correct parameter name (matchlagid)
+        mock_api_request.assert_called_once_with(
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag",
+            {"matchlagid": 123},
+        )
+
+    @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
+    def test_fetch_team_officials_json_success(self, mock_api_request):
+        """Test successful fetch_team_officials_json."""
+        # Mock the _api_request method to return a valid response
+        mock_api_request.return_value = [
+            {"personid": 1, "fornamn": "John", "efternamn": "Doe", "roll": "Tränare"},
+            {
+                "personid": 2,
+                "fornamn": "Jane",
+                "efternamn": "Smith",
+                "roll": "Assisterande tränare",
+            },
+        ]
+
+        # Call the method
+        result = self.api_client.fetch_team_officials_json(team_id=123)
+
+        # Verify the result
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]["personid"], 1)
+        self.assertEqual(result[0]["roll"], "Tränare")
+
+        # Verify the API call used the correct parameter name (matchlagid)
+        mock_api_request.assert_called_once_with(
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag",
+            {"matchlagid": 123},
+        )
 
     @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
     def test_report_match_event_success(self, mock_api_request):

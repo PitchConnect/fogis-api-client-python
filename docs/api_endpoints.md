@@ -33,8 +33,8 @@ https://fogis.svenskfotboll.se/mdk
 
 | Endpoint | Method | Description | Parameters |
 |----------|--------|-------------|------------|
-| `/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag` | POST | Fetches the list of players for a team | `lagid`: Integer |
-| `/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag` | POST | Fetches the list of officials for a team | `lagid`: Integer |
+| `/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag` | POST | Fetches the list of players for a team | `matchlagid`: Integer |
+| `/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag` | POST | Fetches the list of officials for a team | `matchlagid`: Integer |
 
 ## Event Endpoints
 
