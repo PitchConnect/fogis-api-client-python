@@ -1037,7 +1037,9 @@ class FogisApiClient:
         """
         Validates if the current cookies are still valid for authentication.
 
-        This method makes a simple API request to check if the session is still active.
+        This method makes a lightweight request to check if the session is still active.
+        It uses the dashboard page which is likely to be less resource-intensive than
+        API endpoints that query the database.
 
         Returns:
             bool: True if cookies are valid, False otherwise
@@ -1057,18 +1059,34 @@ class FogisApiClient:
             return False
 
         try:
-            # Make a simple request to check if the session is still active
-            # We use the matches list endpoint as it's a common endpoint
-            # that requires authentication
-            self.logger.debug("Validating session cookies")
-            self._api_request(
-                url=f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatcherAttRapportera",
-                method="GET",
-            )
+            # Use the dashboard page which is likely to be lightweight
+            dashboard_url = f"{FogisApiClient.BASE_URL}/Default.aspx"
+
+            # Set up headers for the request
+            headers = {
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                "Referer": f"{FogisApiClient.BASE_URL}/",
+            }
+
+            # Add cookies to the session
+            for key, value in self.cookies.items():
+                if isinstance(value, str):
+                    self.session.cookies.set(key, value)
+
+            self.logger.debug(f"Validating session cookies with request to {dashboard_url}")
+            response = self.session.get(dashboard_url, headers=headers)
+            response.raise_for_status()
+
+            # Check if we're still logged in by looking for login form or redirect
+            if "Logga in" in response.text or "login" in response.url.lower():
+                self.logger.info("Cookies are no longer valid - redirected to login")
+                return False
+
             self.logger.debug("Session cookies are valid")
             return True
-        except (FogisLoginError, FogisAPIRequestError):
-            self.logger.info("Cookies are no longer valid")
+        except Exception as e:
+            self.logger.info(f"Cookie validation failed: {str(e)}")
             return False
 
     def get_cookies(self) -> Optional[CookieDict]:

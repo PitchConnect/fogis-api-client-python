@@ -96,27 +96,49 @@ class TestCookieAuth(unittest.TestCase):
             requests.Session.get = original_get
             requests.Session.post = original_post
 
-    @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
-    def test_validate_cookies_valid(self, mock_api_request):
+    @patch("requests.Session.get")
+    def test_validate_cookies_valid(self, mock_get):
         """Test validate_cookies method with valid cookies."""
-        mock_api_request.return_value = {"matcher": []}
+        # Create a mock response for a successful validation
+        mock_response = MagicMock()
+        mock_response.text = "<html>Welcome to Fogis</html>"
+        mock_response.url = "https://fogis.svenskfotboll.se/mdk/Default.aspx"
+        mock_response.raise_for_status = lambda: None
+        mock_get.return_value = mock_response
 
         client = FogisApiClient(cookies=self.test_cookies)
         result = client.validate_cookies()
 
         self.assertTrue(result)
-        mock_api_request.assert_called_once()
+        mock_get.assert_called_once()
 
-    @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
-    def test_validate_cookies_invalid(self, mock_api_request):
-        """Test validate_cookies method with invalid cookies."""
-        mock_api_request.side_effect = FogisLoginError("Invalid session")
+    @patch("requests.Session.get")
+    def test_validate_cookies_invalid_redirect(self, mock_get):
+        """Test validate_cookies method with invalid cookies that redirect to login."""
+        # Create a mock response for a failed validation (redirected to login)
+        mock_response = MagicMock()
+        mock_response.text = "<html>Logga in</html>"
+        mock_response.url = "https://fogis.svenskfotboll.se/mdk/Login.aspx"
+        mock_response.raise_for_status = lambda: None
+        mock_get.return_value = mock_response
 
         client = FogisApiClient(cookies=self.test_cookies)
         result = client.validate_cookies()
 
         self.assertFalse(result)
-        mock_api_request.assert_called_once()
+        mock_get.assert_called_once()
+
+    @patch("requests.Session.get")
+    def test_validate_cookies_exception(self, mock_get):
+        """Test validate_cookies method when an exception occurs."""
+        # Create a mock response that raises an exception
+        mock_get.side_effect = requests.exceptions.RequestException("Connection error")
+
+        client = FogisApiClient(cookies=self.test_cookies)
+        result = client.validate_cookies()
+
+        self.assertFalse(result)
+        mock_get.assert_called_once()
 
     def test_validate_cookies_no_cookies(self):
         """Test validate_cookies method with no cookies."""
