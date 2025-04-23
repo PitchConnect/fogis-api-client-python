@@ -16,6 +16,7 @@ A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
 * **Error Handling**: Detailed error messages and exception handling
 * **Logging**: Built-in logging for debugging and monitoring
 * **Docker Support**: Easy deployment and development with Docker
+* **Utility Tools**: Session management and testing utilities
 
 ## Installation
 
@@ -456,6 +457,38 @@ The package includes custom exceptions for common API errors:
 - **FogisAPIRequestError**: Raised for general API request errors such as network issues, server errors, or invalid parameters.
 
 - **FogisDataError**: Raised when there's an issue with the data from FOGIS, such as invalid response format, missing fields, or parsing errors.
+
+## Utility Tools
+
+The repository includes several utility tools to help with development and usage:
+
+### Session Management
+
+Tools for maintaining persistent sessions with the Fogis API:
+
+```bash
+# Save cookies from a Fogis login
+python tools/session_keeper/save_fogis_cookies.py --username YOUR_USERNAME --password YOUR_PASSWORD
+
+# Start the session keeper with those cookies
+python tools/session_keeper/fogis_session_keeper.py --cookies-file fogis_cookies.json --interval 300 --monitor --log-file fogis_session.log
+
+# Check session status
+python tools/session_keeper/check_session_status.py
+```
+
+See [tools/session_keeper/README.md](tools/session_keeper/README.md) for more details.
+
+### Testing Utilities
+
+Tools for running tests locally:
+
+```bash
+# Run all tests with proper Docker setup
+./tools/testing/run_local_tests.sh
+```
+
+See [tools/testing/README.md](tools/testing/README.md) for more details.
 
 ## License
 
