@@ -37,8 +37,12 @@ We follow a modified GitFlow workflow to ensure that the main branch is always i
 3. Write or update tests for your changes
 4. Run all tests locally:
    ```bash
+   # Option 1: Run tests directly
    python -m unittest discover tests
    python -m pytest integration_tests
+
+   # Option 2: Use the test script (handles Docker setup automatically)
+   ./tools/testing/run_local_tests.sh
    ```
 5. Ensure pre-commit hooks pass: `pre-commit run --all-files`
 6. Push your branch: `git push -u origin feature/name`
