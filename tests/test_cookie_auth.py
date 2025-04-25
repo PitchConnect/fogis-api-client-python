@@ -102,7 +102,7 @@ class TestCookieAuth(unittest.TestCase):
         # Create a mock response for a successful validation
         mock_response = MagicMock()
         mock_response.text = "<html>Welcome to Fogis</html>"
-        mock_response.url = "https://fogis.svenskfotboll.se/mdk/Default.aspx"
+        mock_response.url = "https://fogis.svenskfotboll.se/mdk/"
         mock_response.raise_for_status = lambda: None
         mock_get.return_value = mock_response
 
