@@ -26,4 +26,5 @@ jobs:
         echo "Built package successfully"
         ls -la dist/
         echo "Uploading to PyPI with verbose output"
-        twine upload --verbose dist/*
+        twine check dist/*
+        twine upload --skip-existing --verbose dist/*
