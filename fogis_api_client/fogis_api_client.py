@@ -1059,8 +1059,8 @@ class FogisApiClient:
             return False
 
         try:
-            # Use the dashboard page which is likely to be lightweight
-            dashboard_url = f"{FogisApiClient.BASE_URL}/Default.aspx"
+            # Use the dashboard page which is the same one we're redirected to after login
+            dashboard_url = f"{FogisApiClient.BASE_URL}/"
 
             # Set up headers for the request
             headers = {
