@@ -23,4 +23,7 @@ jobs:
         TWINE_USERNAME: __token__
       run: |
         python -m build
-        twine upload dist/*
+        echo "Built package successfully"
+        ls -la dist/
+        echo "Uploading to PyPI with verbose output"
+        twine upload --verbose dist/*
