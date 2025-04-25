@@ -37,8 +37,12 @@ We follow a modified GitFlow workflow to ensure that the main branch is always i
 3. Write or update tests for your changes
 4. Run all tests locally:
    ```bash
+   # Option 1: Run tests directly
    python -m unittest discover tests
    python -m pytest integration_tests
+
+   # Option 2: Use the test script (handles Docker setup automatically)
+   ./tools/testing/run_local_tests.sh
    ```
 5. Ensure pre-commit hooks pass: `pre-commit run --all-files`
 6. Push your branch: `git push -u origin feature/name`
@@ -202,6 +206,23 @@ Before submitting a pull request, please ensure all tests pass:
 
 We use pre-commit hooks to automate testing and code quality checks. This helps catch issues early and ensures consistent code quality.
 
+#### Quick Setup (Recommended)
+
+Use our update script to install and configure pre-commit hooks that match our CI/CD pipeline:
+
+```bash
+./update_precommit_hooks.sh
+```
+
+This script will:
+- Install pre-commit and all required dependencies
+- Generate hooks that match our CI/CD configuration
+- Install the hooks automatically
+
+#### Manual Setup
+
+If you prefer to set up manually:
+
 1. Install pre-commit:
    ```bash
    pip install pre-commit
@@ -214,6 +235,8 @@ We use pre-commit hooks to automate testing and code quality checks. This helps 
 
 3. The hooks will now run automatically before each commit
 
+#### What the Hooks Do
+
 Pre-commit hooks will:
 - Format your code with Black and isort
 - Check for common issues with flake8
@@ -221,6 +244,35 @@ Pre-commit hooks will:
   - Note: We ignore lazy string interpolation (F541) as it's not a significant gain for this project
 - Verify type hints with mypy
 - Run unit tests to ensure they pass
+- Check if hooks need updating to match CI/CD
+
+#### Keeping Hooks in Sync with CI/CD
+
+Our project uses a dynamic pre-commit hook generator to ensure local checks match CI/CD:
+
+1. **Automatic Check**: Every commit is checked to see if hooks need updating
+2. **Manual Update**: Run this command to update hooks to match CI/CD:
+   ```bash
+   python scripts/dynamic_precommit_generator.py --install
+   ```
+3. **Weekly Updates**: A GitHub Action runs weekly to keep the hooks in sync
+
+This system ensures that checks that pass locally will also pass in CI, preventing surprises when you push your code.
+
+#### Troubleshooting
+
+If your pre-commit hooks are failing in ways that don't match CI:
+
+1. Update your hooks to match CI/CD:
+   ```bash
+   ./update_precommit_hooks.sh
+   ```
+
+2. If you're still having issues, try reinstalling the hooks:
+   ```bash
+   pre-commit uninstall
+   pre-commit install
+   ```
 
 If any checks fail, the commit will be blocked until you fix the issues.
 
@@ -442,7 +494,13 @@ If you are an AI assistant reading this:
    - When in doubt, ask for clarification rather than making assumptions
    - Consider creating templates for common tasks to ensure consistency
 
-8. **Maintaining Documentation and Scripts**:
+8. **Include Reminders in Issues and PRs**:
+   - All issues and pull requests should include a reminder about following these guidelines
+   - Issue templates and PR templates have checkboxes to confirm reading this document
+   - When creating issues or PRs manually, include a link to this document
+   - This ensures consistency across all contributions, regardless of who handles them
+
+9. **Maintaining Documentation and Scripts**:
    - Keep documentation and scripts up to date with code changes
    - When adding new features, update relevant documentation
    - When changing workflows, update related scripts
@@ -454,7 +512,7 @@ If you are an AI assistant reading this:
    - Consider documentation and scripts as part of the codebase, not an afterthought
    - When switching between computers, use it as an opportunity to verify onboarding docs
 
-9. **Remind Users of the Process**:
+10. **Remind Users of the Process**:
    - If a user asks you to push directly to main, remind them of the GitFlow process
    - Suggest creating a proper branch and PR instead
    - Reference this document when explaining the process

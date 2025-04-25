@@ -212,14 +212,47 @@ def match(match_id):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/match/<match_id>/result")
+@app.route("/match/<match_id>/result", methods=["GET", "POST"])
 def match_result(match_id):
     """
-    Endpoint to fetch result information for a specific match.
+    Endpoint to fetch or report result information for a specific match.
+
+    GET: Fetch the current result for a match
+    POST: Report a new result for a match
+
+    For POST requests, the JSON payload should include:
+    - hemmamal: Full-time score for the home team
+    - bortamal: Full-time score for the away team
+
+    Optional fields:
+    - halvtidHemmamal: Half-time score for the home team
+    - halvtidBortamal: Half-time score for the away team
     """
     try:
-        result_data = client.fetch_match_result_json(match_id)
-        return jsonify(result_data)
+        if request.method == "GET":
+            result_data = client.fetch_match_result_json(match_id)
+            return jsonify(result_data)
+        elif request.method == "POST":
+            # Check if JSON data was provided
+            if not request.is_json or not request.json:
+                return jsonify({"error": "No result data provided"}), 400
+
+            # Get the result data from the request
+            result_data = request.json
+
+            # Add match_id to the result data if not already present
+            if "matchid" not in result_data:
+                result_data["matchid"] = match_id
+
+            # Validate required fields
+            required_fields = ["hemmamal", "bortamal"]
+            for field in required_fields:
+                if field not in result_data:
+                    return jsonify({"error": f"Missing required field '{field}'"}), 400
+
+            # Report the result
+            response = client.report_match_result(result_data)
+            return jsonify(response)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -439,6 +472,48 @@ def team_officials(team_id):
         return jsonify(officials_data)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/auth/cookies")
+def get_cookies():
+    """
+    Endpoint to retrieve the current session cookies.
+
+    This can be used by clients to save cookies for later use,
+    enabling cookie-based authentication in subsequent sessions.
+
+    Returns:
+        JSON object containing the cookies or an error message
+    """
+    try:
+        cookies = client.get_cookies()
+        if cookies:
+            return jsonify({"cookies": cookies, "success": True})
+        else:
+            return jsonify({"error": "No valid cookies available", "success": False}), 404
+    except Exception as e:
+        return jsonify({"error": str(e), "success": False}), 500
+
+
+@app.route("/auth/validate")
+def validate_cookies():
+    """
+    Endpoint to validate if the current cookies are valid.
+
+    This can be used by clients to check if their saved cookies are still valid
+    before making API requests.
+
+    Returns:
+        JSON object with validation status
+    """
+    try:
+        # The validate_cookies method doesn't exist directly in the client,
+        # but we can check if we can make a simple API request
+        # If the cookies are invalid, this will raise an exception
+        client.hello_world()
+        return jsonify({"valid": True, "success": True})
+    except Exception as e:
+        return jsonify({"valid": False, "error": str(e), "success": False}), 401
 
 
 @app.route("/match/<match_id>/finish", methods=["POST"])

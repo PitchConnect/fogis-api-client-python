@@ -20,3 +20,7 @@ assignees: ''
 
 ## Additional Context
 <!-- Add any other context, screenshots, or examples about the feature request here -->
+
+## Contributing Guidelines
+<!-- Please make sure you've read and understood our CONTRIBUTING.md file before submitting this feature request -->
+- [ ] I have read and agree to follow the [Contributing Guidelines](../../CONTRIBUTING.md)

@@ -26,7 +26,7 @@
 - [ ] I have verified that API endpoints still work as expected
 - [ ] I have checked for backward compatibility
 - [ ] I have added type hints where appropriate
-- [ ] I have followed the style guidelines in the CONTRIBUTING.md file
+- [ ] I have read and followed the guidelines in the [CONTRIBUTING.md](../CONTRIBUTING.md) file
 - [ ] I have reviewed my own code before submitting
 
 ## Testing

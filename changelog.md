@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.0] - 2025-04-25
+
+### Added
+- Added more endpoints to the HTTP wrapper (Issue #118)
+
+### Changed
+- Optimized cookie validation to use a more lightweight approach (Issue #119)
+- Organized tools into dedicated directories and improved documentation (Issue #122)
+- Integrated dynamic pre-commit hook generator to keep local checks in sync with CI/CD (Issue #114)
+- Improved setup experience with aligned pre-commit hooks (Issue #117)
+
+### Removed
+- Removed session management tools (moved to dedicated repository)
+
+## [0.2.4] - 2025-04-17
+
+### Fixed
+- Corrected parameter names in team endpoints from "lagid" to "matchlagid" (Issue #101)
+
 ## [0.2.3] - 2025-04-17
 
 ### Fixed

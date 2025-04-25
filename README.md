@@ -16,6 +16,7 @@ A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
 * **Error Handling**: Detailed error messages and exception handling
 * **Logging**: Built-in logging for debugging and monitoring
 * **Docker Support**: Easy deployment and development with Docker
+* **Utility Tools**: Testing utilities and development tools
 
 ## Installation
 
@@ -297,6 +298,14 @@ Contributions are welcome! Please follow these steps:
 
 We provide setup scripts to make it easy to set up your development environment, including pre-commit hooks.
 
+To set up pre-commit hooks that match our CI/CD pipeline:
+
+```bash
+./update_precommit_hooks.sh
+```
+
+This script will install pre-commit, generate hooks that match our CI/CD configuration, and install them automatically.
+
 ##### Using the Setup Script
 
 On macOS/Linux:
@@ -342,6 +351,9 @@ We use pre-commit hooks to ensure code quality. The hooks will automatically run
 - Linting issues (flake8)
 - Type checking (mypy)
 - Unit test failures
+- Whether hooks need updating to match CI/CD
+
+For more details on keeping hooks in sync with CI/CD, see [CONTRIBUTING.md](CONTRIBUTING.md#keeping-hooks-in-sync-with-cicd).
 
 You can also run the hooks manually on all files:
 ```bash
@@ -445,6 +457,21 @@ The package includes custom exceptions for common API errors:
 - **FogisAPIRequestError**: Raised for general API request errors such as network issues, server errors, or invalid parameters.
 
 - **FogisDataError**: Raised when there's an issue with the data from FOGIS, such as invalid response format, missing fields, or parsing errors.
+
+## Utility Tools
+
+The repository includes several utility tools to help with development and usage:
+
+### Testing Utilities
+
+Tools for running tests locally:
+
+```bash
+# Run all tests with proper Docker setup
+./tools/testing/run_local_tests.sh
+```
+
+See [tools/testing/README.md](tools/testing/README.md) for more details.
 
 ## License
 

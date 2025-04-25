@@ -32,3 +32,7 @@ assignees: ''
 
 ## Possible Solution
 <!-- If you have suggestions on how to fix the issue -->
+
+## Contributing Guidelines
+<!-- Please make sure you've read and understood our CONTRIBUTING.md file before submitting this issue -->
+- [ ] I have read and agree to follow the [Contributing Guidelines](../../CONTRIBUTING.md)
