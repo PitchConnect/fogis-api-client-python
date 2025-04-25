@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  # Interactive GUI for session management
+  session-gui:
+    build:
+      context: ../..
+      dockerfile: tools/session_keeper/Dockerfile
+    container_name: fogis-session-gui
+    volumes:
+      - ./data:/app/data
+    stdin_open: true  # Keep STDIN open
+    tty: true         # Allocate a pseudo-TTY
+    restart: "no"     # Don't restart automatically
+
+  # Long-running session keeper service
+  session-keeper:
+    build:
+      context: ../..
+      dockerfile: tools/session_keeper/Dockerfile
+    container_name: fogis-session-keeper
+    environment:
+      - FOGIS_USERNAME=${FOGIS_USERNAME:-}
+      - FOGIS_PASSWORD=${FOGIS_PASSWORD:-}
+    volumes:
+      - ./data:/app/data
+    command: python /app/session_keeper/fogis_session_keeper.py --cookies-file /app/data/fogis_cookies.json --interval ${INTERVAL:-1800} --monitor --log-file /app/data/fogis_session.log
+    restart: unless-stopped
+
+  # Session timeout testing service
+  timeout-test:
+    build:
+      context: ../..
+      dockerfile: tools/session_keeper/Dockerfile
+    container_name: fogis-timeout-test
+    environment:
+      - FOGIS_USERNAME=${FOGIS_USERNAME:-}
+      - FOGIS_PASSWORD=${FOGIS_PASSWORD:-}
+    volumes:
+      - ./data:/app/data
+    command: python /app/session_keeper/auto_test_session_timeout.py --cookies-file /app/data/fogis_cookies.json --adaptive --log-file /app/data/timeout_test.log
+    restart: "no"     # Don't restart automatically
+
+volumes:
+  data:
+    driver: local

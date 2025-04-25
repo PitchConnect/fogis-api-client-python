@@ -2,6 +2,8 @@
 
 This directory contains tools for maintaining persistent sessions with the Fogis API.
 
+> **New!** Docker support is now available. See [Docker Usage](#docker-usage) below.
+
 ## Tools
 
 ### fogis_session_keeper.py
@@ -63,3 +65,38 @@ To reattach later:
 ```bash
 screen -r fogis-session
 ```
+
+## Docker Usage
+
+You can run all the session keeper tools in Docker containers for easier deployment and management.
+
+### Quick Start
+
+```bash
+# Navigate to the session_keeper directory
+cd tools/session_keeper
+
+# Run the helper script
+./run_docker.sh help
+```
+
+### Available Docker Commands
+
+```bash
+# Run the interactive GUI
+./run_docker.sh gui
+
+# Run the session keeper as a service
+./run_docker.sh keeper
+
+# Run a session timeout test
+./run_docker.sh test
+
+# Check the status of the session keeper
+./run_docker.sh status
+
+# View logs
+./run_docker.sh logs
+```
+
+For more detailed information about Docker usage, see [DOCKER.md](DOCKER.md).
