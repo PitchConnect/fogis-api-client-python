@@ -5,11 +5,7 @@ from unittest.mock import MagicMock, Mock
 
 import requests
 
-from fogis_api_client.fogis_api_client import (
-    FogisApiClient,
-    FogisAPIRequestError,
-    FogisLoginError,
-)
+from fogis_api_client.fogis_api_client import FogisApiClient, FogisAPIRequestError, FogisLoginError
 
 
 class MockResponse:
@@ -28,9 +24,7 @@ class MockResponse:
 
     def raise_for_status(self):
         if 400 <= self.status_code < 600:
-            raise requests.exceptions.HTTPError(
-                f"HTTP Error {self.status_code}", response=self
-            )
+            raise requests.exceptions.HTTPError(f"HTTP Error {self.status_code}", response=self)
 
 
 class TestFogisApiClient(unittest.TestCase):
@@ -48,9 +42,7 @@ class TestFogisApiClient(unittest.TestCase):
         mock_session.cookies.set = MagicMock()
 
         self.client.session = mock_session
-        self.client.cookies = {
-            "FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"
-        }  # Simulate being logged in
+        self.client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}  # Simulate being logged in
 
         # Set up logging capture
         self.log_capture = io.StringIO()
@@ -85,9 +77,7 @@ class TestFogisApiClient(unittest.TestCase):
         mock_post_response = Mock()
         mock_post_response.status_code = 302
         mock_post_response.headers = {"Location": "/mdk/"}
-        mock_post_response.cookies = {
-            "FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"
-        }
+        mock_post_response.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
         mocked_session.post.return_value = mock_post_response
 
         # Mock the redirect response
@@ -103,9 +93,7 @@ class TestFogisApiClient(unittest.TestCase):
         # Verify the result
         self.assertIn("FogisMobilDomarKlient.ASPXAUTH", cookies)
         self.assertEqual(cookies["FogisMobilDomarKlient.ASPXAUTH"], "mock_auth_cookie")
-        self.assertEqual(
-            mocked_session.get.call_count, 2
-        )  # Initial page load + redirect
+        self.assertEqual(mocked_session.get.call_count, 2)  # Initial page load + redirect
         mocked_session.post.assert_called_once()
 
     def test_login_failure_invalid_credentials(self):
@@ -212,9 +200,7 @@ class TestFogisApiClient(unittest.TestCase):
         # Create a mock response that raises an HTTP error
         mock_api_response = MockResponse({"error": "Not found"}, 404)
         mock_session_instance.post.return_value = mock_api_response
-        mock_api_response.raise_for_status = MagicMock(
-            side_effect=requests.exceptions.HTTPError("HTTP Error 404")
-        )
+        mock_api_response.raise_for_status = MagicMock(side_effect=requests.exceptions.HTTPError("HTTP Error 404"))
 
         # Call _api_request and expect an exception
         with self.assertRaises(FogisAPIRequestError) as excinfo:
@@ -267,9 +253,7 @@ class TestFogisApiClient(unittest.TestCase):
     def test_fetch_matches_list_json_success(self):
         """Unit test for fetch_matches_list_json success."""
         # Mock the _api_request method
-        self.client._api_request = MagicMock(
-            return_value={"matchlista": [{"matchid": 1}, {"matchid": 2}]}
-        )
+        self.client._api_request = MagicMock(return_value={"matchlista": [{"matchid": 1}, {"matchid": 2}]})
 
         # Call fetch_matches_list_json
         matches_list = self.client.fetch_matches_list_json()
@@ -388,11 +372,7 @@ class TestFogisApiClient(unittest.TestCase):
     def test_fetch_match_result_json(self):
         """Unit test for fetch_match_result_json method."""
         # Mock the _api_request method
-        self.client._api_request = MagicMock(
-            return_value=[
-                {"matchresultattypid": 1, "matchlag1mal": 2, "matchlag2mal": 1}
-            ]
-        )
+        self.client._api_request = MagicMock(return_value=[{"matchresultattypid": 1, "matchlag1mal": 2, "matchlag2mal": 1}])
 
         # Call fetch_match_result_json
         match_id = 12345
@@ -414,9 +394,7 @@ class TestFogisApiClient(unittest.TestCase):
         """Unit test for fetch_match_result_json method with error."""
         # Mock the _api_request method to raise an exception
         error_msg = "API request failed"
-        self.client._api_request = MagicMock(
-            side_effect=FogisAPIRequestError(error_msg)
-        )
+        self.client._api_request = MagicMock(side_effect=FogisAPIRequestError(error_msg))
 
         # Call fetch_match_result_json and expect an exception
         with self.assertRaises(FogisAPIRequestError) as excinfo:
@@ -465,9 +443,7 @@ class TestFogisApiClient(unittest.TestCase):
         """Unit test for report_match_result method with error."""
         # Mock the _api_request method to raise an exception
         error_msg = "API request failed"
-        self.client._api_request = MagicMock(
-            side_effect=FogisAPIRequestError(error_msg)
-        )
+        self.client._api_request = MagicMock(side_effect=FogisAPIRequestError(error_msg))
 
         # Call report_match_result and expect an exception
         result_data = {"matchid": "12345", "hemmamal": 2, "bortamal": 1}
@@ -547,9 +523,7 @@ class TestFogisApiClient(unittest.TestCase):
         """Unit test for report_team_official_action method with error."""
         # Mock the _api_request method to raise an exception
         error_msg = "API request failed"
-        self.client._api_request = MagicMock(
-            side_effect=FogisAPIRequestError(error_msg)
-        )
+        self.client._api_request = MagicMock(side_effect=FogisAPIRequestError(error_msg))
 
         # Call report_team_official_action and expect an exception
         action_data = {
@@ -573,6 +547,208 @@ class TestFogisApiClient(unittest.TestCase):
                 "lagid": 67890,  # Should be converted to int
                 "personid": 54321,  # Should be converted to int
                 "matchlagledaretypid": 2,  # Should be converted to int
+            },
+        )
+
+    def test_save_match_participant(self):
+        """Unit test for save_match_participant method."""
+        # Mock the _api_request method with a roster response
+        mock_response = {
+            "spelare": [
+                {
+                    "matchdeltagareid": 46123762,
+                    "fornamn": "John",
+                    "efternamn": "Doe",
+                    "trojnummer": 92,
+                    "lagkapten": False,
+                    "ersattare": False,
+                },
+                {
+                    "matchdeltagareid": 46123763,
+                    "fornamn": "Jane",
+                    "efternamn": "Smith",
+                    "trojnummer": 10,
+                    "lagkapten": True,
+                    "ersattare": False,
+                },
+            ]
+        }
+        self.client._api_request = MagicMock(return_value=mock_response)
+
+        # Call save_match_participant
+        participant_data = {
+            "matchdeltagareid": "46123762",
+            "trojnummer": "92",
+            "lagdelid": "0",
+            "lagkapten": "false",
+            "ersattare": "false",
+            "positionsnummerhv": "0",
+            "arSpelandeLedare": "false",
+            "ansvarig": "false",
+        }
+        response = self.client.save_match_participant(participant_data)
+
+        # Verify the result structure
+        self.assertTrue(response["success"])
+        self.assertTrue(response["verified"])
+        self.assertEqual(response["roster"], mock_response)
+        self.assertEqual(response["updated_player"]["matchdeltagareid"], 46123762)
+        self.assertEqual(response["updated_player"]["trojnummer"], 92)
+        self.assertEqual(response["updated_player"]["lagkapten"], False)
+
+        # Verify the API call
+        self.client._api_request.assert_called_once_with(
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare",
+            {
+                "matchdeltagareid": 46123762,  # Should be converted to int
+                "trojnummer": 92,  # Should be converted to int
+                "lagdelid": 0,  # Should be converted to int
+                "lagkapten": False,  # Should be converted to bool
+                "ersattare": False,  # Should be converted to bool
+                "positionsnummerhv": 0,  # Should be converted to int
+                "arSpelandeLedare": False,  # Should be converted to bool
+                "ansvarig": False,  # Should be converted to bool
+            },
+        )
+
+    def test_save_match_participant_error(self):
+        """Unit test for save_match_participant method with error."""
+        # Mock the _api_request method to raise an exception
+        error_msg = "API request failed"
+        self.client._api_request = MagicMock(side_effect=FogisAPIRequestError(error_msg))
+
+        # Call save_match_participant and expect an exception
+        participant_data = {
+            "matchdeltagareid": "46123762",
+            "trojnummer": "92",
+            "lagdelid": "0",
+            "lagkapten": "false",
+            "ersattare": "false",
+            "positionsnummerhv": "0",
+            "arSpelandeLedare": "false",
+            "ansvarig": "false",
+        }
+        with self.assertRaises(FogisAPIRequestError) as excinfo:
+            self.client.save_match_participant(participant_data)
+
+        # Verify the exception message
+        self.assertIn("API request failed", str(excinfo.exception))
+
+        # Verify the API call
+        self.client._api_request.assert_called_once_with(
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare",
+            {
+                "matchdeltagareid": 46123762,  # Should be converted to int
+                "trojnummer": 92,  # Should be converted to int
+                "lagdelid": 0,  # Should be converted to int
+                "lagkapten": False,  # Should be converted to bool
+                "ersattare": False,  # Should be converted to bool
+                "positionsnummerhv": 0,  # Should be converted to int
+                "arSpelandeLedare": False,  # Should be converted to bool
+                "ansvarig": False,  # Should be converted to bool
+            },
+        )
+
+    def test_save_match_participant_verification_failure(self):
+        """Unit test for save_match_participant method with verification failure."""
+        # Mock the _api_request method with a roster response where values don't match
+        mock_response = {
+            "spelare": [
+                {
+                    "matchdeltagareid": 46123762,
+                    "fornamn": "John",
+                    "efternamn": "Doe",
+                    "trojnummer": 7,  # Different from what we requested (92)
+                    "lagkapten": False,
+                    "ersattare": False,
+                }
+            ]
+        }
+        self.client._api_request = MagicMock(return_value=mock_response)
+
+        # Call save_match_participant
+        participant_data = {
+            "matchdeltagareid": "46123762",
+            "trojnummer": "92",
+            "lagdelid": "0",
+            "lagkapten": "false",
+            "ersattare": "false",
+            "positionsnummerhv": "0",
+            "arSpelandeLedare": "false",
+            "ansvarig": "false",
+        }
+        response = self.client.save_match_participant(participant_data)
+
+        # Verify the result structure
+        self.assertTrue(response["success"])  # API call succeeded
+        self.assertFalse(response["verified"])  # But verification failed
+        self.assertEqual(response["roster"], mock_response)
+        self.assertEqual(response["updated_player"]["matchdeltagareid"], 46123762)
+        self.assertEqual(response["updated_player"]["trojnummer"], 7)  # Not what we requested
+
+        # Verify the API call
+        self.client._api_request.assert_called_once_with(
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare",
+            {
+                "matchdeltagareid": 46123762,
+                "trojnummer": 92,
+                "lagdelid": 0,
+                "lagkapten": False,
+                "ersattare": False,
+                "positionsnummerhv": 0,
+                "arSpelandeLedare": False,
+                "ansvarig": False,
+            },
+        )
+
+    def test_save_match_participant_spelareid_fallback(self):
+        """Unit test for save_match_participant method with spelareid instead of matchdeltagareid."""
+        # Mock the _api_request method with a roster response that uses spelareid instead of matchdeltagareid
+        mock_response = {
+            "spelare": [
+                {
+                    "spelareid": 12345,  # Different ID field (spelareid instead of matchdeltagareid)
+                    "fornamn": "John",
+                    "efternamn": "Doe",
+                    "trojnummer": 92,  # Same jersey number as requested
+                    "lagkapten": False,
+                    "ersattare": False,
+                }
+            ]
+        }
+        self.client._api_request = MagicMock(return_value=mock_response)
+
+        # Call save_match_participant
+        participant_data = {
+            "matchdeltagareid": "46123762",  # This ID won't be found in the response
+            "trojnummer": "92",  # But this jersey number will match
+            "lagdelid": "0",
+            "lagkapten": "false",
+            "ersattare": "false",
+            "positionsnummerhv": "0",
+            "arSpelandeLedare": "false",
+            "ansvarig": "false",
+        }
+        response = self.client.save_match_participant(participant_data)
+
+        # Verify the result structure
+        self.assertTrue(response["success"])  # API call succeeded
+        self.assertTrue(response["verified"])  # Verification should succeed based on jersey number
+        self.assertEqual(response["roster"], mock_response)
+        self.assertEqual(response["updated_player"]["trojnummer"], 92)  # Jersey number matches
+
+        # Verify the API call
+        self.client._api_request.assert_called_once_with(
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare",
+            {
+                "matchdeltagareid": 46123762,
+                "trojnummer": 92,
+                "lagdelid": 0,
+                "lagkapten": False,
+                "ersattare": False,
+                "positionsnummerhv": 0,
+                "arSpelandeLedare": False,
+                "ansvarig": False,
             },
         )
 

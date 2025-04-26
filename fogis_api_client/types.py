@@ -121,3 +121,16 @@ class CookieDict(TypedDict, total=False):
 
     FogisMobilDomarKlient_ASPXAUTH: str
     ASP_NET_SessionId: str
+
+
+class MatchParticipantDict(TypedDict, total=False):
+    """Type definition for a match participant update used in reporting."""
+
+    matchdeltagareid: int
+    trojnummer: int
+    lagdelid: int
+    lagkapten: bool
+    ersattare: bool
+    positionsnummerhv: int
+    arSpelandeLedare: bool
+    ansvarig: bool

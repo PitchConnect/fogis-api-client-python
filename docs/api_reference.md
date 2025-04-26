@@ -333,6 +333,85 @@ if players:
     print(f"First player: {players[0]['fornamn']} {players[0]['efternamn']}")
 ```
 
+#### save_match_participant
+
+```python
+save_match_participant(participant_data: Dict[str, Any]) -> Dict[str, Any]
+```
+
+Updates specific fields for a match participant in FOGIS while preserving other fields. This method is used to modify only the fields you specify (like jersey number, captain status, etc.) while keeping all other player information unchanged.
+
+**Parameters:**
+- `participant_data` (Dict[str, Any]): Data containing match participant details. Must include:
+  - `matchdeltagareid`: The ID of the match participant (this is a match-specific ID, NOT the permanent `spelareid`)
+  - `trojnummer`: Jersey number
+  - `lagdelid`: Team part ID (typically 0)
+  - `lagkapten`: Boolean indicating if the player is team captain
+  - `ersattare`: Boolean indicating if the player is a substitute
+  - `positionsnummerhv`: Position number (typically 0)
+  - `arSpelandeLedare`: Boolean indicating if the player is a playing leader
+  - `ansvarig`: Boolean indicating if the player is responsible
+
+  **Note:** It's important to use `matchdeltagareid` (match-specific player ID) and not `spelareid` (permanent player ID) when updating player information for a specific match.
+
+**Returns:**
+- `Dict[str, Any]`: Response from the API containing:
+  - `success`: Boolean indicating if the update was successful
+  - `roster`: The updated team roster
+  - `updated_player`: The updated player information
+  - `verified`: Boolean indicating if the changes were verified in the returned roster
+
+**Raises:**
+- `FogisLoginError`: If not logged in
+- `FogisAPIRequestError`: If there's an error with the API request
+- `FogisDataError`: If the response data is invalid or not a dictionary
+- `ValueError`: If required fields are missing
+
+**Example:**
+```python
+client = FogisApiClient(username="your_username", password="your_password")
+
+# First, get the current player information
+match_players = client.fetch_match_players_json(123456)
+home_players = match_players.get('hemmalag', [])
+
+# Find the player we want to update
+player_to_update = None
+for player in home_players:
+    if player['fornamn'] == 'John' and player['efternamn'] == 'Doe':
+        player_to_update = player
+        break
+
+if player_to_update:
+    # Create an update object with only the fields we want to change
+    # We must include matchdeltagareid to identify the player
+    participant_update = {
+        "matchdeltagareid": player_to_update['matchdeltagareid'],  # Required to identify the player
+        "trojnummer": 10,                                       # Change jersey number to 10
+        "lagkapten": True,                                      # Make this player the captain
+
+        # These fields are required by the API but will keep their current values
+        "lagdelid": 0,
+        "ersattare": player_to_update.get('ersattare', False),
+        "positionsnummerhv": 0,
+        "arSpelandeLedare": False,
+        "ansvarig": False
+    }
+
+    # Send only the fields we want to update
+    response = client.save_match_participant(participant_update)
+
+    if response["success"] and response["verified"]:
+        print(f"Player updated successfully with jersey #{response['updated_player']['trojnummer']}")
+        # You can access the full team roster if needed
+        roster = response["roster"]
+        print(f"Team has {len(roster.get('spelare', []))} players")
+    else:
+        print("Update failed or changes not verified")
+else:
+    print("Player not found")
+```
+
 ### Event Methods
 
 #### fetch_match_events_json

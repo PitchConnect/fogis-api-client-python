@@ -20,9 +20,7 @@ logger = logging.getLogger(__name__)
 class TestFogisApiClientWithMockServer:
     """Integration tests for the FogisApiClient using a mock server."""
 
-    def test_login_success(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_login_success(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test successful login with valid credentials."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -58,9 +56,7 @@ class TestFogisApiClientWithMockServer:
         with pytest.raises(FogisLoginError):
             client.login()
 
-    def test_fetch_matches_list(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test fetching the match list."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -108,9 +104,7 @@ class TestFogisApiClientWithMockServer:
         assert "datum" in match
         assert "tid" in match
 
-    def test_fetch_match_details(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_match_details(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test fetching match details."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -133,9 +127,7 @@ class TestFogisApiClientWithMockServer:
         assert "datum" in match
         assert "tid" in match
 
-    def test_fetch_match_players(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_match_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test fetching match players."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -169,9 +161,7 @@ class TestFogisApiClientWithMockServer:
         assert "fornamn" in home_player
         assert "efternamn" in home_player
 
-    def test_fetch_match_officials(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_match_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test fetching match officials."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -206,9 +196,7 @@ class TestFogisApiClientWithMockServer:
         assert "fornamn" in home_official
         assert "efternamn" in home_official
 
-    def test_fetch_match_events(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test fetching match events."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -236,9 +224,7 @@ class TestFogisApiClientWithMockServer:
         assert "matchminut" in event  # New field name instead of minut
         assert "matchlagid" in event  # New field name instead of lagid
 
-    def test_fetch_match_result(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test fetching match result."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -267,9 +253,7 @@ class TestFogisApiClientWithMockServer:
             assert "matchlag1mal" in result[0]
             assert "matchlag2mal" in result[0]
 
-    def test_report_match_event(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_report_match_event(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test reporting a match event."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -307,9 +291,7 @@ class TestFogisApiClientWithMockServer:
         assert "success" in response
         assert response["success"] is True
 
-    def test_clear_match_events(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_clear_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test clearing match events."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -329,9 +311,7 @@ class TestFogisApiClientWithMockServer:
         assert "success" in response
         assert response["success"] is True
 
-    def test_mark_reporting_finished(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_mark_reporting_finished(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test marking reporting as finished."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -368,9 +348,7 @@ class TestFogisApiClientWithMockServer:
         # Verify the response
         assert message == "Hello, brave new world!"
 
-    def test_fetch_team_players(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_team_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test fetching team players."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -401,9 +379,7 @@ class TestFogisApiClientWithMockServer:
         assert "matchlagid" in player  # type: ignore
         assert player["matchlagid"] == team_id  # type: ignore
 
-    def test_fetch_team_officials(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_team_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test fetching team officials."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -457,3 +433,47 @@ class TestFogisApiClientWithMockServer:
         # For this test, we'll skip the actual API call and just verify the cookies
         # This is because the mock server cookie handling is complex to match exactly
         # what the real server does
+
+    def test_save_match_participant(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+        """Test saving match participant information."""
+        # Override the base URL to use the mock server
+        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+
+        # Create a client with test credentials
+        client = FogisApiClient(
+            username=test_credentials["username"],
+            password=test_credentials["password"],
+        )
+
+        # Login to get cookies
+        client.login()
+
+        # Create participant data to update
+        participant_data = {
+            "matchdeltagareid": 46123762,
+            "trojnummer": 10,
+            "lagdelid": 0,
+            "lagkapten": True,
+            "ersattare": False,
+            "positionsnummerhv": 0,
+            "arSpelandeLedare": False,
+            "ansvarig": False,
+        }
+
+        # Save match participant
+        response = client.save_match_participant(participant_data)
+
+        # Verify the response structure
+        assert response["success"] is True
+        assert "roster" in response
+        assert "updated_player" in response
+
+        # The verification might be True or False depending on the mock server's random behavior
+        # but it should be a boolean
+        assert isinstance(response["verified"], bool)
+
+        # If verification succeeded, check the updated player
+        if response["verified"] and response["updated_player"]:
+            assert response["updated_player"]["matchdeltagareid"] == participant_data["matchdeltagareid"]
+            assert response["updated_player"]["trojnummer"] == participant_data["trojnummer"]
+            assert response["updated_player"]["lagkapten"] == participant_data["lagkapten"]
