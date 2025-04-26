@@ -7,6 +7,7 @@ for integration testing without requiring real credentials or internet access.
 
 import json
 import logging
+import random
 from datetime import datetime
 from typing import Dict, List
 
@@ -60,12 +61,8 @@ class MockFogisServer:
         def login():
             if request.method == "POST":
                 # Try both field name formats
-                username = request.form.get("ctl00$cphMain$tbUsername") or request.form.get(
-                    "ctl00$MainContent$UserName"
-                )
-                password = request.form.get("ctl00$cphMain$tbPassword") or request.form.get(
-                    "ctl00$MainContent$Password"
-                )
+                username = request.form.get("ctl00$cphMain$tbUsername") or request.form.get("ctl00$MainContent$UserName")
+                password = request.form.get("ctl00$cphMain$tbPassword") or request.form.get("ctl00$MainContent$Password")
 
                 if username in self.users and self.users[username] == password:
                     # Successful login
@@ -276,9 +273,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps({"success": True})})
 
         # Team players endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag", methods=["POST"])
         def fetch_team_players_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -295,9 +290,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps(players_data)})
 
         # Team officials endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag", methods=["POST"])
         def fetch_team_officials_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -314,9 +307,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps(officials_data)})
 
         # Match details endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/GetMatch", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatch", methods=["POST"])
         def fetch_match_details_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -333,9 +324,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps(match_data)})
 
         # Match players endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/GetMatchdeltagareLista", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchdeltagareLista", methods=["POST"])
         def fetch_match_players_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -352,9 +341,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps(players_data)})
 
         # Match officials endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/GetMatchfunktionarerLista", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchfunktionarerLista", methods=["POST"])
         def fetch_match_officials_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -371,9 +358,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps(officials_data)})
 
         # Match events endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/GetMatchhandelselista", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchhandelselista", methods=["POST"])
         def fetch_match_events_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -390,9 +375,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps(events_data)})
 
         # Match result endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/GetMatchresultat", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchresultat", methods=["POST"])
         def fetch_match_result_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -409,9 +392,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps(result_data)})
 
         # Clear match events endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/ClearMatchEvents", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/ClearMatchEvents", methods=["POST"])
         def clear_match_events_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -421,9 +402,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps({"success": True})})
 
         # Report match event endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/SparaMatchhandelse", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/SparaMatchhandelse", methods=["POST"])
         def report_match_event_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -433,9 +412,7 @@ class MockFogisServer:
             return jsonify({"d": json.dumps({"success": True})})
 
         # Mark reporting finished endpoint
-        @self.app.route(
-            "/mdk/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport", methods=["POST"]
-        )
+        @self.app.route("/mdk/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport", methods=["POST"])
         def mark_reporting_finished_endpoint():
             auth_result = self._check_auth()
             if auth_result is not True:
@@ -443,6 +420,58 @@ class MockFogisServer:
 
             # Return success response
             return jsonify({"d": json.dumps({"success": True})})
+
+        # Save match participant endpoint
+        @self.app.route("/mdk/MatchWebMetoder.aspx/SparaMatchdeltagare", methods=["POST"])
+        def save_match_participant_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get participant data from request
+            data = request.json or {}
+            match_deltagare_id = data.get("matchdeltagareid")
+
+            if not match_deltagare_id:
+                return jsonify({"d": json.dumps({"error": "Missing matchdeltagareid"})}), 400
+
+            # Generate a team roster with the updated player
+            team_id = random.randint(10000, 99999)  # Generate a random team ID
+            roster = MockDataFactory.generate_team_players(team_id)
+
+            # Find or create the player with the specified matchdeltagareid
+            updated_player = None
+            for player in roster["spelare"]:
+                if random.random() < 0.2:  # 20% chance to match this player
+                    # Update this player to match the requested changes
+                    player["matchdeltagareid"] = match_deltagare_id
+                    player["trojnummer"] = data.get("trojnummer", player.get("tshirt", 0))
+                    player["lagkapten"] = data.get("lagkapten", False)
+                    player["ersattare"] = data.get("ersattare", False)
+                    updated_player = player
+                    break
+
+            # If we didn't find a player to update, add one
+            if not updated_player:
+                new_player = {
+                    "matchdeltagareid": match_deltagare_id,
+                    "personid": MockDataFactory.generate_id(),
+                    "fornamn": MockDataFactory.generate_name(True),
+                    "efternamn": MockDataFactory.generate_name(False),
+                    "trojnummer": data.get("trojnummer", random.randint(1, 99)),
+                    "lagkapten": data.get("lagkapten", False),
+                    "ersattare": data.get("ersattare", False),
+                    "position": random.choice(["Målvakt", "Försvarare", "Mittfältare", "Anfallare"]),
+                    "matchlagid": team_id,
+                    "fodelsedatum": MockDataFactory.generate_date(False),
+                    "licensnummer": f"LIC{random.randint(100000, 999999)}",
+                    "spelarregistreringsstrang": "",
+                    "spelareAntalAckumuleradeVarningar": random.randint(0, 2),
+                    "spelareAvstangningBeskrivning": "",
+                }
+                roster["spelare"].append(new_player)
+
+            return jsonify({"d": json.dumps(roster)})
 
         # Main dashboard route after login
         @self.app.route("/mdk/", methods=["GET"])
