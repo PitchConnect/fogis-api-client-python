@@ -4,12 +4,7 @@ This package provides a client for interacting with the FOGIS API.
 """
 
 from fogis_api_client.event_types import EVENT_TYPES
-from fogis_api_client.fogis_api_client import (
-    FogisApiClient,
-    FogisAPIRequestError,
-    FogisDataError,
-    FogisLoginError,
-)
+from fogis_api_client.fogis_api_client import FogisApiClient, FogisAPIRequestError, FogisDataError, FogisLoginError
 from fogis_api_client.logging_config import (
     SensitiveFilter,
     add_sensitive_filter,
@@ -23,6 +18,7 @@ from fogis_api_client.types import (
     EventDict,
     MatchDict,
     MatchListResponse,
+    MatchParticipantDict,
     MatchResultDict,
     OfficialActionDict,
     OfficialDict,
@@ -42,6 +38,7 @@ __all__ = [
     "EventDict",
     "MatchDict",
     "MatchListResponse",
+    "MatchParticipantDict",
     "MatchResultDict",
     "OfficialActionDict",
     "OfficialDict",
