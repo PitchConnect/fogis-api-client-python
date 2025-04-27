@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.1] - 2025-05-15
+
+### Fixed
+- Fixed match result reporting functionality to handle both flat and nested data structures (Issue #141)
+- Added backward compatibility for the `report_match_result` method
+- Improved documentation for API data structures
+- Added tests to verify correct API communication
+
 ## [0.3.1] - 2025-04-25
 
 ### Fixed

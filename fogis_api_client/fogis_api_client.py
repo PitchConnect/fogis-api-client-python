@@ -725,19 +725,38 @@ class FogisApiClient:
             self.logger.error(error_msg)
             raise FogisDataError(error_msg)
 
-    def report_match_result(self, result_data: MatchResultDict) -> Dict[str, Any]:
+    def report_match_result(self, result_data: Union[MatchResultDict, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Reports match results (halftime and fulltime) to the FOGIS API.
 
+        IMPORTANT: This method supports two different input formats, but the flat format (Format 1)
+        is preferred for new code due to its simplicity and type safety. The nested format is
+        maintained for backward compatibility with v0.0.5 and earlier.
+
+        Note: For matches with extra time or penalties, the nested format may still be necessary
+        until full support for these scenarios is added to the flat format.
+
+        This method supports two different input formats:
+        1. The flat format with direct fields (hemmamal, bortamal, etc.) - PREFERRED
+        2. The nested format with matchresultatListaJSON array (used in v0.0.5)
+
         Args:
-            result_data: Data containing match results. Must include:
+            result_data: Data containing match results. Can be either:
+
+                Format 1 (flat structure - PREFERRED):
                 - matchid: The ID of the match
                 - hemmamal: Full-time score for the home team
                 - bortamal: Full-time score for the away team
+                - halvtidHemmamal: Half-time score for the home team (optional)
+                - halvtidBortamal: Half-time score for the away team (optional)
 
-                Optional fields:
-                - halvtidHemmamal: Half-time score for the home team
-                - halvtidBortamal: Half-time score for the away team
+                Format 2 (nested structure - for backward compatibility):
+                - matchresultatListaJSON: Array of match result objects with:
+                  - matchid: The ID of the match
+                  - matchresultattypid: 1 for full-time, 2 for half-time
+                  - matchlag1mal: Score for team 1
+                  - matchlag2mal: Score for team 2
+                  - wo, ow, ww: Boolean flags
 
         Returns:
             Dict[str, Any]: Response from the API, typically containing success status
@@ -750,6 +769,7 @@ class FogisApiClient:
 
         Examples:
             >>> client = FogisApiClient(username="your_username", password="your_password")
+            >>> # Format 1 (flat structure)
             >>> result = {
             ...     "matchid": 123456,
             ...     "hemmamal": 2,
@@ -760,35 +780,120 @@ class FogisApiClient:
             >>> response = client.report_match_result(result)
             >>> print(f"Result reported successfully: {response.get('success', False)}")
             Result reported successfully: True
+
+            >>> # Format 2 (nested structure from v0.0.5)
+            >>> result = {
+            ...     "matchresultatListaJSON": [{
+            ...         "matchid": 123456,
+            ...         "matchresultattypid": 1,  # Full time
+            ...         "matchlag1mal": 2,
+            ...         "matchlag2mal": 1,
+            ...         "wo": False,
+            ...         "ow": False,
+            ...         "ww": False
+            ...     },
+            ...     {
+            ...         "matchid": 123456,
+            ...         "matchresultattypid": 2,  # Half-time
+            ...         "matchlag1mal": 1,
+            ...         "matchlag2mal": 0,
+            ...         "wo": False,
+            ...         "ow": False,
+            ...         "ww": False
+            ...     }]
+            ... }
+            >>> response = client.report_match_result(result)
+            >>> print(f"Result reported successfully: {response.get('success', False)}")
+            Result reported successfully: True
         """
-        # Ensure required fields are present
-        required_fields = ["matchid", "hemmamal", "bortamal"]
-        for field in required_fields:
-            if field not in result_data:
-                error_msg = f"Missing required field '{field}' in result data"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
+        # IMPORTANT: The FOGIS API requires the nested structure with matchresultatListaJSON,
+        # regardless of which format is used to call this method. This was overlooked in a
+        # previous update, causing result reporting to fail when using the flat structure.
+        # This implementation ensures we always send the correct nested structure to the API.
 
-        # Create a copy to avoid modifying the original
-        result_data_copy = dict(result_data)
+        # Check if we have the nested structure with matchresultatListaJSON
+        if "matchresultatListaJSON" in result_data:
+            # Already in the correct format for the API, just ensure numeric fields are integers
+            self.logger.info("Using nested matchresultatListaJSON format for reporting match result")
 
-        # Ensure numeric fields are integers
-        for field in [
-            "matchid",
-            "hemmamal",
-            "bortamal",
-            "halvtidHemmamal",
-            "halvtidBortamal",
-        ]:
-            if field in result_data_copy and result_data_copy[field] is not None:
-                value = result_data_copy[field]
-                if isinstance(value, str):
-                    result_data_copy[field] = int(value)
-                elif isinstance(value, int):
-                    result_data_copy[field] = value
+            # Create a deep copy to avoid modifying the original
+            result_data_copy = json.loads(json.dumps(result_data))
 
+            # Ensure matchid and score fields are integers in each result object
+            for result_obj in result_data_copy.get("matchresultatListaJSON", []):
+                for field in ["matchid", "matchresultattypid", "matchlag1mal", "matchlag2mal"]:
+                    if field in result_obj and result_obj[field] is not None:
+                        value = result_obj[field]
+                        if isinstance(value, str):
+                            result_obj[field] = int(value)
+        else:
+            # We have the flat structure, need to convert to nested structure
+            # This conversion is critical - the flat structure cannot be sent directly to the API
+            self.logger.info("Converting flat result structure to nested matchresultatListaJSON format")
+
+            # Ensure required fields are present in flat structure
+            required_fields = ["matchid", "hemmamal", "bortamal"]
+            for field in required_fields:
+                if field not in result_data:
+                    error_msg = f"Missing required field '{field}' in result data"
+                    self.logger.error(error_msg)
+                    raise ValueError(error_msg)
+
+            # Create a copy to avoid modifying the original
+            flat_data = dict(result_data)
+
+            # Ensure numeric fields are integers
+            for field in [
+                "matchid",
+                "hemmamal",
+                "bortamal",
+                "halvtidHemmamal",
+                "halvtidBortamal",
+            ]:
+                if field in flat_data and flat_data[field] is not None:
+                    value = flat_data[field]
+                    if isinstance(value, str):
+                        flat_data[field] = int(value)
+                    elif isinstance(value, int):
+                        flat_data[field] = value
+
+            # Convert flat structure to nested structure
+            match_id = flat_data["matchid"]
+            fulltime_home = flat_data["hemmamal"]
+            fulltime_away = flat_data["bortamal"]
+            halftime_home = flat_data.get("halvtidHemmamal", 0)
+            halftime_away = flat_data.get("halvtidBortamal", 0)
+
+            result_data_copy = {
+                "matchresultatListaJSON": [
+                    {
+                        "matchid": match_id,
+                        "matchresultattypid": 1,  # Full time
+                        "matchlag1mal": fulltime_home,
+                        "matchlag2mal": fulltime_away,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    },
+                    {
+                        "matchid": match_id,
+                        "matchresultattypid": 2,  # Half-time
+                        "matchlag1mal": halftime_home,
+                        "matchlag2mal": halftime_away,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    }
+                ]
+            }
+
+        # CRITICAL: Always use the nested structure when communicating with the FOGIS API
+        # This is the format the server expects and should not be changed without careful testing
         result_url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista"
         response_data = self._api_request(result_url, result_data_copy)
+
+        # Log the actual data sent to the API for debugging purposes
+        self.logger.debug(f"Sent match result data to API: {json.dumps(result_data_copy)}")
 
         if isinstance(response_data, dict):
             return response_data
