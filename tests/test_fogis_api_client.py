@@ -427,15 +427,30 @@ class TestFogisApiClient(unittest.TestCase):
         # Verify the result
         self.assertEqual(response, {"success": True})
 
-        # Verify the API call
+        # Verify the API call - now using the nested structure
         self.client._api_request.assert_called_once_with(
             f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista",
             {
-                "matchid": 12345,  # Should be converted to int
-                "hemmamal": 2,
-                "bortamal": 1,
-                "halvtidHemmamal": 1,
-                "halvtidBortamal": 0,
+                "matchresultatListaJSON": [
+                    {
+                        "matchid": 12345,  # Should be converted to int
+                        "matchresultattypid": 1,  # Full time
+                        "matchlag1mal": 2,
+                        "matchlag2mal": 1,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    },
+                    {
+                        "matchid": 12345,
+                        "matchresultattypid": 2,  # Half-time
+                        "matchlag1mal": 1,
+                        "matchlag2mal": 0,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    }
+                ]
             },
         )
 
@@ -453,14 +468,31 @@ class TestFogisApiClient(unittest.TestCase):
         # Verify the exception message
         self.assertIn("API request failed", str(excinfo.exception))
 
-        # Verify the API call
+        # Verify the API call - now using the nested structure
         self.client._api_request.assert_called_once_with(
             f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista",
             {
-                "matchid": 12345,
-                "hemmamal": 2,
-                "bortamal": 1,
-            },  # Should be converted to int
+                "matchresultatListaJSON": [
+                    {
+                        "matchid": 12345,  # Should be converted to int
+                        "matchresultattypid": 1,  # Full time
+                        "matchlag1mal": 2,
+                        "matchlag2mal": 1,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    },
+                    {
+                        "matchid": 12345,
+                        "matchresultattypid": 2,  # Half-time
+                        "matchlag1mal": 0,
+                        "matchlag2mal": 0,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    }
+                ]
+            },
         )
 
     def test_event_types_dictionary(self):
