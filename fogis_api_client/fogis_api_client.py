@@ -605,6 +605,13 @@ class FogisApiClient:
         """
         Reports a match event to FOGIS.
 
+        # AI-CRITICAL-SECTION-START
+        # WARNING: This code section maintains critical API contracts.
+        # Do not modify the structure of data sent to the API without understanding
+        # the server requirements. See docs/api_contracts.md for details.
+        # The FOGIS API requires specific event data structures based on event type.
+        # AI-CRITICAL-SECTION-END
+
         Args:
             event_data: Data for the event to report. Must include at minimum:
                 - matchid: The ID of the match
@@ -728,6 +735,13 @@ class FogisApiClient:
     def report_match_result(self, result_data: Union[MatchResultDict, Dict[str, Any]]) -> Dict[str, Any]:
         """
         Reports match results (halftime and fulltime) to the FOGIS API.
+
+        # AI-CRITICAL-SECTION-START
+        # WARNING: This code section maintains critical API contracts.
+        # Do not modify the structure of data sent to the API without understanding
+        # the server requirements. See docs/api_contracts.md for details.
+        # The FOGIS API requires a specific nested structure with matchresultatListaJSON.
+        # AI-CRITICAL-SECTION-END
 
         IMPORTANT: This method supports two different input formats, but the flat format (Format 1)
         is preferred for new code due to its simplicity and type safety. The nested format is
@@ -1370,6 +1384,13 @@ class FogisApiClient:
     def mark_reporting_finished(self, match_id: Union[str, int]) -> Dict[str, bool]:
         """
         Mark a match report as completed/finished in the FOGIS system.
+
+        # AI-CRITICAL-SECTION-START
+        # WARNING: This code section maintains critical API contracts.
+        # Do not modify the structure of data sent to the API without understanding
+        # the server requirements. See docs/api_contracts.md for details.
+        # This method finalizes the match report and must be called with the correct match_id.
+        # AI-CRITICAL-SECTION-END
 
         This is the final step in the referee reporting workflow that finalizes
         the match report and submits it officially.
