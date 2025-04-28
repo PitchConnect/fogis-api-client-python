@@ -416,7 +416,7 @@ class TestFogisApiClient(unittest.TestCase):
 
         # Call report_match_result
         result_data = {
-            "matchid": "12345",
+            "matchid": 12345,  # Changed from string to integer
             "hemmamal": 2,
             "bortamal": 1,
             "halvtidHemmamal": 1,
@@ -461,7 +461,7 @@ class TestFogisApiClient(unittest.TestCase):
         self.client._api_request = MagicMock(side_effect=FogisAPIRequestError(error_msg))
 
         # Call report_match_result and expect an exception
-        result_data = {"matchid": "12345", "hemmamal": 2, "bortamal": 1}
+        result_data = {"matchid": 12345, "hemmamal": 2, "bortamal": 1}  # Changed from string to integer
         with self.assertRaises(FogisAPIRequestError) as excinfo:
             self.client.report_match_result(result_data)
 

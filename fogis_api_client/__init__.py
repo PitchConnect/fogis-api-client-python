@@ -3,6 +3,11 @@
 This package provides a client for interacting with the FOGIS API.
 """
 
+from fogis_api_client.api_contracts import (
+    convert_flat_to_nested_match_result,
+    validate_request,
+    validate_response,
+)
 from fogis_api_client.event_types import EVENT_TYPES
 from fogis_api_client.fogis_api_client import FogisApiClient, FogisAPIRequestError, FogisDataError, FogisLoginError
 from fogis_api_client.logging_config import (
