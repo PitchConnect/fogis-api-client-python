@@ -27,6 +27,7 @@ setuptools.setup(
         "flask-swagger-ui",
         "marshmallow>=3.26.0",
         "psutil",
+        "jsonschema>=4.17.3",
     ],
     extras_require={
         "dev": [
