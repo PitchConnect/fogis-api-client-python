@@ -128,6 +128,40 @@ When making changes to the API client:
 3. If breaking changes are necessary, use deprecation warnings first
 4. Document any changes to API contracts
 
+## API Contract Testing Framework
+
+The FOGIS API Client includes a comprehensive API contract testing framework to ensure that all API interactions maintain the correct data structures. This framework consists of:
+
+1. **JSON Schema Definitions:** Each API endpoint has a corresponding JSON schema that defines the expected structure of requests and responses.
+
+2. **Validation Functions:** The `validate_request` and `validate_response` functions validate data against these schemas.
+
+3. **Automatic Validation:** API methods automatically validate data before sending requests and after receiving responses.
+
+4. **Conversion Utilities:** Helper functions like `convert_flat_to_nested_match_result` ensure data is in the correct format.
+
+### Using the API Contract Testing Framework
+
+```python
+from fogis_api_client.api_contracts import validate_request, validate_response
+
+# Validate a request payload
+try:
+    validate_request('/MatchWebMetoder.aspx/SparaMatchresultatLista', payload)
+    # Payload is valid
+except ValidationError as e:
+    # Handle validation error
+    print(f"Invalid payload: {e}")
+
+# Validate a response
+try:
+    validate_response('/MatchWebMetoder.aspx/GetMatchresultatlista', response_data)
+    # Response is valid
+except ValidationError as e:
+    # Handle validation error
+    print(f"Invalid response: {e}")
+```
+
 ## Testing API Changes
 
 Before submitting changes that affect API interactions:
@@ -135,4 +169,5 @@ Before submitting changes that affect API interactions:
 1. Test with the actual FOGIS API
 2. Verify both success and error cases
 3. Test with various input formats
-4. Document any changes to expected behavior
+4. Run the API contract tests to ensure your changes maintain compatibility
+5. Document any changes to expected behavior

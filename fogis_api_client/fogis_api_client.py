@@ -5,7 +5,13 @@ from typing import Any, Dict, List, Optional, Union, cast
 
 import requests
 from bs4 import BeautifulSoup
+from jsonschema import ValidationError
 
+from fogis_api_client.api_contracts import (
+    convert_flat_to_nested_match_result,
+    validate_request,
+    validate_response,
+)
 from fogis_api_client.event_types import EVENT_TYPES  # noqa: F401
 from fogis_api_client.types import MatchListResponse  # noqa: F401
 from fogis_api_client.types import (
@@ -651,15 +657,8 @@ class FogisApiClient:
             >>> print(f"Event reported successfully: {response.get('success', False)}")
             Event reported successfully: True
         """
-        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchhandelse"
-
-        # Ensure required fields are present
-        required_fields = ["matchid", "handelsekod", "minut", "lagid"]
-        for field in required_fields:
-            if field not in event_data:
-                error_msg = f"Missing required field '{field}' in event data"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
+        endpoint = "/MatchWebMetoder.aspx/SparaMatchhandelse"
+        url = f"{FogisApiClient.BASE_URL}{endpoint}"
 
         # Create a copy to avoid modifying the original
         event_data_copy = dict(event_data)
@@ -683,7 +682,24 @@ class FogisApiClient:
                 elif isinstance(value, int):
                     event_data_copy[field] = value
 
+        # Validate the request against the schema before sending
+        try:
+            validate_request(endpoint, event_data_copy)
+        except ValidationError as e:
+            error_msg = f"Match event data validation failed: {e}"
+            self.logger.error(error_msg)
+            raise
+
         response_data = self._api_request(url, event_data_copy)
+
+        # Validate the response if possible
+        try:
+            validate_response(endpoint, response_data)
+        except ValidationError as e:
+            self.logger.warning(f"Response validation warning: {e}")
+        except ValueError:
+            # No schema defined for this response, just log and continue
+            self.logger.debug(f"No response schema defined for {endpoint}")
 
         if isinstance(response_data, dict):
             return response_data
@@ -825,15 +841,15 @@ class FogisApiClient:
         # previous update, causing result reporting to fail when using the flat structure.
         # This implementation ensures we always send the correct nested structure to the API.
 
-        # Check if we have the nested structure with matchresultatListaJSON
+        # Determine the format and convert if necessary
         if "matchresultatListaJSON" in result_data:
-            # Already in the correct format for the API, just ensure numeric fields are integers
+            # Already in the nested format for the API
             self.logger.info("Using nested matchresultatListaJSON format for reporting match result")
 
             # Create a deep copy to avoid modifying the original
             result_data_copy = json.loads(json.dumps(result_data))
 
-            # Ensure matchid and score fields are integers in each result object
+            # Ensure numeric fields are integers in each result object
             for result_obj in result_data_copy.get("matchresultatListaJSON", []):
                 for field in ["matchid", "matchresultattypid", "matchlag1mal", "matchlag2mal"]:
                     if field in result_obj and result_obj[field] is not None:
@@ -842,72 +858,40 @@ class FogisApiClient:
                             result_obj[field] = int(value)
         else:
             # We have the flat structure, need to convert to nested structure
-            # This conversion is critical - the flat structure cannot be sent directly to the API
             self.logger.info("Converting flat result structure to nested matchresultatListaJSON format")
+            try:
+                # Use the api_contracts module to convert and validate
+                result_data_copy = convert_flat_to_nested_match_result(result_data)
+            except (ValueError, ValidationError) as e:
+                error_msg = f"Invalid match result data: {e}"
+                self.logger.error(error_msg)
+                raise ValueError(error_msg)
 
-            # Ensure required fields are present in flat structure
-            required_fields = ["matchid", "hemmamal", "bortamal"]
-            for field in required_fields:
-                if field not in result_data:
-                    error_msg = f"Missing required field '{field}' in result data"
-                    self.logger.error(error_msg)
-                    raise ValueError(error_msg)
-
-            # Create a copy to avoid modifying the original
-            flat_data = dict(result_data)
-
-            # Ensure numeric fields are integers
-            for field in [
-                "matchid",
-                "hemmamal",
-                "bortamal",
-                "halvtidHemmamal",
-                "halvtidBortamal",
-            ]:
-                if field in flat_data and flat_data[field] is not None:
-                    value = flat_data[field]
-                    if isinstance(value, str):
-                        flat_data[field] = int(value)
-                    elif isinstance(value, int):
-                        flat_data[field] = value
-
-            # Convert flat structure to nested structure
-            match_id = flat_data["matchid"]
-            fulltime_home = flat_data["hemmamal"]
-            fulltime_away = flat_data["bortamal"]
-            halftime_home = flat_data.get("halvtidHemmamal", 0)
-            halftime_away = flat_data.get("halvtidBortamal", 0)
-
-            result_data_copy = {
-                "matchresultatListaJSON": [
-                    {
-                        "matchid": match_id,
-                        "matchresultattypid": 1,  # Full time
-                        "matchlag1mal": fulltime_home,
-                        "matchlag2mal": fulltime_away,
-                        "wo": False,
-                        "ow": False,
-                        "ww": False
-                    },
-                    {
-                        "matchid": match_id,
-                        "matchresultattypid": 2,  # Half-time
-                        "matchlag1mal": halftime_home,
-                        "matchlag2mal": halftime_away,
-                        "wo": False,
-                        "ow": False,
-                        "ww": False
-                    }
-                ]
-            }
+        # Validate the request against the schema before sending
+        endpoint = "/MatchWebMetoder.aspx/SparaMatchresultatLista"
+        try:
+            validate_request(endpoint, result_data_copy)
+        except ValidationError as e:
+            error_msg = f"Match result data validation failed: {e}"
+            self.logger.error(error_msg)
+            raise
 
         # CRITICAL: Always use the nested structure when communicating with the FOGIS API
         # This is the format the server expects and should not be changed without careful testing
-        result_url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista"
+        result_url = f"{FogisApiClient.BASE_URL}{endpoint}"
         response_data = self._api_request(result_url, result_data_copy)
 
         # Log the actual data sent to the API for debugging purposes
         self.logger.debug(f"Sent match result data to API: {json.dumps(result_data_copy)}")
+
+        # Validate the response if possible
+        try:
+            validate_response(endpoint, response_data)
+        except ValidationError as e:
+            self.logger.warning(f"Response validation warning: {e}")
+        except ValueError:
+            # No schema defined for this response, just log and continue
+            self.logger.debug(f"No response schema defined for {endpoint}")
 
         if isinstance(response_data, dict):
             return response_data
@@ -1424,11 +1408,29 @@ class FogisApiClient:
         match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
         payload = {"matchid": match_id_int}
 
+        # Validate the request against the schema before sending
+        endpoint = "/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport"
+        try:
+            validate_request(endpoint, payload)
+        except ValidationError as e:
+            error_msg = f"Mark reporting finished data validation failed: {e}"
+            self.logger.error(error_msg)
+            raise
+
         self.logger.info(f"Marking match ID {match_id} reporting as finished")
         response_data = self._api_request(
-            url=f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport",
+            url=f"{FogisApiClient.BASE_URL}{endpoint}",
             payload=payload,
         )
+
+        # Validate the response if possible
+        try:
+            validate_response(endpoint, response_data)
+        except ValidationError as e:
+            self.logger.warning(f"Response validation warning: {e}")
+        except ValueError:
+            # No schema defined for this response, just log and continue
+            self.logger.debug(f"No response schema defined for {endpoint}")
 
         if isinstance(response_data, dict):
             if response_data.get("success", False):
