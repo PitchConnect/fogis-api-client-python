@@ -160,7 +160,9 @@ except (FogisAPIRequestError, FogisDataError) as e:
 
 ## Step 5: Report Match Result
 
-After reporting all events, you need to report the final match result:
+After reporting all events, you need to report the final match result. The client library supports two formats for reporting match results, but the flat structure is recommended for most cases.
+
+### Using the Flat Structure (Recommended)
 
 ```python
 # Example: Report a 2-1 result with 1-0 at halftime
@@ -181,6 +183,49 @@ try:
 except (FogisAPIRequestError, FogisDataError) as e:
     print(f"Error reporting match result: {e}")
 ```
+
+> **⚠️ IMPORTANT**: The FOGIS API requires a specific nested structure, but the client library automatically converts the flat structure to the required format. Always use the client library's `report_match_result` method rather than making direct API calls.
+
+### Using the Nested Structure (Legacy)
+
+For backward compatibility, the client library also supports the nested structure that matches the API's requirements:
+
+```python
+# Example: Report a 2-1 result with 1-0 at halftime using the nested structure
+result_data = {
+    "matchresultatListaJSON": [
+        {
+            "matchid": match_id,
+            "matchresultattypid": 1,  # Full time
+            "matchlag1mal": 2,  # Full-time home team score
+            "matchlag2mal": 1,  # Full-time away team score
+            "wo": False,
+            "ow": False,
+            "ww": False
+        },
+        {
+            "matchid": match_id,
+            "matchresultattypid": 2,  # Half-time
+            "matchlag1mal": 1,  # Half-time home team score
+            "matchlag2mal": 0,  # Half-time away team score
+            "wo": False,
+            "ow": False,
+            "ww": False
+        }
+    ]
+}
+
+try:
+    response = client.report_match_result(result_data)
+    if response.get('success', False):
+        print("Match result reported successfully")
+    else:
+        print("Failed to report match result")
+except (FogisAPIRequestError, FogisDataError) as e:
+    print(f"Error reporting match result: {e}")
+```
+
+For more details on the API contracts and data structures, see the [API Contracts Guide](api_contracts.md).
 
 ## Step 6: Mark Reporting as Finished
 
@@ -344,22 +389,101 @@ except Exception as e:
 1. **Authentication Failures**
    - Ensure your username and password are correct
    - Check if your account has the necessary permissions
+   - Verify that your session hasn't expired (use `client.validate_cookies()` to check)
 
 2. **Missing Player Information**
    - Ensure the match has been properly set up in FOGIS
    - Verify that team rosters have been submitted
+   - Check if you have the correct match ID
 
 3. **Event Reporting Failures**
    - Check that all required fields are included in the event data
-   - Ensure player IDs are correct
-   - Verify that the event type code is valid
+   - Ensure player IDs are correct and are integers, not strings
+   - Verify that the event type code is valid (see `EVENT_TYPES` constant)
+   - For goals, make sure you include the updated score (`resultatHemma` and `resultatBorta`)
+   - For substitutions, ensure both `personid` (player coming on) and `assisterandeid` (player going off) are included
 
 4. **Result Reporting Failures**
    - Ensure the reported goals match the final result
    - Check that both full-time and half-time scores are included
+   - Verify that scores are integers, not strings
+   - If using the nested structure, ensure the `matchresultatListaJSON` array is correctly formatted
+   - Check that the match ID is correct and is an integer
 
 5. **Unable to Mark Reporting as Finished**
    - Ensure all required match information has been reported
    - Check for any validation errors in the match report
+   - Verify that you've reported both the match result and all events
 
-If you encounter persistent issues, refer to the [Troubleshooting](../troubleshooting.md) section for more detailed help.
+### Debugging API Contracts
+
+If you're experiencing issues with API contracts, you can use the validation functions to check your data:
+
+```python
+from fogis_api_client.api_contracts import validate_request
+
+# Validate match result data before sending
+try:
+    validate_request('/MatchWebMetoder.aspx/SparaMatchresultatLista', result_data)
+    print("Data is valid")
+except ValidationError as e:
+    print(f"Invalid data: {e}")
+```
+
+### Common API Contract Mistakes
+
+1. **Using Strings Instead of Integers**
+   ```python
+   # Incorrect
+   result_data = {
+       "matchid": "123456",  # String instead of integer
+       "hemmamal": "2",     # String instead of integer
+       "bortamal": "1"      # String instead of integer
+   }
+
+   # Correct
+   result_data = {
+       "matchid": 123456,  # Integer
+       "hemmamal": 2,     # Integer
+       "bortamal": 1      # Integer
+   }
+   ```
+
+2. **Missing Required Fields**
+   ```python
+   # Incorrect (missing halvtid scores)
+   result_data = {
+       "matchid": 123456,
+       "hemmamal": 2,
+       "bortamal": 1
+       # Missing halvtidHemmamal and halvtidBortamal
+   }
+
+   # Correct
+   result_data = {
+       "matchid": 123456,
+       "hemmamal": 2,
+       "bortamal": 1,
+       "halvtidHemmamal": 1,
+       "halvtidBortamal": 0
+   }
+   ```
+
+3. **Incorrect Field Names**
+   ```python
+   # Incorrect (wrong field names)
+   result_data = {
+       "match_id": 123456,    # Underscore instead of camelCase
+       "homescore": 2,       # Wrong field name
+       "awayscore": 1        # Wrong field name
+   }
+
+   # Correct
+   result_data = {
+       "matchid": 123456,
+       "hemmamal": 2,
+       "bortamal": 1
+   }
+   ```
+
+For more detailed information about API contracts, see the [API Contracts Guide](api_contracts.md) and the [API Contracts Documentation](../api_contracts.md).

@@ -616,6 +616,7 @@ class FogisApiClient:
         # Do not modify the structure of data sent to the API without understanding
         # the server requirements. See docs/api_contracts.md for details.
         # The FOGIS API requires specific event data structures based on event type.
+        # Different event types (goals, cards, substitutions) require different fields.
         # AI-CRITICAL-SECTION-END
 
         Args:
@@ -660,10 +661,15 @@ class FogisApiClient:
         endpoint = "/MatchWebMetoder.aspx/SparaMatchhandelse"
         url = f"{FogisApiClient.BASE_URL}{endpoint}"
 
+        # WARNING: This is a critical API contract section. The FOGIS API requires specific
+        # data structures and field types. Modifying this code without understanding the
+        # server requirements can break functionality.
+
         # Create a copy to avoid modifying the original
         event_data_copy = dict(event_data)
 
         # Ensure numeric fields are integers
+        # This is critical - the FOGIS API requires these fields to be integers, not strings
         for field in [
             "matchid",
             "handelsekod",
@@ -836,6 +842,11 @@ class FogisApiClient:
             >>> print(f"Result reported successfully: {response.get('success', False)}")
             Result reported successfully: True
         """
+        # WARNING: This is a critical API contract section. The FOGIS API requires a specific
+        # nested structure with matchresultatListaJSON. Modifying this code without understanding
+        # the server requirements can break functionality.
+        # See docs/api_contracts.md for details on the required structure.
+
         # IMPORTANT: The FOGIS API requires the nested structure with matchresultatListaJSON,
         # regardless of which format is used to call this method. This was overlooked in a
         # previous update, causing result reporting to fail when using the flat structure.
@@ -850,6 +861,7 @@ class FogisApiClient:
             result_data_copy = json.loads(json.dumps(result_data))
 
             # Ensure numeric fields are integers in each result object
+            # This is critical - the FOGIS API requires these fields to be integers, not strings
             for result_obj in result_data_copy.get("matchresultatListaJSON", []):
                 for field in ["matchid", "matchresultattypid", "matchlag1mal", "matchlag2mal"]:
                     if field in result_obj and result_obj[field] is not None:
