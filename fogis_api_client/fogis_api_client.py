@@ -1462,6 +1462,9 @@ class FogisApiClient:
         Internal helper function to make API requests to FOGIS.
         Automatically logs in if not already authenticated and credentials are available.
 
+        This method also validates request payloads before sending them to the server
+        and validates response data when received, based on the ValidationConfig settings.
+
         Args:
             url: The URL to make the request to
             payload: The payload to send with the request
@@ -1473,13 +1476,29 @@ class FogisApiClient:
         Raises:
             FogisLoginError: If login fails or if authentication is not possible
             FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-            ValueError: If an unsupported HTTP method is specified
+            FogisDataError: If the response data is invalid or fails validation
+            ValidationError: If the request or response fails validation in strict mode
+            ValueError: If an unsupported HTTP method is specified or schema is missing in strict mode
         """
         # For tests only - mock response for specific URLs
         if self.username and isinstance(self.username, str) and "test" in self.username and url.endswith("HamtaMatchLista"):
             self.logger.debug("Using test mock for match list")
             return {"matcher": []}
+
+        # Extract endpoint from URL for validation
+        from fogis_api_client.api_contracts import extract_endpoint_from_url, validate_request, validate_response, ValidationConfig
+        endpoint = extract_endpoint_from_url(url)
+
+        # Validate request payload if present
+        if payload is not None:
+            try:
+                validate_request(endpoint, payload)
+            except ValidationError as e:
+                self.logger.error(f"Request validation failed for {url}: {e}")
+                raise FogisDataError(f"Invalid request payload: {e}") from e
+            except ValueError as e:
+                # This happens when no schema is defined for the endpoint
+                self.logger.warning(f"Validation skipped: {e}")
 
         # Lazy login - automatically log in if not already authenticated
         if not self.cookies:
@@ -1531,15 +1550,44 @@ class FogisApiClient:
                 # The 'd' value is a JSON string that needs to be parsed again
                 if isinstance(response_json["d"], str):
                     try:
-                        return json.loads(response_json["d"])
+                        parsed_data = json.loads(response_json["d"])
+
+                        # Validate response data if it's a dictionary or list of dictionaries
+                        if isinstance(parsed_data, (dict, list)):
+                            try:
+                                # For lists, we don't validate each item individually
+                                data_to_validate = parsed_data
+                                if isinstance(parsed_data, dict):
+                                    validate_response(endpoint, parsed_data)
+                            except ValidationError as e:
+                                self.logger.error(f"Response validation failed for {url}: {e}")
+                                if ValidationConfig.strict_mode:
+                                    raise FogisDataError(f"Invalid response data: {e}") from e
+                                # In non-strict mode, we still return the data even if validation fails
+
+                        return parsed_data
                     except json.JSONDecodeError:
                         # If it's not valid JSON, return as is
                         self.logger.debug("Response 'd' value is not valid JSON, returning as string")
                         return response_json["d"]
                 else:
                     # If 'd' is already a dict/list, return it directly
+                    parsed_data = response_json["d"]
                     self.logger.debug("Response 'd' value is already parsed, returning directly")
-                    return response_json["d"]
+
+                    # Validate response data if it's a dictionary or list of dictionaries
+                    if isinstance(parsed_data, (dict, list)):
+                        try:
+                            # For lists, we don't validate each item individually
+                            if isinstance(parsed_data, dict):
+                                validate_response(endpoint, parsed_data)
+                        except ValidationError as e:
+                            self.logger.error(f"Response validation failed for {url}: {e}")
+                            if ValidationConfig.strict_mode:
+                                raise FogisDataError(f"Invalid response data: {e}") from e
+                            # In non-strict mode, we still return the data even if validation fails
+
+                    return parsed_data
             else:
                 self.logger.debug("Response does not contain 'd' key, returning full response")
                 return response_json

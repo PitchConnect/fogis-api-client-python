@@ -4,6 +4,7 @@ This package provides a client for interacting with the FOGIS API.
 """
 
 from fogis_api_client.api_contracts import (
+    ValidationConfig,
     convert_flat_to_nested_match_result,
     validate_request,
     validate_response,
@@ -56,4 +57,9 @@ __all__ = [
     "get_log_levels",
     "add_sensitive_filter",
     "SensitiveFilter",
+    # Validation utilities
+    "ValidationConfig",
+    "validate_request",
+    "validate_response",
+    "convert_flat_to_nested_match_result",
 ]

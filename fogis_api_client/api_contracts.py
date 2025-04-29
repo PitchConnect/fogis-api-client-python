@@ -17,7 +17,12 @@ Usage:
         validate_response,
         REQUEST_SCHEMAS,
         RESPONSE_SCHEMAS,
+        ValidationConfig,
     )
+
+    # Configure validation
+    ValidationConfig.enable_validation = True
+    ValidationConfig.strict_mode = True
 
     # Validate a request payload
     validate_request('/MatchWebMetoder.aspx/SparaMatchresultatLista', payload)
@@ -27,6 +32,7 @@ Usage:
 """
 import json
 import logging
+import re
 from typing import Any, Dict, List, Optional, Union
 
 import jsonschema
@@ -34,6 +40,19 @@ from jsonschema import ValidationError
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+class ValidationConfig:
+    """
+    Configuration options for API validation.
+
+    Attributes:
+        enable_validation (bool): Whether to enable validation (default: True)
+        strict_mode (bool): Whether to raise exceptions on validation failure (default: True)
+        log_validation_success (bool): Whether to log successful validations (default: True)
+    """
+    enable_validation = True
+    strict_mode = True
+    log_validation_success = True
 
 # Schema for match result reporting (nested format)
 MATCH_RESULT_NESTED_SCHEMA = {
@@ -190,23 +209,23 @@ MATCH_FETCH_SCHEMA = {
 REQUEST_SCHEMAS = {
     # Match result endpoints
     "/MatchWebMetoder.aspx/SparaMatchresultatLista": MATCH_RESULT_NESTED_SCHEMA,
-    
+
     # Match event endpoints
     "/MatchWebMetoder.aspx/SparaMatchhandelse": MATCH_EVENT_SCHEMA,
     "/MatchWebMetoder.aspx/RaderaMatchhandelse": MATCH_EVENT_DELETE_SCHEMA,
-    
+
     # Match reporting endpoints
     "/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport": MARK_REPORTING_FINISHED_SCHEMA,
-    
+
     # Team official action endpoints
     "/MatchWebMetoder.aspx/SparaMatchlagledare": TEAM_OFFICIAL_ACTION_SCHEMA,
-    
+
     # Match participant endpoints
     "/MatchWebMetoder.aspx/SparaMatchdeltagare": MATCH_PARTICIPANT_SCHEMA,
-    
+
     # Match list endpoints
     "/MatchWebMetoder.aspx/GetMatcherAttRapportera": MATCH_LIST_FILTER_SCHEMA,
-    
+
     # Match fetch endpoints
     "/MatchWebMetoder.aspx/GetMatch": MATCH_FETCH_SCHEMA,
     "/MatchWebMetoder.aspx/GetMatchdeltagareLista": MATCH_FETCH_SCHEMA,
@@ -222,74 +241,115 @@ RESPONSE_SCHEMAS = {
     # For now, we'll focus on request validation
 }
 
+def extract_endpoint_from_url(url: str) -> str:
+    """
+    Extracts the endpoint path from a full URL.
+
+    Args:
+        url: The full URL (e.g., 'https://fogis.svenskfotboll.se/MatchWebMetoder.aspx/SparaMatchresultatLista')
+
+    Returns:
+        str: The endpoint path (e.g., '/MatchWebMetoder.aspx/SparaMatchresultatLista')
+    """
+    # Use regex to extract the endpoint path
+    match = re.search(r'(/[^/]+\.aspx/[^/]+)$', url)
+    if match:
+        return match.group(1)
+
+    # Fallback: just return the URL as is
+    return url
+
 def validate_request(endpoint: str, payload: Dict[str, Any]) -> bool:
     """
     Validates a request payload against the schema for the given endpoint.
-    
+
     Args:
         endpoint: The API endpoint path (e.g., '/MatchWebMetoder.aspx/SparaMatchresultatLista')
         payload: The request payload to validate
-        
+
     Returns:
         bool: True if the payload is valid, False otherwise
-        
+
     Raises:
-        ValidationError: If the payload does not match the schema
-        ValueError: If the endpoint does not have a defined schema
+        ValidationError: If the payload does not match the schema and strict_mode is True
+        ValueError: If the endpoint does not have a defined schema and strict_mode is True
     """
+    # Skip validation if disabled
+    if not ValidationConfig.enable_validation:
+        return True
+
+    # Check if schema exists for this endpoint
     if endpoint not in REQUEST_SCHEMAS:
-        raise ValueError(f"No schema defined for endpoint: {endpoint}")
-    
+        message = f"No schema defined for endpoint: {endpoint}"
+        logger.warning(message)
+        if ValidationConfig.strict_mode:
+            raise ValueError(message)
+        return False
+
     schema = REQUEST_SCHEMAS[endpoint]
-    
+
     try:
         jsonschema.validate(instance=payload, schema=schema)
-        logger.debug(f"Payload for {endpoint} is valid")
+        if ValidationConfig.log_validation_success:
+            logger.debug(f"Payload for {endpoint} is valid")
         return True
     except ValidationError as e:
-        logger.error(f"Payload validation failed for {endpoint}: {e}")
-        raise
-        
+        detailed_error = f"Payload validation failed for {endpoint}: {e}"
+        logger.error(detailed_error)
+        if ValidationConfig.strict_mode:
+            raise ValidationError(detailed_error) from e
+        return False
+
 def validate_response(endpoint: str, response_data: Dict[str, Any]) -> bool:
     """
     Validates a response from the API against the schema for the given endpoint.
-    
+
     Args:
         endpoint: The API endpoint path
         response_data: The response data to validate
-        
+
     Returns:
         bool: True if the response is valid, False otherwise
-        
+
     Raises:
-        ValidationError: If the response does not match the schema
-        ValueError: If the endpoint does not have a defined schema
+        ValidationError: If the response does not match the schema and strict_mode is True
+        ValueError: If the endpoint does not have a defined schema and strict_mode is True
     """
-    if endpoint not in RESPONSE_SCHEMAS:
-        # For now, we'll just log a warning and return True
-        logger.warning(f"No response schema defined for endpoint: {endpoint}")
+    # Skip validation if disabled
+    if not ValidationConfig.enable_validation:
         return True
-    
+
+    # Check if schema exists for this endpoint
+    if endpoint not in RESPONSE_SCHEMAS:
+        message = f"No response schema defined for endpoint: {endpoint}"
+        logger.warning(message)
+        # We don't raise an error for missing response schemas, even in strict mode
+        return True
+
     schema = RESPONSE_SCHEMAS[endpoint]
-    
+
     try:
         jsonschema.validate(instance=response_data, schema=schema)
-        logger.debug(f"Response for {endpoint} is valid")
+        if ValidationConfig.log_validation_success:
+            logger.debug(f"Response for {endpoint} is valid")
         return True
     except ValidationError as e:
-        logger.error(f"Response validation failed for {endpoint}: {e}")
-        raise
+        detailed_error = f"Response validation failed for {endpoint}: {e}"
+        logger.error(detailed_error)
+        if ValidationConfig.strict_mode:
+            raise ValidationError(detailed_error) from e
+        return False
 
 def convert_flat_to_nested_match_result(flat_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Converts a flat match result structure to the nested structure required by the API.
-    
+
     Args:
         flat_data: The flat match result data with fields like 'hemmamal' and 'bortamal'
-        
+
     Returns:
         Dict[str, Any]: The nested structure with 'matchresultatListaJSON' array
-        
+
     Raises:
         ValueError: If required fields are missing
     """
@@ -298,14 +358,14 @@ def convert_flat_to_nested_match_result(flat_data: Dict[str, Any]) -> Dict[str, 
         jsonschema.validate(instance=flat_data, schema=MATCH_RESULT_FLAT_SCHEMA)
     except ValidationError as e:
         raise ValueError(f"Invalid flat match result data: {e}")
-    
+
     # Extract fields from the flat data
     match_id = flat_data["matchid"]
     fulltime_home = flat_data["hemmamal"]
     fulltime_away = flat_data["bortamal"]
     halftime_home = flat_data.get("halvtidHemmamal", 0)
     halftime_away = flat_data.get("halvtidBortamal", 0)
-    
+
     # Create the nested structure
     nested_data = {
         "matchresultatListaJSON": [
@@ -329,22 +389,22 @@ def convert_flat_to_nested_match_result(flat_data: Dict[str, Any]) -> Dict[str, 
             }
         ]
     }
-    
+
     # Validate the nested data against the nested schema
     try:
         jsonschema.validate(instance=nested_data, schema=MATCH_RESULT_NESTED_SCHEMA)
     except ValidationError as e:
         raise ValueError(f"Generated nested match result data is invalid: {e}")
-    
+
     return nested_data
 
 def get_schema_for_endpoint(endpoint: str) -> Optional[Dict[str, Any]]:
     """
     Returns the request schema for the given endpoint.
-    
+
     Args:
         endpoint: The API endpoint path
-        
+
     Returns:
         Optional[Dict[str, Any]]: The schema for the endpoint, or None if not found
     """
