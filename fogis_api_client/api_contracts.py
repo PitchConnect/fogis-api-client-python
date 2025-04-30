@@ -30,16 +30,16 @@ Usage:
     # Validate a response
     validate_response('/MatchWebMetoder.aspx/GetMatchresultatlista', response_data)
 """
-import json
 import logging
 import re
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional
 
 import jsonschema
 from jsonschema import ValidationError
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
 
 class ValidationConfig:
     """
@@ -50,9 +50,11 @@ class ValidationConfig:
         strict_mode (bool): Whether to raise exceptions on validation failure (default: True)
         log_validation_success (bool): Whether to log successful validations (default: True)
     """
+
     enable_validation = True
     strict_mode = True
     log_validation_success = True
+
 
 # Schema for match result reporting (nested format)
 MATCH_RESULT_NESTED_SCHEMA = {
@@ -72,13 +74,13 @@ MATCH_RESULT_NESTED_SCHEMA = {
                     "matchlag2mal": {"type": "integer", "minimum": 0},
                     "wo": {"type": "boolean"},
                     "ow": {"type": "boolean"},
-                    "ww": {"type": "boolean"}
+                    "ww": {"type": "boolean"},
                 },
-                "additionalProperties": False
-            }
+                "additionalProperties": False,
+            },
         }
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 # Schema for match result reporting (flat format)
@@ -90,9 +92,9 @@ MATCH_RESULT_FLAT_SCHEMA = {
         "hemmamal": {"type": "integer", "minimum": 0},
         "bortamal": {"type": "integer", "minimum": 0},
         "halvtidHemmamal": {"type": "integer", "minimum": 0},
-        "halvtidBortamal": {"type": "integer", "minimum": 0}
+        "halvtidBortamal": {"type": "integer", "minimum": 0},
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 # Schema for match event reporting
@@ -117,29 +119,25 @@ MATCH_EVENT_SCHEMA = {
         "resultatBorta": {"type": ["integer", "null"], "minimum": 0},
         "strafflage": {"type": ["string", "null"]},
         "straffriktning": {"type": ["string", "null"]},
-        "straffresultat": {"type": ["string", "null"]}
+        "straffresultat": {"type": ["string", "null"]},
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 # Schema for match event deletion
 MATCH_EVENT_DELETE_SCHEMA = {
     "type": "object",
     "required": ["matchhandelseid"],
-    "properties": {
-        "matchhandelseid": {"type": "integer"}
-    },
-    "additionalProperties": False
+    "properties": {"matchhandelseid": {"type": "integer"}},
+    "additionalProperties": False,
 }
 
 # Schema for marking match reporting as finished
 MARK_REPORTING_FINISHED_SCHEMA = {
     "type": "object",
     "required": ["matchid"],
-    "properties": {
-        "matchid": {"type": "integer"}
-    },
-    "additionalProperties": False
+    "properties": {"matchid": {"type": "integer"}},
+    "additionalProperties": False,
 }
 
 # Schema for team official action reporting
@@ -151,9 +149,9 @@ TEAM_OFFICIAL_ACTION_SCHEMA = {
         "lagid": {"type": "integer"},
         "personid": {"type": "integer"},
         "matchlagledaretypid": {"type": "integer"},
-        "minut": {"type": ["integer", "null"], "minimum": 0}
+        "minut": {"type": ["integer", "null"], "minimum": 0},
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 # Schema for match participant update
@@ -168,9 +166,9 @@ MATCH_PARTICIPANT_SCHEMA = {
         "ersattare": {"type": "boolean"},
         "positionsnummerhv": {"type": "integer"},
         "arSpelandeLedare": {"type": "boolean"},
-        "ansvarig": {"type": "boolean"}
+        "ansvarig": {"type": "boolean"},
     },
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 # Schema for match list filter
@@ -187,45 +185,37 @@ MATCH_LIST_FILTER_SCHEMA = {
                 "status": {"type": "array", "items": {"type": "string"}},
                 "alderskategori": {"type": "array", "items": {"type": "integer"}},
                 "kon": {"type": "array", "items": {"type": "integer"}},
-                "sparadDatum": {"type": "string", "format": "date"}
-            }
+                "sparadDatum": {"type": "string", "format": "date"},
+            },
         }
     },
     "required": ["filter"],
-    "additionalProperties": False
+    "additionalProperties": False,
 }
 
 # Schema for match fetch
 MATCH_FETCH_SCHEMA = {
     "type": "object",
     "required": ["matchid"],
-    "properties": {
-        "matchid": {"type": "integer"}
-    },
-    "additionalProperties": False
+    "properties": {"matchid": {"type": "integer"}},
+    "additionalProperties": False,
 }
 
 # Dictionary mapping API endpoints to their request schemas
 REQUEST_SCHEMAS = {
     # Match result endpoints
     "/MatchWebMetoder.aspx/SparaMatchresultatLista": MATCH_RESULT_NESTED_SCHEMA,
-
     # Match event endpoints
     "/MatchWebMetoder.aspx/SparaMatchhandelse": MATCH_EVENT_SCHEMA,
     "/MatchWebMetoder.aspx/RaderaMatchhandelse": MATCH_EVENT_DELETE_SCHEMA,
-
     # Match reporting endpoints
     "/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport": MARK_REPORTING_FINISHED_SCHEMA,
-
     # Team official action endpoints
     "/MatchWebMetoder.aspx/SparaMatchlagledare": TEAM_OFFICIAL_ACTION_SCHEMA,
-
     # Match participant endpoints
     "/MatchWebMetoder.aspx/SparaMatchdeltagare": MATCH_PARTICIPANT_SCHEMA,
-
     # Match list endpoints
     "/MatchWebMetoder.aspx/GetMatcherAttRapportera": MATCH_LIST_FILTER_SCHEMA,
-
     # Match fetch endpoints
     "/MatchWebMetoder.aspx/GetMatch": MATCH_FETCH_SCHEMA,
     "/MatchWebMetoder.aspx/GetMatchdeltagareLista": MATCH_FETCH_SCHEMA,
@@ -241,6 +231,7 @@ RESPONSE_SCHEMAS = {
     # For now, we'll focus on request validation
 }
 
+
 def extract_endpoint_from_url(url: str) -> str:
     """
     Extracts the endpoint path from a full URL.
@@ -252,12 +243,13 @@ def extract_endpoint_from_url(url: str) -> str:
         str: The endpoint path (e.g., '/MatchWebMetoder.aspx/SparaMatchresultatLista')
     """
     # Use regex to extract the endpoint path
-    match = re.search(r'(/[^/]+\.aspx/[^/]+)$', url)
+    match = re.search(r"(/[^/]+\.aspx/[^/]+)$", url)
     if match:
         return match.group(1)
 
     # Fallback: just return the URL as is
     return url
+
 
 def validate_request(endpoint: str, payload: Dict[str, Any]) -> bool:
     """
@@ -300,6 +292,7 @@ def validate_request(endpoint: str, payload: Dict[str, Any]) -> bool:
             raise ValidationError(detailed_error) from e
         return False
 
+
 def validate_response(endpoint: str, response_data: Dict[str, Any]) -> bool:
     """
     Validates a response from the API against the schema for the given endpoint.
@@ -340,6 +333,7 @@ def validate_response(endpoint: str, response_data: Dict[str, Any]) -> bool:
             raise ValidationError(detailed_error) from e
         return False
 
+
 def convert_flat_to_nested_match_result(flat_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Converts a flat match result structure to the nested structure required by the API.
@@ -376,7 +370,7 @@ def convert_flat_to_nested_match_result(flat_data: Dict[str, Any]) -> Dict[str, 
                 "matchlag2mal": fulltime_away,
                 "wo": False,
                 "ow": False,
-                "ww": False
+                "ww": False,
             },
             {
                 "matchid": match_id,
@@ -385,8 +379,8 @@ def convert_flat_to_nested_match_result(flat_data: Dict[str, Any]) -> Dict[str, 
                 "matchlag2mal": halftime_away,
                 "wo": False,
                 "ow": False,
-                "ww": False
-            }
+                "ww": False,
+            },
         ]
     }
 
@@ -397,6 +391,7 @@ def convert_flat_to_nested_match_result(flat_data: Dict[str, Any]) -> Dict[str, 
         raise ValueError(f"Generated nested match result data is invalid: {e}")
 
     return nested_data
+
 
 def get_schema_for_endpoint(endpoint: str) -> Optional[Dict[str, Any]]:
     """
