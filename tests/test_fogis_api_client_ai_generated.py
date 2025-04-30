@@ -115,11 +115,20 @@ class TestFogisApiClient(unittest.TestCase):
         # Set cookies to simulate being logged in
         self.api_client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
 
+        # Create a valid payload for the endpoint
+        valid_payload = {
+            "matchid": 123456,
+            "handelsekod": 1,
+            "minut": 10,
+            "lagid": 1,
+            "period": 1
+        }
+
         # Call _api_request and expect an exception
         with self.assertRaises(FogisAPIRequestError):
             self.api_client._api_request(
                 self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SparaMatchhandelse",
-                {},
+                valid_payload,
             )
 
         # Check the log message contains part of the error
@@ -153,15 +162,33 @@ class TestFogisApiClient(unittest.TestCase):
         # Set cookies to simulate being logged in
         self.api_client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
 
-        # Call _api_request and expect an exception
-        with self.assertRaises(FogisDataError) as context:
-            self.api_client._api_request(
-                self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SparaMatchhandelse",
-                {},
-            )
+        # Create a valid payload for the endpoint
+        valid_payload = {
+            "matchid": 123456,
+            "handelsekod": 1,
+            "minut": 10,
+            "lagid": 1,
+            "period": 1
+        }
 
-        # Verify the error message
-        self.assertIn("Failed to parse API response", str(context.exception))
+        # Temporarily disable validation for this test
+        from fogis_api_client.api_contracts import ValidationConfig
+        original_enable_validation = ValidationConfig.enable_validation
+        ValidationConfig.enable_validation = False
+
+        try:
+            # Call _api_request and expect an exception
+            with self.assertRaises(FogisDataError) as context:
+                self.api_client._api_request(
+                    self.api_client.BASE_URL + "/test__api_request_invalid_json",
+                    valid_payload,
+                )
+
+            # Verify the error message
+            self.assertIn("Failed to parse API response", str(context.exception))
+        finally:
+            # Restore validation setting
+            ValidationConfig.enable_validation = original_enable_validation
 
     @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
     def test_fetch_matches_list_json_success(self, mock_api_request):
