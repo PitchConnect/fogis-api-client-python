@@ -32,6 +32,7 @@ Usage:
 """
 import logging
 import re
+import warnings
 from typing import Any, Dict, Optional
 
 import jsonschema
@@ -39,6 +40,14 @@ from jsonschema import ValidationError
 
 # Configure logging
 logger = logging.getLogger(__name__)
+
+# Emit a deprecation warning
+warnings.warn(
+    "The fogis_api_client.api_contracts module is deprecated. "
+    "Use fogis_api_client.internal.api_contracts instead.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 class ValidationConfig:
