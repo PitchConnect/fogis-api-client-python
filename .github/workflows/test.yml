@@ -64,38 +64,12 @@ jobs:
           docker compose version
 
       - name: Run integration tests
-        env:
-          CI: true
         run: |
-          # Create the Docker network
-          docker network create fogis-network || true
-
-          # Start the services
-          docker compose -f docker-compose.ci.yml up -d fogis-api-client mock-fogis-server
-
-          # Wait for services to start
-          sleep 10
-
-          # Show running containers
-          docker ps
+          # Make the CI test script executable
+          chmod +x ./run_ci_tests.sh
 
           # Run the integration tests
-          docker compose -f docker-compose.ci.yml run --rm integration-tests
-
-          # Store the exit code
-          TEST_EXIT_CODE=$?
-
-          # Show Docker logs for debugging if tests failed
-          if [ $TEST_EXIT_CODE -ne 0 ]; then
-            echo "Integration tests failed with exit code $TEST_EXIT_CODE"
-            echo "\nMock server logs:"
-            docker logs mock-fogis-server || true
-            echo "\nAPI server logs:"
-            docker logs fogis-api-client-dev || true
-          fi
-
-          # Return the original exit code
-          exit $TEST_EXIT_CODE
+          ./run_ci_tests.sh
 
   publish:
     needs: build  # Only run after the 'build' job is successful
