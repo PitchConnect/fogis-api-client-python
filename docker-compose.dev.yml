@@ -90,5 +90,11 @@ services:
 
 networks:
   fogis-network:
-    external: true
+    # Use internal network instead of external to ensure proper DNS resolution
     name: fogis-network
+    driver: bridge
+    # Add DNS configuration to ensure containers can resolve each other by name
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"

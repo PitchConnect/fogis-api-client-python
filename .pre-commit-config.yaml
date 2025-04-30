@@ -77,3 +77,13 @@ repos:
         language: script
         pass_filenames: false
         always_run: true
+
+# Dependency checker
+-   repo: local
+    hooks:
+    -   id: check-dependencies
+        name: check-dependencies
+        entry: .pre-commit-hooks/check_dependencies.py
+        language: script
+        pass_filenames: false
+        always_run: true

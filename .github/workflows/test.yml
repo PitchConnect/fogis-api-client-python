@@ -54,9 +54,6 @@ jobs:
 
       - name: Run integration tests
         run: |
-          # Create Docker network if it doesn't exist
-          docker network create fogis-network || true
-
           # Make the integration test script executable
           chmod +x ./run_integration_tests.sh
 
@@ -73,6 +70,10 @@ jobs:
             docker logs mock-fogis-server || true
             echo "\nAPI server logs:"
             docker logs fogis-api-client-dev || true
+            echo "\nDocker network info:"
+            docker network inspect fogis-network || true
+            echo "\nDocker container list:"
+            docker ps -a || true
           fi
 
           # Return the original exit code

@@ -51,8 +51,8 @@ check_container_health() {
     return 1
 }
 
-# Create the network if it doesn't exist
-docker network create fogis-network 2>/dev/null || true
+# We don't need to create the network anymore as it's defined in docker-compose.dev.yml
+# and will be created automatically when docker-compose up is run
 
 # Remove any existing containers to ensure a clean start
 echo "Stopping any existing containers..."
@@ -80,6 +80,16 @@ docker compose -f docker-compose.dev.yml run --rm integration-tests
 TEST_EXIT_CODE=$?
 
 echo "Integration tests completed with exit code: $TEST_EXIT_CODE"
+
+# If tests failed, run the health check script
+if [ $TEST_EXIT_CODE -ne 0 ]; then
+    echo "\nRunning Docker health check script..."
+    if [ -f "scripts/check_docker_health.py" ]; then
+        python3 scripts/check_docker_health.py
+    else
+        echo "Health check script not found. Skipping."
+    fi
+fi
 
 # Return the test exit code
 exit $TEST_EXIT_CODE

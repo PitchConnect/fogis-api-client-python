@@ -26,7 +26,7 @@ class MockFogisServer:
     A Flask-based mock server that simulates the FOGIS API endpoints.
     """
 
-    def __init__(self, host: str = "localhost", port: int = 5000):
+    def __init__(self, host: str = "localhost", port: int = 5001):
         """
         Initialize the mock server.
 
@@ -487,10 +487,17 @@ class MockFogisServer:
         # Health check endpoint
         @self.app.route("/health", methods=["GET"])
         def health():
+            # Include more detailed information for debugging
             return jsonify(
                 {
                     "status": "healthy",
                     "timestamp": datetime.now().isoformat(),
+                    "server": {
+                        "host": self.host,
+                        "port": self.port,
+                        "url": self.get_url(),
+                    },
+                    "version": "1.0.0",
                 }
             )
 
