@@ -67,26 +67,20 @@ jobs:
         env:
           CI: true
         run: |
-          # Make the integration test script executable
-          chmod +x ./run_integration_tests.sh
-
-          # Set environment variables for Docker
-          export DOCKER_CLIENT_TIMEOUT=120
-          export COMPOSE_HTTP_TIMEOUT=120
-
           # Create the Docker network
           docker network create fogis-network || true
 
-          # Show Docker network list
-          echo "Docker networks:"
-          docker network ls
+          # Start the services
+          docker compose -f docker-compose.ci.yml up -d fogis-api-client mock-fogis-server
 
-          # Show Docker info
-          echo "\nDocker info:"
-          docker info
+          # Wait for services to start
+          sleep 10
 
-          # Run the integration tests with improved error handling
-          ./run_integration_tests.sh
+          # Show running containers
+          docker ps
+
+          # Run the integration tests
+          docker compose -f docker-compose.ci.yml run --rm integration-tests
 
           # Store the exit code
           TEST_EXIT_CODE=$?
@@ -98,20 +92,6 @@ jobs:
             docker logs mock-fogis-server || true
             echo "\nAPI server logs:"
             docker logs fogis-api-client-dev || true
-            echo "\nDocker network info:"
-            docker network inspect fogis-network || true
-            echo "\nDocker container list:"
-            docker ps -a || true
-            echo "\nHost DNS configuration:"
-            cat /etc/resolv.conf || true
-            echo "\nHost /etc/hosts:"
-            cat /etc/hosts || true
-            echo "\nTry to ping containers:"
-            docker exec fogis-api-client-tests ping -c 1 mock-fogis-server || true
-            docker exec fogis-api-client-tests ping -c 1 fogis-api-client-dev || true
-            echo "\nTry to curl containers:"
-            docker exec fogis-api-client-tests curl -v http://mock-fogis-server:5001/health || true
-            docker exec fogis-api-client-tests curl -v http://fogis-api-client-dev:8080/ || true
           fi
 
           # Return the original exit code
