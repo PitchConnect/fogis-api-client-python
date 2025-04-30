@@ -68,9 +68,20 @@ jobs:
           # Make the integration test script executable
           chmod +x ./run_integration_tests.sh
 
-          # Set environment variables for DNS resolution
+          # Set environment variables for Docker
           export DOCKER_CLIENT_TIMEOUT=120
           export COMPOSE_HTTP_TIMEOUT=120
+
+          # Create the Docker network
+          docker network create fogis-network || true
+
+          # Show Docker network list
+          echo "Docker networks:"
+          docker network ls
+
+          # Show Docker info
+          echo "\nDocker info:"
+          docker info
 
           # Run the integration tests with improved error handling
           ./run_integration_tests.sh
@@ -89,12 +100,16 @@ jobs:
             docker network inspect fogis-network || true
             echo "\nDocker container list:"
             docker ps -a || true
-            echo "\nDocker DNS configuration:"
-            cat /etc/docker/daemon.json || true
             echo "\nHost DNS configuration:"
             cat /etc/resolv.conf || true
             echo "\nHost /etc/hosts:"
             cat /etc/hosts || true
+            echo "\nTry to ping containers:"
+            docker exec fogis-api-client-tests ping -c 1 mock-fogis-server || true
+            docker exec fogis-api-client-tests ping -c 1 fogis-api-client-dev || true
+            echo "\nTry to curl containers:"
+            docker exec fogis-api-client-tests curl -v http://mock-fogis-server:5001/health || true
+            docker exec fogis-api-client-tests curl -v http://fogis-api-client-dev:8080/ || true
           fi
 
           # Return the original exit code

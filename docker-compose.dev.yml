@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     container_name: fogis-api-client-dev
-    # Use host network to avoid DNS resolution issues
-    network_mode: host
+    networks:
+      - fogis-network
     ports:
       - "8080:8080"
     volumes:
@@ -47,8 +47,8 @@ services:
       context: .
       dockerfile: Dockerfile.mock
     container_name: mock-fogis-server
-    # Use host network to avoid DNS resolution issues
-    network_mode: host
+    networks:
+      - fogis-network
     ports:
       - "5001:5001"
     volumes:
@@ -71,16 +71,16 @@ services:
       context: .
       dockerfile: Dockerfile.test
     container_name: fogis-api-client-tests
-    # Use host network to avoid DNS resolution issues
-    network_mode: host
+    networks:
+      - fogis-network
     volumes:
       - ./tests:/app/tests
       - ./integration_tests:/app/integration_tests
       - ./test-results:/app/test-results
     environment:
       - PYTHONUNBUFFERED=1
-      - API_URL=http://localhost:8080
-      - MOCK_SERVER_URL=http://localhost:5001
+      - API_URL=http://fogis-api-client-dev:8080
+      - MOCK_SERVER_URL=http://mock-fogis-server:5001
       - PYTHONDONTWRITEBYTECODE=1  # Prevent creation of __pycache__ directories
     depends_on:
       - fogis-api-client
@@ -89,8 +89,7 @@ services:
     # This way we can see which tests are failing and why
     command: ["pytest", "integration_tests", "-v", "--log-cli-level=INFO"]
 
-# We're using host networking for all services, so we don't need to define a network
-# networks:
-#   fogis-network:
-#     name: fogis-network
-#     driver: bridge
+networks:
+  fogis-network:
+    name: fogis-network
+    driver: bridge

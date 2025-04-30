@@ -101,6 +101,10 @@ ping -c 1 google.com || true
 ping -c 1 github.com || true
 ping -c 1 localhost || true
 
+# Create the network if it doesn't exist
+echo "\nCreating Docker network..."
+docker network create fogis-network 2>/dev/null || true
+
 # Start the services
 echo "\nStarting services..."
 docker compose -f docker-compose.dev.yml up -d fogis-api-client mock-fogis-server
@@ -108,6 +112,13 @@ docker compose -f docker-compose.dev.yml up -d fogis-api-client mock-fogis-serve
 # Check if services are running
 echo "\nRunning containers:"
 docker ps
+
+# Check network connectivity
+echo "\nChecking network connectivity:"
+docker network inspect fogis-network
+
+# Wait a bit for services to start
+sleep 5
 
 # Check if the API service is healthy
 check_container_health "fogis-api-client-dev" 10 15 "/" 8080

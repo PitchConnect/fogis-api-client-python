@@ -7,6 +7,8 @@ WORKDIR /app
 # Install test dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    iputils-ping \
+    dnsutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the package files
