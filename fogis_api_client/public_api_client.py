@@ -82,6 +82,10 @@ class PublicApiClient:
     """
 
     BASE_URL: str = "https://fogis.svenskfotboll.se/mdk"
+    # For tests, this can be overridden with an environment variable
+    import os
+    if os.environ.get("FOGIS_API_BASE_URL"):
+        BASE_URL = os.environ.get("FOGIS_API_BASE_URL")
     logger: logging.Logger = logging.getLogger("fogis_api_client.api")
 
     def __init__(
@@ -200,7 +204,7 @@ class PublicApiClient:
         try:
             # Use the internal API client to fetch the match list
             response_data = self.internal_client.get_matches_list(filter_params)
-            
+
             # Convert to the public format
             return cast(MatchListResponse, response_data)
         except InternalApiError as e:
@@ -233,7 +237,7 @@ class PublicApiClient:
         try:
             # Use the internal API client to fetch the match details
             internal_match = self.internal_client.get_match(match_id_int)
-            
+
             # Convert to the public format
             return convert_internal_to_match(internal_match)
         except InternalApiError as e:
@@ -266,12 +270,12 @@ class PublicApiClient:
         try:
             # Use the internal API client to fetch the match players
             internal_players = self.internal_client.get_match_players(match_id_int)
-            
+
             # Convert to the public format
             result: Dict[str, List[PlayerDict]] = {}
             for key, players in internal_players.items():
                 result[key] = [convert_internal_to_player(player) for player in players]
-            
+
             return result
         except InternalApiError as e:
             error_msg = f"Failed to fetch match players: {e}"
@@ -303,12 +307,12 @@ class PublicApiClient:
         try:
             # Use the internal API client to fetch the match officials
             internal_officials = self.internal_client.get_match_officials(match_id_int)
-            
+
             # Convert to the public format
             result: Dict[str, List[OfficialDict]] = {}
             for key, officials in internal_officials.items():
                 result[key] = [convert_internal_to_official(official) for official in officials]
-            
+
             return result
         except InternalApiError as e:
             error_msg = f"Failed to fetch match officials: {e}"
@@ -340,7 +344,7 @@ class PublicApiClient:
         try:
             # Use the internal API client to fetch the match events
             internal_events = self.internal_client.get_match_events(match_id_int)
-            
+
             # Convert to the public format
             return [convert_internal_to_event(event) for event in internal_events]
         except InternalApiError as e:
@@ -373,7 +377,7 @@ class PublicApiClient:
         try:
             # Use the internal API client to fetch the team players
             internal_players = self.internal_client.get_team_players(team_id_int)
-            
+
             # For now, just cast to the public format since they're the same
             return cast(TeamPlayersResponse, internal_players)
         except InternalApiError as e:
@@ -412,10 +416,10 @@ class PublicApiClient:
         try:
             # Convert to the internal format
             internal_event = convert_event_to_internal(event_data)
-            
+
             # Use the internal API client to report the match event
             response_data = self.internal_client.save_match_event(internal_event)
-            
+
             return response_data
         except InternalApiError as e:
             error_msg = f"Failed to report match event: {e}"
@@ -447,7 +451,7 @@ class PublicApiClient:
         try:
             # Use the internal API client to fetch the match result
             internal_result = self.internal_client.get_match_result(match_id_int)
-            
+
             # Convert to the public format
             return convert_internal_to_match_result(internal_result)
         except InternalApiError as e:
@@ -489,10 +493,10 @@ class PublicApiClient:
         try:
             # Convert to the internal format
             internal_result = convert_match_result_to_internal(result_data)
-            
+
             # Use the internal API client to report the match result
             response_data = self.internal_client.save_match_result(internal_result)
-            
+
             return response_data
         except InternalApiError as e:
             error_msg = f"Failed to report match result: {e}"
@@ -524,7 +528,7 @@ class PublicApiClient:
         try:
             # Use the internal API client to delete the match event
             response_data = self.internal_client.delete_match_event(event_id_int)
-            
+
             return response_data
         except InternalApiError as e:
             error_msg = f"Failed to delete match event: {e}"
@@ -562,13 +566,135 @@ class PublicApiClient:
         try:
             # Convert to the internal format
             internal_action = convert_official_action_to_internal(action_data)
-            
+
             # Use the internal API client to report the team official action
             response_data = self.internal_client.save_team_official_action(internal_action)
-            
+
             return response_data
         except InternalApiError as e:
             error_msg = f"Failed to report team official action: {e}"
+            self.logger.error(error_msg)
+            raise FogisAPIRequestError(error_msg) from e
+
+    def fetch_team_officials_json(self, team_id: Union[int, str]) -> List[OfficialDict]:
+        """
+        Fetch officials information for a specific team.
+
+        Args:
+            team_id: The ID of the team
+
+        Returns:
+            List[OfficialDict]: Officials information for the team
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+            FogisDataError: If the response data is invalid
+        """
+        # Ensure we're logged in
+        if not self.cookies:
+            self.login()
+
+        # Convert team_id to int if it's a string
+        team_id_int = int(team_id) if isinstance(team_id, str) else team_id
+
+        try:
+            # Use the internal API client to fetch the team officials
+            internal_officials = self.internal_client.get_team_officials(team_id_int)
+
+            # Convert to the public format
+            return [convert_internal_to_official(official) for official in internal_officials]
+        except InternalApiError as e:
+            error_msg = f"Failed to fetch team officials: {e}"
+            self.logger.error(error_msg)
+            raise FogisAPIRequestError(error_msg) from e
+
+    def save_match_participant(self, participant_data: MatchParticipantDict) -> Dict[str, Any]:
+        """
+        Save a match participant to the FOGIS API.
+
+        Args:
+            participant_data: The match participant data to save
+
+        Returns:
+            Dict[str, Any]: The response from the API
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+            FogisDataError: If the response data is invalid
+            ValueError: If required fields are missing
+        """
+        # Ensure we're logged in
+        if not self.cookies:
+            self.login()
+
+        # Validate required fields
+        required_fields = ["matchdeltagareid", "trojnummer", "lagdelid"]
+        for field in required_fields:
+            if field not in participant_data:
+                error_msg = f"Missing required field '{field}' in participant data"
+                self.logger.error(error_msg)
+                raise ValueError(error_msg)
+
+        try:
+            # Convert to the internal format
+            internal_participant = convert_match_participant_to_internal(participant_data)
+
+            # Use the internal API client to save the match participant
+            url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare"
+            headers = {
+                "Content-Type": "application/json; charset=utf-8",
+                "Accept": "application/json, text/javascript, */*; q=0.01",
+                "X-Requested-With": "XMLHttpRequest",
+            }
+
+            response = self.session.post(url, json=internal_participant, headers=headers)
+            response.raise_for_status()
+
+            # Parse the JSON response
+            response_data = response.json()
+
+            # Extract the 'd' field if it exists
+            if isinstance(response_data, dict) and "d" in response_data:
+                try:
+                    return json.loads(response_data["d"])
+                except (json.JSONDecodeError, TypeError):
+                    return response_data["d"]
+
+            return response_data
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Failed to save match participant: {e}"
+            self.logger.error(error_msg)
+            raise FogisAPIRequestError(error_msg) from e
+
+    def clear_match_events(self, match_id: Union[int, str]) -> Dict[str, bool]:
+        """
+        Clear all events for a match.
+
+        Args:
+            match_id: The ID of the match
+
+        Returns:
+            Dict[str, bool]: The response from the API
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+            FogisDataError: If the response data is invalid
+        """
+        # Ensure we're logged in
+        if not self.cookies:
+            self.login()
+
+        # Convert match_id to int if it's a string
+        match_id_int = int(match_id) if isinstance(match_id, str) else match_id
+
+        try:
+            # Use the internal API client to clear the match events
+            return self.internal_client.clear_match_events(match_id_int)
+        except InternalApiError as e:
+            error_msg = f"Failed to clear match events: {e}"
             self.logger.error(error_msg)
             raise FogisAPIRequestError(error_msg) from e
 
@@ -628,7 +754,7 @@ class PublicApiClient:
             # Use the internal API client to mark reporting as finished
             url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport"
             payload = {"matchid": match_id_int}
-            
+
             # For now, use the _api_request method directly since we don't have an internal method for this
             response_data = self.session.post(url, json=payload, headers={
                 "Content-Type": "application/json; charset=utf-8",
@@ -636,10 +762,10 @@ class PublicApiClient:
                 "X-Requested-With": "XMLHttpRequest",
             })
             response_data.raise_for_status()
-            
+
             # Parse the JSON response
             response_json = response_data.json()
-            
+
             # Extract the 'd' field if it exists
             if isinstance(response_json, dict) and "d" in response_json:
                 try:
@@ -647,7 +773,7 @@ class PublicApiClient:
                     return cast(Dict[str, bool], result)
                 except (json.JSONDecodeError, TypeError):
                     return {"success": True}
-            
+
             return {"success": True}
         except requests.exceptions.RequestException as e:
             error_msg = f"Failed to mark reporting as finished: {e}"
