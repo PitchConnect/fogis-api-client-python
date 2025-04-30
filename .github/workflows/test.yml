@@ -52,10 +52,26 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
+      - name: Set up DNS for Docker
+        run: |
+          # Configure DNS for Docker
+          echo '{"dns": ["8.8.8.8", "8.8.4.4"]}' | sudo tee /etc/docker/daemon.json
+          sudo service docker restart
+
+          # Wait for Docker to restart
+          sleep 10
+
+          # Verify Docker is running
+          docker info
+
       - name: Run integration tests
         run: |
           # Make the integration test script executable
           chmod +x ./run_integration_tests.sh
+
+          # Set environment variables for DNS resolution
+          export DOCKER_CLIENT_TIMEOUT=120
+          export COMPOSE_HTTP_TIMEOUT=120
 
           # Run the integration tests with improved error handling
           ./run_integration_tests.sh
@@ -74,6 +90,12 @@ jobs:
             docker network inspect fogis-network || true
             echo "\nDocker container list:"
             docker ps -a || true
+            echo "\nDocker DNS configuration:"
+            cat /etc/docker/daemon.json || true
+            echo "\nHost DNS configuration:"
+            cat /etc/resolv.conf || true
+            echo "\nHost /etc/hosts:"
+            cat /etc/hosts || true
           fi
 
           # Return the original exit code

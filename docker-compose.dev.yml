@@ -107,3 +107,6 @@ networks:
     # Use internal network instead of external to ensure proper DNS resolution
     name: fogis-network
     driver: bridge
+    # Add DNS configuration for GitHub Actions
+    driver_opts:
+      com.docker.network.driver.mtu: "1500"

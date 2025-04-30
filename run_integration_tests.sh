@@ -99,6 +99,11 @@ echo "Starting services..."
 echo "Docker network information:"
 docker network ls
 
+# Check DNS resolution
+echo "\nChecking DNS resolution:"
+ping -c 1 google.com || true
+ping -c 1 github.com || true
+
 # Start the services
 docker compose -f docker-compose.dev.yml up -d fogis-api-client mock-fogis-server
 
