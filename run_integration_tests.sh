@@ -105,9 +105,20 @@ ping -c 1 localhost || true
 echo "\nCreating Docker network..."
 docker network create fogis-network 2>/dev/null || true
 
+# Determine which docker-compose file to use
+if [ "$CI" = "true" ]; then
+    # Use the CI-specific docker-compose file in CI environments
+    COMPOSE_FILE="docker-compose.ci.yml"
+    echo "Running in CI environment, using $COMPOSE_FILE"
+else
+    # Use the development docker-compose file in local environments
+    COMPOSE_FILE="docker-compose.dev.yml"
+    echo "Running in local environment, using $COMPOSE_FILE"
+fi
+
 # Start the services
 echo "\nStarting services..."
-docker compose -f docker-compose.dev.yml up -d fogis-api-client mock-fogis-server
+docker compose -f $COMPOSE_FILE up -d fogis-api-client mock-fogis-server
 
 # Check if services are running
 echo "\nRunning containers:"
@@ -130,11 +141,11 @@ MOCK_HEALTHY=$?
 
 # Show service status
 echo "\nService status:"
-docker compose -f docker-compose.dev.yml ps
+docker compose -f $COMPOSE_FILE ps
 
 # Run the integration tests
 echo "\nRunning integration tests..."
-docker compose -f docker-compose.dev.yml run --rm integration-tests
+docker compose -f $COMPOSE_FILE run --rm integration-tests
 TEST_EXIT_CODE=$?
 
 echo "Integration tests completed with exit code: $TEST_EXIT_CODE"
