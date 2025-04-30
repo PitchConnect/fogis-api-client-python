@@ -10,7 +10,9 @@ from fogis_api_client.api_contracts import (
     validate_response,
 )
 from fogis_api_client.event_types import EVENT_TYPES
-from fogis_api_client.fogis_api_client import FogisApiClient, FogisAPIRequestError, FogisDataError, FogisLoginError
+# Import from the public API client for backward compatibility
+from fogis_api_client.public_api_client import PublicApiClient as FogisApiClient
+from fogis_api_client.public_api_client import FogisAPIRequestError, FogisDataError, FogisLoginError
 from fogis_api_client.logging_config import (
     SensitiveFilter,
     add_sensitive_filter,

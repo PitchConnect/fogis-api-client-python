@@ -17,6 +17,26 @@ A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
 * **Logging**: Built-in logging for debugging and monitoring
 * **Docker Support**: Easy deployment and development with Docker
 * **Utility Tools**: Testing utilities and development tools
+* **Clean Architecture**: Separation of public and internal APIs for better maintainability
+
+## Architecture
+
+The FOGIS API Client is designed with a clean architecture that separates the public API from the internal implementation details. This separation allows for better maintainability and makes it easier to adapt to changes in the FOGIS API without breaking the public interface.
+
+### Public API
+
+The public API is what users of the library interact with. It provides a simple, intuitive interface for common operations like fetching match lists, reporting events, and managing match results. The public API is designed to be stable and backward-compatible.
+
+### Internal API
+
+The internal API handles the low-level communication with the FOGIS API server. It's responsible for:
+
+1. Converting between public and internal data formats
+2. Handling authentication and session management
+3. Implementing the low-level API contracts
+4. Validating request and response data
+
+This separation allows the public API to focus on usability and type safety, while the internal API ensures compatibility with the server requirements.
 
 ## Installation
 
