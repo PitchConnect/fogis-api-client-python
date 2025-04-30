@@ -13,10 +13,15 @@ check_container_health() {
 
     echo "Checking if $container_name is healthy..."
 
+    # Get container IP address
+    local container_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $container_name 2>/dev/null || echo "unknown")
+    echo "Container $container_name IP address: $container_ip"
+
     for ((i=1; i<=max_attempts; i++)); do
         # Check if container is running
         if ! docker ps | grep -q $container_name; then
             echo "$container_name is not running! Attempt $i/$max_attempts"
+            docker ps -a | grep $container_name || true
             sleep $delay
             continue
         fi
@@ -31,13 +36,39 @@ check_container_health() {
 
         # Try to access the endpoint if provided
         if [ -n "$endpoint" ] && [ -n "$port" ]; then
+            # Try localhost first
+            echo "Trying to access $container_name via localhost:$port$endpoint"
             RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$port$endpoint || echo "failed")
 
             if [ "$RESPONSE" = "200" ]; then
-                echo "$container_name is responding with 200 OK."
+                echo "$container_name is responding with 200 OK via localhost."
                 return 0
             else
-                echo "$container_name returned status $RESPONSE. Attempt $i/$max_attempts"
+                echo "$container_name returned status $RESPONSE via localhost. Attempt $i/$max_attempts"
+
+                # Try container IP if available
+                if [ "$container_ip" != "unknown" ]; then
+                    echo "Trying to access $container_name via $container_ip:$port$endpoint"
+                    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://$container_ip:$port$endpoint || echo "failed")
+
+                    if [ "$RESPONSE" = "200" ]; then
+                        echo "$container_name is responding with 200 OK via container IP."
+                        return 0
+                    else
+                        echo "$container_name returned status $RESPONSE via container IP. Attempt $i/$max_attempts"
+                    fi
+                fi
+
+                # Try container name
+                echo "Trying to access $container_name via $container_name:$port$endpoint"
+                RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://$container_name:$port$endpoint || echo "failed")
+
+                if [ "$RESPONSE" = "200" ]; then
+                    echo "$container_name is responding with 200 OK via container name."
+                    return 0
+                else
+                    echo "$container_name returned status $RESPONSE via container name. Attempt $i/$max_attempts"
+                fi
             fi
         else
             echo "$container_name health status: $HEALTH. Attempt $i/$max_attempts"
@@ -47,7 +78,10 @@ check_container_health() {
     done
 
     echo "$container_name is not healthy after $max_attempts attempts!"
+    echo "Container logs:"
     docker logs $container_name --tail 20
+    echo "\nContainer inspection:"
+    docker inspect $container_name | grep -A 10 Health || true
     return 1
 }
 
@@ -60,7 +94,17 @@ docker compose -f docker-compose.dev.yml down -v 2>/dev/null || true
 
 # Start the services
 echo "Starting services..."
+
+# Print Docker network information
+echo "Docker network information:"
+docker network ls
+
+# Start the services
 docker compose -f docker-compose.dev.yml up -d fogis-api-client mock-fogis-server
+
+# Print container IP addresses
+echo "\nContainer IP addresses:"
+docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -q) || true
 
 # Check if the API service is healthy
 check_container_health "fogis-api-client-dev" 10 15 "/" 8080

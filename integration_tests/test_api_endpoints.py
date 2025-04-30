@@ -38,7 +38,31 @@ def retry_on_failure(max_retries=3, delay=2):
 
 # Get the API URL from environment variable or use default
 # When running in Docker, this should be set to http://fogis-api-client-dev:8080
-API_URL = os.environ.get("API_URL", "http://localhost:8080")
+# Use IP address instead of hostname to avoid DNS resolution issues
+API_URL = os.environ.get("API_URL", "http://127.0.0.1:8080")
+
+# Try different URLs if the default one doesn't work
+API_URLS_TO_TRY = [
+    API_URL,
+    "http://localhost:8080",
+    "http://fogis-api-client-dev:8080",
+    "http://host.docker.internal:8080",  # For Docker Desktop on macOS/Windows
+]
+
+# Try each URL until one works
+for url in API_URLS_TO_TRY:
+    try:
+        logger.info(f"Trying to connect to API at {url}")
+        response = requests.get(f"{url}/health", timeout=1)
+        if response.status_code == 200:
+            API_URL = url
+            logger.info(f"Successfully connected to API at {url}")
+            break
+    except requests.exceptions.RequestException as e:
+        logger.info(f"Failed to connect to {url}: {e}")
+else:
+    # If we get here, none of the URLs worked
+    logger.warning("Could not connect to API with any of the tried URLs")
 
 
 @retry_on_failure(max_retries=5, delay=3)

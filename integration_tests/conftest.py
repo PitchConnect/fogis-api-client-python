@@ -23,19 +23,31 @@ def mock_fogis_server() -> Generator[Dict[str, str], None, None]:
         Dict with server information including the base URL
     """
     # Get the mock server URL from environment variable or use default
-    mock_server_url = os.environ.get("MOCK_SERVER_URL", "http://mock-fogis-server:5001")
+    # Use IP address instead of hostname to avoid DNS resolution issues
+    mock_server_url = os.environ.get("MOCK_SERVER_URL", "http://127.0.0.1:5001")
 
-    # For local testing outside of Docker, fall back to localhost if the container isn't accessible
-    if "mock-fogis-server" in mock_server_url:
+    # Try different URLs if the default one doesn't work
+    urls_to_try = [
+        mock_server_url,
+        "http://localhost:5001",
+        "http://mock-fogis-server:5001",
+        "http://host.docker.internal:5001",  # For Docker Desktop on macOS/Windows
+    ]
+
+    # Try each URL until one works
+    for url in urls_to_try:
         try:
-            # Try to connect to the containerized mock server
-            response = requests.get(f"{mock_server_url}/health", timeout=1)
-            if response.status_code != 200:
-                # If not successful, fall back to localhost
-                mock_server_url = "http://localhost:5001"
-        except requests.exceptions.RequestException:
-            # If connection fails, fall back to localhost
-            mock_server_url = "http://localhost:5001"
+            logger.info(f"Trying to connect to mock server at {url}")
+            response = requests.get(f"{url}/health", timeout=1)
+            if response.status_code == 200:
+                mock_server_url = url
+                logger.info(f"Successfully connected to mock server at {url}")
+                break
+        except requests.exceptions.RequestException as e:
+            logger.info(f"Failed to connect to {url}: {e}")
+    else:
+        # If we get here, none of the URLs worked
+        logger.warning("Could not connect to mock server with any of the tried URLs")
 
     # Wait for the server to be ready
     max_retries = 10

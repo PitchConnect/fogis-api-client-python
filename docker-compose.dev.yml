@@ -23,6 +23,10 @@ services:
       - TZ=Europe/Stockholm
       # Ensure correct dependency versions
       - PIP_EXTRA_INDEX_URL=https://pypi.org/simple
+    # Add extra hosts to help with DNS resolution
+    extra_hosts:
+      - "mock-fogis-server:127.0.0.1"
+      - "host.docker.internal:host-gateway"
     healthcheck:
       # Use a verbose health check for development to help diagnose issues
       # Use 0.0.0.0 instead of 127.0.0.1 to ensure it works in all network configurations
@@ -58,6 +62,10 @@ services:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
       - MOCK_SERVER_PORT=5001
+    # Add extra hosts to help with DNS resolution
+    extra_hosts:
+      - "fogis-api-client-dev:127.0.0.1"
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
       interval: 10s
@@ -81,20 +89,21 @@ services:
       - PYTHONUNBUFFERED=1
       - API_URL=http://fogis-api-client-dev:8080
       - MOCK_SERVER_URL=http://mock-fogis-server:5001
+      - PYTHONDONTWRITEBYTECODE=1  # Prevent creation of __pycache__ directories
+    # Add extra hosts to help with DNS resolution
+    extra_hosts:
+      - "fogis-api-client-dev:127.0.0.1"
+      - "mock-fogis-server:127.0.0.1"
+      - "host.docker.internal:host-gateway"
     depends_on:
       - fogis-api-client
       - mock-fogis-server
     # We're removing the health check dependency to allow tests to run even if the service is unhealthy
     # This way we can see which tests are failing and why
-    command: ["pytest", "integration_tests", "-v"]
+    command: ["pytest", "integration_tests", "-v", "--log-cli-level=INFO"]
 
 networks:
   fogis-network:
     # Use internal network instead of external to ensure proper DNS resolution
     name: fogis-network
     driver: bridge
-    # Add DNS configuration to ensure containers can resolve each other by name
-    driver_opts:
-      com.docker.network.bridge.enable_icc: "true"
-      com.docker.network.bridge.enable_ip_masquerade: "true"
-      com.docker.network.bridge.host_binding_ipv4: "0.0.0.0"
