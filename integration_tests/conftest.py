@@ -23,15 +23,14 @@ def mock_fogis_server() -> Generator[Dict[str, str], None, None]:
         Dict with server information including the base URL
     """
     # Get the mock server URL from environment variable or use default
-    # Use IP address instead of hostname to avoid DNS resolution issues
-    mock_server_url = os.environ.get("MOCK_SERVER_URL", "http://127.0.0.1:5001")
+    # Use localhost since we're using host networking
+    mock_server_url = os.environ.get("MOCK_SERVER_URL", "http://localhost:5001")
 
     # Try different URLs if the default one doesn't work
     urls_to_try = [
         mock_server_url,
-        "http://localhost:5001",
-        "http://mock-fogis-server:5001",
-        "http://host.docker.internal:5001",  # For Docker Desktop on macOS/Windows
+        "http://127.0.0.1:5001",
+        "http://0.0.0.0:5001",
     ]
 
     # Try each URL until one works

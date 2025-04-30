@@ -95,21 +95,19 @@ docker compose -f docker-compose.dev.yml down -v 2>/dev/null || true
 # Start the services
 echo "Starting services..."
 
-# Print Docker network information
-echo "Docker network information:"
-docker network ls
-
 # Check DNS resolution
 echo "\nChecking DNS resolution:"
 ping -c 1 google.com || true
 ping -c 1 github.com || true
+ping -c 1 localhost || true
 
 # Start the services
+echo "\nStarting services..."
 docker compose -f docker-compose.dev.yml up -d fogis-api-client mock-fogis-server
 
-# Print container IP addresses
-echo "\nContainer IP addresses:"
-docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -q) || true
+# Check if services are running
+echo "\nRunning containers:"
+docker ps
 
 # Check if the API service is healthy
 check_container_health "fogis-api-client-dev" 10 15 "/" 8080
