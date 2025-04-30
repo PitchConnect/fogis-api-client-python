@@ -37,11 +37,18 @@ We follow a modified GitFlow workflow to ensure that the main branch is always i
 3. Write or update tests for your changes
 4. Run all tests locally:
    ```bash
-   # Option 1: Run tests directly
+   # Option 1: Run unit tests directly
    python -m unittest discover tests
+
+   # Option 2: Run integration tests with Docker (recommended)
+   # This automatically sets up the mock server and API client in Docker
+   ./run_integration_tests.sh
+
+   # Option 3: Run integration tests directly (requires manual setup)
+   # Note: This requires the mock server to be running separately
    python -m pytest integration_tests
 
-   # Option 2: Use the test script (handles Docker setup automatically)
+   # Option 4: Use the comprehensive test script
    ./tools/testing/run_local_tests.sh
    ```
 5. Ensure pre-commit hooks pass: `pre-commit run --all-files`
@@ -201,6 +208,52 @@ Before submitting a pull request, please ensure all tests pass:
 - Integration tests for API endpoints
 - Regression tests for critical functionality
 - Mock external dependencies when appropriate
+
+### Integration Test Setup
+
+The integration tests use a containerized mock server to simulate the FOGIS API. This approach ensures consistent test results across different environments, including CI/CD pipelines.
+
+#### Components:
+
+1. **Mock Server Container**: A dedicated container that runs a Flask-based mock server simulating the FOGIS API endpoints.
+2. **API Client Container**: The main application container that runs the FOGIS API client.
+3. **Integration Test Container**: A container that runs the integration tests against both the mock server and API client.
+
+#### Running Integration Tests:
+
+The `run_integration_tests.sh` script handles the entire setup:
+
+```bash
+./run_integration_tests.sh
+```
+
+This script:
+- Creates the necessary Docker network
+- Starts the mock server and API client containers
+- Waits for both containers to be healthy
+- Runs the integration tests
+- Reports the results
+
+#### Troubleshooting Integration Tests:
+
+If integration tests fail:
+
+1. Check the logs of the mock server container:
+   ```bash
+   docker logs mock-fogis-server
+   ```
+
+2. Check the logs of the API client container:
+   ```bash
+   docker logs fogis-api-client-dev
+   ```
+
+3. Ensure both containers are running and healthy:
+   ```bash
+   docker ps
+   docker inspect --format='{{.State.Health.Status}}' mock-fogis-server
+   docker inspect --format='{{.State.Health.Status}}' fogis-api-client-dev
+   ```
 
 ### Pre-commit Hooks
 

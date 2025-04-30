@@ -1,0 +1,49 @@
+# Use a slim Python base image
+FROM python:3.9-slim-buster
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only the necessary files for the mock server
+COPY integration_tests/ /app/integration_tests/
+COPY requirements.txt /app/
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir flask flask-swagger-ui apispec>=6.0.0 marshmallow
+
+# Create a simple script to run the mock server
+RUN echo '#!/usr/bin/env python3\n\
+import logging\n\
+import os\n\
+from integration_tests.mock_fogis_server import MockFogisServer\n\
+\n\
+# Configure logging\n\
+logging.basicConfig(level=logging.INFO)\n\
+logger = logging.getLogger(__name__)\n\
+\n\
+if __name__ == "__main__":\n\
+    # Get port from environment variable or use default\n\
+    port = int(os.environ.get("MOCK_SERVER_PORT", 5001))\n\
+    # Start the server\n\
+    server = MockFogisServer(host="0.0.0.0", port=port)\n\
+    server.run()\n\
+' > /app/run_mock_server.py
+
+# Make the script executable
+RUN chmod +x /app/run_mock_server.py
+
+# Expose the port the mock server runs on
+EXPOSE 5000
+
+# Health check to ensure the server is running
+HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:5000/health || exit 1
+
+# Command to run the mock server
+CMD ["python", "/app/run_mock_server.py"]

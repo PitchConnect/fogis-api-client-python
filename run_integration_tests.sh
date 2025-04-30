@@ -3,74 +3,83 @@
 # Create necessary directories if they don't exist
 mkdir -p test-results
 
-# Start the development environment if it's not already running
-if ! docker ps | grep -q fogis-api-client-dev; then
-    echo "Starting development environment..."
+# Function to check if a container is healthy
+check_container_health() {
+    local container_name=$1
+    local max_attempts=$2
+    local delay=$3
+    local endpoint=$4
+    local port=$5
 
-    # Remove any existing containers to ensure a clean start
-    docker compose -f docker-compose.dev.yml down -v 2>/dev/null || true
+    echo "Checking if $container_name is healthy..."
 
-    # Create the network if it doesn't exist
-    docker network create fogis-network 2>/dev/null || true
-
-    # Start the service in the foreground to see logs
-    echo "Starting API service and showing logs for 10 seconds..."
-    docker compose -f docker-compose.dev.yml up fogis-api-client &
-    DOCKER_PID=$!
-    sleep 10
-    kill $DOCKER_PID 2>/dev/null || true
-
-    # Now start it in the background
-    echo "Starting API service in the background..."
-    docker compose -f docker-compose.dev.yml up -d fogis-api-client
-
-    # Simple wait for the service to start
-    echo "Waiting for API service to start..."
-    sleep 15  # Give the container time to start
-
-    # Check if the container is running
-    if docker ps | grep -q fogis-api-client-dev; then
-        echo "Container is running. Checking if API is responding..."
-
-        # Try to access the API
-        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || echo "failed")
-
-        if [ "$RESPONSE" = "200" ]; then
-            echo "API is responding with 200 OK. Proceeding with tests."
-        else
-            echo "API returned status $RESPONSE. Waiting a bit longer..."
-            sleep 15  # Wait a bit longer
-
-            # Try one more time
-            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/ || echo "failed")
-            if [ "$RESPONSE" = "200" ]; then
-                echo "API is now responding with 200 OK. Proceeding with tests."
-            else
-                echo "API still returned status $RESPONSE. Proceeding with tests anyway."
-                # Show container logs for debugging
-                echo "Container logs:"
-                docker logs fogis-api-client-dev --tail 20
-            fi
+    for ((i=1; i<=max_attempts; i++)); do
+        # Check if container is running
+        if ! docker ps | grep -q $container_name; then
+            echo "$container_name is not running! Attempt $i/$max_attempts"
+            sleep $delay
+            continue
         fi
-    else
-        echo "Container is not running! Starting it..."
-        docker compose -f docker-compose.dev.yml up -d fogis-api-client
-        sleep 15  # Wait for container to start
-    fi
 
-    # Final check to confirm API is responding
-    echo "Final API check before proceeding:"
-    curl -v http://localhost:8080/
-    echo ""
+        # Check container health status
+        HEALTH=$(docker inspect --format='{{.State.Health.Status}}' $container_name 2>/dev/null || echo "unhealthy")
 
-    # Get debug information to help diagnose health check issues
-    echo "Getting debug information:"
-    curl -s http://localhost:8080/debug | jq . || echo "Debug endpoint failed"
-fi
+        if [ "$HEALTH" = "healthy" ]; then
+            echo "$container_name is healthy!"
+            return 0
+        fi
+
+        # Try to access the endpoint if provided
+        if [ -n "$endpoint" ] && [ -n "$port" ]; then
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$port$endpoint || echo "failed")
+
+            if [ "$RESPONSE" = "200" ]; then
+                echo "$container_name is responding with 200 OK."
+                return 0
+            else
+                echo "$container_name returned status $RESPONSE. Attempt $i/$max_attempts"
+            fi
+        else
+            echo "$container_name health status: $HEALTH. Attempt $i/$max_attempts"
+        fi
+
+        sleep $delay
+    done
+
+    echo "$container_name is not healthy after $max_attempts attempts!"
+    docker logs $container_name --tail 20
+    return 1
+}
+
+# Create the network if it doesn't exist
+docker network create fogis-network 2>/dev/null || true
+
+# Remove any existing containers to ensure a clean start
+echo "Stopping any existing containers..."
+docker compose -f docker-compose.dev.yml down -v 2>/dev/null || true
+
+# Start the services
+echo "Starting services..."
+docker compose -f docker-compose.dev.yml up -d fogis-api-client mock-fogis-server
+
+# Check if the API service is healthy
+check_container_health "fogis-api-client-dev" 10 15 "/" 8080
+API_HEALTHY=$?
+
+# Check if the mock server is healthy
+check_container_health "mock-fogis-server" 10 5 "/health" 5000
+MOCK_HEALTHY=$?
+
+# Show service status
+echo "\nService status:"
+docker compose -f docker-compose.dev.yml ps
 
 # Run the integration tests
-echo "Running integration tests..."
+echo "\nRunning integration tests..."
 docker compose -f docker-compose.dev.yml run --rm integration-tests
+TEST_EXIT_CODE=$?
 
-# Show test results
-echo "Integration tests completed."
+echo "Integration tests completed with exit code: $TEST_EXIT_CODE"
+
+# Return the test exit code
+exit $TEST_EXIT_CODE

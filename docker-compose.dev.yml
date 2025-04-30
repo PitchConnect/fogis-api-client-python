@@ -42,6 +42,30 @@ services:
     restart: unless-stopped
     command: ["python", "fogis_api_gateway.py"]
 
+  mock-fogis-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    container_name: mock-fogis-server
+    networks:
+      - fogis-network
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./integration_tests:/app/integration_tests
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - MOCK_SERVER_PORT=5001
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
   integration-tests:
     build:
       context: .
@@ -56,8 +80,10 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - API_URL=http://fogis-api-client-dev:8080
+      - MOCK_SERVER_URL=http://mock-fogis-server:5001
     depends_on:
       - fogis-api-client
+      - mock-fogis-server
     # We're removing the health check dependency to allow tests to run even if the service is unhealthy
     # This way we can see which tests are failing and why
     command: ["pytest", "integration_tests", "-v"]

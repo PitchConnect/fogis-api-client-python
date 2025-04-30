@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
 COPY . .
 
 # Install dependencies
-RUN pip install --no-cache-dir marshmallow>=3.26.0
+RUN pip install --no-cache-dir marshmallow>=3.26.0 jsonschema
 RUN pip install --no-cache-dir -e .
 RUN pip install --no-cache-dir pytest pytest-cov requests flask-swagger-ui apispec>=6.0.0 docker
 

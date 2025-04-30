@@ -54,8 +54,29 @@ jobs:
 
       - name: Run integration tests
         run: |
+          # Create Docker network if it doesn't exist
           docker network create fogis-network || true
+
+          # Make the integration test script executable
+          chmod +x ./run_integration_tests.sh
+
+          # Run the integration tests with improved error handling
           ./run_integration_tests.sh
+
+          # Store the exit code
+          TEST_EXIT_CODE=$?
+
+          # Show Docker logs for debugging if tests failed
+          if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "Integration tests failed with exit code $TEST_EXIT_CODE"
+            echo "\nMock server logs:"
+            docker logs mock-fogis-server || true
+            echo "\nAPI server logs:"
+            docker logs fogis-api-client-dev || true
+          fi
+
+          # Return the original exit code
+          exit $TEST_EXIT_CODE
 
   publish:
     needs: build  # Only run after the 'build' job is successful
