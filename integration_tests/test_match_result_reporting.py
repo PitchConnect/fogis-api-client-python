@@ -153,7 +153,13 @@ class TestMatchResultReporting:
     ):
         """Test reporting match results with invalid nested format."""
         # Override the base URL to use the mock server
+        original_base_url = FogisApiClient.BASE_URL
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+
+        # Also override the internal API client's base URL
+        from fogis_api_client.internal.api_client import InternalApiClient
+        original_internal_base_url = InternalApiClient.BASE_URL
+        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
