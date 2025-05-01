@@ -41,6 +41,8 @@ services:
     init: true
     restart: unless-stopped
     command: ["python", "fogis_api_gateway.py"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   mock-fogis-server:
     build:
@@ -65,6 +67,8 @@ services:
       retries: 3
       start_period: 10s
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   integration-tests:
     build:
@@ -88,6 +92,8 @@ services:
     # We're removing the health check dependency to allow tests to run even if the service is unhealthy
     # This way we can see which tests are failing and why
     command: ["pytest", "integration_tests", "-v", "--log-cli-level=INFO"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   fogis-network:
