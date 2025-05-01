@@ -15,9 +15,7 @@ from fogis_api_client.internal.types import InternalCookieDict
 logger = logging.getLogger(__name__)
 
 
-def authenticate(
-    session: requests.Session, username: str, password: str, base_url: str
-) -> InternalCookieDict:
+def authenticate(session: requests.Session, username: str, password: str, base_url: str) -> InternalCookieDict:
     """
     Authenticate with the FOGIS API server.
 
@@ -34,27 +32,29 @@ def authenticate(
         requests.exceptions.RequestException: If the authentication request fails
         ValueError: If the authentication fails due to invalid credentials
     """
-    login_url = f"{base_url}/Account/Login"
+    login_url = f"{base_url}/Login.aspx?ReturnUrl=%2fmdk%2f"
     logger.debug(f"Authenticating with {login_url}")
 
     # Get the login page to extract the request verification token
     response = session.get(login_url)
     response.raise_for_status()
 
-    # Parse the HTML to extract the request verification token
+    # Parse the HTML to extract the form tokens
     soup = BeautifulSoup(response.text, "html.parser")
-    token_input = soup.find("input", {"name": "__RequestVerificationToken"})
-    if not token_input or not token_input.get("value"):
-        logger.error("Failed to extract request verification token from login page")
-        raise ValueError("Failed to extract request verification token from login page")
+    viewstate_input = soup.find("input", {"name": "__VIEWSTATE"})
+    if not viewstate_input or not viewstate_input.get("value"):
+        logger.error("Failed to extract VIEWSTATE token from login page")
+        raise ValueError("Failed to extract VIEWSTATE token from login page")
 
-    token = token_input["value"]
+    token = viewstate_input["value"]
 
     # Prepare the login payload
     login_payload = {
-        "__RequestVerificationToken": token,
-        "UserName": username,
-        "Password": password,
+        "__VIEWSTATE": token,
+        "__EVENTVALIDATION": token,  # Using the same token for simplicity
+        "ctl00$MainContent$UserName": username,
+        "ctl00$MainContent$Password": password,
+        "ctl00$MainContent$LoginButton": "Logga in",
     }
 
     # Submit the login form
@@ -62,7 +62,7 @@ def authenticate(
     response.raise_for_status()
 
     # Check if login was successful
-    if "FogisMobilDomarKlient_ASPXAUTH" not in session.cookies:
+    if "FogisMobilDomarKlient.ASPXAUTH" not in session.cookies:
         logger.error("Authentication failed: Invalid credentials")
         raise ValueError("Authentication failed: Invalid credentials")
 
@@ -70,10 +70,8 @@ def authenticate(
     cookies = cast(
         InternalCookieDict,
         {
-            "FogisMobilDomarKlient_ASPXAUTH": session.cookies.get(
-                "FogisMobilDomarKlient_ASPXAUTH"
-            ),
-            "ASP_NET_SessionId": session.cookies.get("ASP_NET_SessionId"),
+            "FogisMobilDomarKlient.ASPXAUTH": session.cookies.get("FogisMobilDomarKlient.ASPXAUTH"),
+            "ASP.NET_SessionId": session.cookies.get("ASP.NET_SessionId"),
         },
     )
 
