@@ -69,10 +69,7 @@ jobs:
           chmod +x ./run_ci_tests.sh
 
           # Run the integration tests
-          # Skip integration tests for now to get the PR passing
-          # ./run_ci_tests.sh
-          echo "Skipping integration tests for now to get the PR passing..."
-          exit 0
+          ./run_ci_tests.sh
 
   publish:
     needs: build  # Only run after the 'build' job is successful
