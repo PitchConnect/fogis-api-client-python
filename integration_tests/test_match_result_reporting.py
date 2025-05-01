@@ -4,14 +4,13 @@ Integration tests for match result reporting.
 These tests verify that the match result reporting functionality works correctly
 and that the client sends the correct data structure to the API.
 """
-import json
 import logging
-import requests
-from typing import Dict, List, Any, cast
+from typing import Dict, cast
 
 import pytest
+import requests
 
-from fogis_api_client import FogisApiClient, FogisAPIRequestError, FogisDataError
+from fogis_api_client import FogisApiClient, FogisAPIRequestError
 from fogis_api_client.types import MatchResultDict
 
 # Configure logging
@@ -149,9 +148,7 @@ class TestMatchResultReporting:
         with pytest.raises(FogisAPIRequestError):
             client.report_match_result(result_data)
 
-    def test_report_match_result_with_extra_time(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_report_match_result_with_extra_time(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test reporting match results with extra time."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -204,9 +201,7 @@ class TestMatchResultReporting:
         assert "success" in response
         assert response["success"] is True
 
-    def test_report_match_result_with_penalties(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_report_match_result_with_penalties(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test reporting match results with penalties."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -303,9 +298,7 @@ class TestMatchResultReporting:
         assert "success" in response
         assert response["success"] is True
 
-    def test_complete_match_reporting_workflow(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_complete_match_reporting_workflow(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test the complete match reporting workflow."""
         # Override the base URL to use the mock server
         FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
@@ -343,8 +336,9 @@ class TestMatchResultReporting:
         history_data = history_response.json()
 
         # Find the match result request in the history
-        match_result_requests = [req for req in history_data["history"]
-                               if req["endpoint"] == "/MatchWebMetoder.aspx/SparaMatchresultatLista"]
+        match_result_requests = [
+            req for req in history_data["history"] if req["endpoint"] == "/MatchWebMetoder.aspx/SparaMatchresultatLista"
+        ]
 
         assert len(match_result_requests) > 0, "No match result request found in history"
 
@@ -410,8 +404,9 @@ class TestMatchResultReporting:
         history_data = history_response.json()
 
         # Find the match result request in the history
-        match_result_requests = [req for req in history_data["history"]
-                               if req["endpoint"] == "/MatchWebMetoder.aspx/SparaMatchresultatLista"]
+        match_result_requests = [
+            req for req in history_data["history"] if req["endpoint"] == "/MatchWebMetoder.aspx/SparaMatchresultatLista"
+        ]
 
         assert len(match_result_requests) > 0, "No match result request found in history"
 

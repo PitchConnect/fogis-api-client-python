@@ -7,7 +7,7 @@ the expected structure required by the FOGIS API.
 
 import json
 import logging
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -52,15 +52,9 @@ class RequestValidator:
                 "matchlagid",
             ]
         },
-        "/MatchWebMetoder.aspx/SparaMatchlagledare": {
-            "required_fields": ["matchlagid", "personid", "roll"]
-        },
-        "/MatchWebMetoder.aspx/SparaMatchdeltagare": {
-            "required_fields": ["matchdeltagareid", "trojnummer"]
-        },
-        "/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport": {
-            "required_fields": ["matchid"]
-        },
+        "/MatchWebMetoder.aspx/SparaMatchlagledare": {"required_fields": ["matchlagid", "personid", "roll"]},
+        "/MatchWebMetoder.aspx/SparaMatchdeltagare": {"required_fields": ["matchdeltagareid", "trojnummer"]},
+        "/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport": {"required_fields": ["matchid"]},
     }
 
     @staticmethod
@@ -85,14 +79,16 @@ class RequestValidator:
             return True  # No schema defined, so we can't validate
 
         # Check required fields
-        for field in schema.get("required_fields", []):
+        required_fields = schema.get("required_fields", [])
+        for field in required_fields:
             if field not in data:
                 error_msg = f"Missing required field '{field}' in request to {endpoint}"
                 logger.error(error_msg)
                 raise RequestValidationError(error_msg)
 
         # Check nested fields
-        for field, nested_schema in schema.get("nested_fields", {}).items():
+        nested_fields = schema.get("nested_fields", {})
+        for field, nested_schema in nested_fields.items():
             if field not in data:
                 error_msg = f"Missing nested field '{field}' in request to {endpoint}"
                 logger.error(error_msg)
@@ -104,14 +100,19 @@ class RequestValidator:
                 for i, item_schema in enumerate(nested_schema):
                     if i < len(data[field]):
                         item = data[field][i]
-                        for required_field in item_schema.get("required_fields", []):
+                        item_required_fields = item_schema.get("required_fields", [])
+                        for required_field in item_required_fields:
                             if required_field not in item:
-                                error_msg = f"Missing required field '{required_field}' in item {i} of '{field}' in request to {endpoint}"
+                                error_msg = (
+                                    f"Missing required field '{required_field}' in item {i} "
+                                    f"of '{field}' in request to {endpoint}"
+                                )
                                 logger.error(error_msg)
                                 raise RequestValidationError(error_msg)
             elif isinstance(nested_schema, dict) and isinstance(data[field], dict):
                 # Validate the dict
-                for required_field in nested_schema.get("required_fields", []):
+                dict_required_fields = nested_schema.get("required_fields", [])
+                for required_field in dict_required_fields:
                     if required_field not in data[field]:
                         error_msg = f"Missing required field '{required_field}' in '{field}' in request to {endpoint}"
                         logger.error(error_msg)
@@ -165,9 +166,7 @@ def validate_match_result_request(data: Dict[str, Any]) -> bool:
             ]
             for field in required_fields:
                 if field not in result:
-                    raise RequestValidationError(
-                        f"Missing required field '{field}' in result {i} of matchresultatListaJSON"
-                    )
+                    raise RequestValidationError(f"Missing required field '{field}' in result {i} of matchresultatListaJSON")
         return True
     else:
         # Check for the flat structure

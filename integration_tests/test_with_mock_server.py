@@ -9,7 +9,7 @@ from typing import Dict, cast
 
 import pytest
 
-from fogis_api_client import FogisApiClient, FogisLoginError, FogisAPIRequestError
+from fogis_api_client import FogisApiClient, FogisLoginError
 from fogis_api_client.types import CookieDict, EventDict, MatchResultDict
 
 # Configure logging
