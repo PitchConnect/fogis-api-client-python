@@ -9,8 +9,8 @@ from typing import Dict, cast
 
 import pytest
 
-from fogis_api_client import FogisApiClient, FogisLoginError
-from fogis_api_client.types import CookieDict, EventDict
+from fogis_api_client import FogisApiClient, FogisLoginError, FogisAPIRequestError
+from fogis_api_client.types import CookieDict, EventDict, MatchResultDict
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -252,6 +252,38 @@ class TestFogisApiClientWithMockServer:
             assert "matchid" in result[0]
             assert "matchlag1mal" in result[0]
             assert "matchlag2mal" in result[0]
+
+    def test_report_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+        """Test reporting match results."""
+        # Override the base URL to use the mock server
+        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+
+        # Create a client with test credentials
+        client = FogisApiClient(
+            username=test_credentials["username"],
+            password=test_credentials["password"],
+        )
+
+        # Create match result data
+        match_id = 12345
+        result_data = cast(
+            MatchResultDict,
+            {
+                "matchid": match_id,
+                "hemmamal": 2,
+                "bortamal": 1,
+                "halvtidHemmamal": 1,
+                "halvtidBortamal": 0,
+            },
+        )
+
+        # Report the match result
+        response = client.report_match_result(result_data)
+
+        # Verify the response
+        assert isinstance(response, dict)
+        assert "success" in response
+        assert response["success"] is True
 
     def test_report_match_event(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
         """Test reporting a match event."""
