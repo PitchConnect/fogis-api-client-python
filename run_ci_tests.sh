@@ -18,20 +18,26 @@ docker run --rm fogis-api-client-test pytest tests -v
 echo "Running integration tests..."
 
 # Start the Docker Compose environment
-docker-compose -f docker-compose.ci.yml up -d
+docker compose -f docker-compose.ci.yml up -d
 
 # Wait for the mock server to be ready
 echo "Waiting for mock server to be ready..."
-sleep 10
+sleep 20
+
+# Check if the mock server is running
+docker ps
 
 # Run the integration tests
-docker-compose -f docker-compose.ci.yml run --rm integration-tests
+docker compose -f docker-compose.ci.yml run --rm integration-tests
 
 # Store the exit code
 INTEGRATION_TEST_EXIT_CODE=$?
 
+# Print the logs for debugging
+docker compose -f docker-compose.ci.yml logs
+
 # Stop the Docker Compose environment
-docker-compose -f docker-compose.ci.yml down
+docker compose -f docker-compose.ci.yml down
 
 # Return the integration test exit code
 exit $INTEGRATION_TEST_EXIT_CODE
