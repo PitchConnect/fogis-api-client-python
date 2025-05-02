@@ -45,18 +45,25 @@ jobs:
             ISSUE_NUMBER=$(echo "$issue" | jq -r '.number')
             ISSUE_TITLE=$(echo "$issue" | jq -r '.title')
             
+            # Append to the lists
             ISSUE_LIST="${ISSUE_LIST}- #${ISSUE_NUMBER}: ${ISSUE_TITLE}\n"
             ISSUE_REFS="${ISSUE_REFS}Fixes #${ISSUE_NUMBER}\n"
+            
+            echo "Found issue #$ISSUE_NUMBER: $ISSUE_TITLE"
           done
           
-          # Save to outputs
-          echo "ISSUE_LIST<<EOF" >> $GITHUB_ENV
-          echo -e "$ISSUE_LIST" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          # Save to outputs using heredoc syntax
+          cat << EOF >> $GITHUB_ENV
+          ISSUE_LIST<<EOFLIST
+          $ISSUE_LIST
+          EOFLIST
+          EOF
           
-          echo "ISSUE_REFS<<EOF" >> $GITHUB_ENV
-          echo -e "$ISSUE_REFS" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          cat << EOF >> $GITHUB_ENV
+          ISSUE_REFS<<EOFREFS
+          $ISSUE_REFS
+          EOFREFS
+          EOF
       
       - name: Create release PR
         run: |
@@ -67,7 +74,7 @@ jobs:
           curl -X POST \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
             -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${{ github.repository }}/pulls \
+            "https://api.github.com/repos/${{ github.repository }}/pulls" \
             -d "{
               \"title\": \"Release v${{ github.event.inputs.version }}\",
               \"body\": \"$PR_BODY\",
