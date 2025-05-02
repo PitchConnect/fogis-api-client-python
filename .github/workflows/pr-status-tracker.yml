@@ -1,0 +1,133 @@
+name: PR Status Tracker
+
+on:
+  pull_request:
+    types: [opened, converted_to_draft, ready_for_review, closed]
+
+jobs:
+  track-pr-status:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Process PR status
+        run: |
+          # For draft PRs
+          if [[ "${{ github.event.action }}" == "converted_to_draft" || ("${{ github.event.action }}" == "opened" && "${{ github.event.pull_request.draft }}" == "true") ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_BODY="${{ github.event.pull_request.body }}"
+            
+            # Extract issue numbers from PR body
+            ISSUE_REFS=$(echo "$PR_BODY" | grep -o -E "(close[sd]?|fix(es|ed)?|resolve[sd]?)\s*:?\s*#[0-9]+" || echo "")
+            ISSUE_NUMBERS=$(echo "$ISSUE_REFS" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
+            
+            # Process each issue
+            for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+              # Add in-progress label
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels \
+                -d '{"labels":["in-progress"]}'
+              
+              # Add comment
+              COMMENT_BODY="This issue is being worked on in draft PR #${PR_NUMBER}"
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments \
+                -d "{\"body\":\"${COMMENT_BODY}\"}"
+            done
+          
+          # For PRs marked ready for review
+          elif [[ "${{ github.event.action }}" == "ready_for_review" ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_BODY="${{ github.event.pull_request.body }}"
+            
+            # Extract issue numbers from PR body
+            ISSUE_REFS=$(echo "$PR_BODY" | grep -o -E "(close[sd]?|fix(es|ed)?|resolve[sd]?)\s*:?\s*#[0-9]+" || echo "")
+            ISSUE_NUMBERS=$(echo "$ISSUE_REFS" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
+            
+            # Process each issue
+            for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+              # Remove in-progress label
+              curl -X DELETE \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/in-progress || true
+              
+              # Add review-ready label
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels \
+                -d '{"labels":["review-ready"]}'
+              
+              # Add comment
+              COMMENT_BODY="Work on this issue is ready for review in PR #${PR_NUMBER}"
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments \
+                -d "{\"body\":\"${COMMENT_BODY}\"}"
+            done
+          
+          # For merged PRs
+          elif [[ "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_BODY="${{ github.event.pull_request.body }}"
+            TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+            
+            # Extract issue numbers from PR body
+            ISSUE_REFS=$(echo "$PR_BODY" | grep -o -E "(close[sd]?|fix(es|ed)?|resolve[sd]?)\s*:?\s*#[0-9]+" || echo "")
+            ISSUE_NUMBERS=$(echo "$ISSUE_REFS" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
+            
+            # Process each issue
+            for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+              if [[ "$TARGET_BRANCH" == "develop" ]]; then
+                # Remove review-ready label
+                curl -X DELETE \
+                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/review-ready || true
+                
+                # Add merged-to-develop label
+                curl -X POST \
+                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels \
+                  -d '{"labels":["merged-to-develop"]}'
+                
+                # Add comment
+                COMMENT_BODY="Implementation for this issue has been merged to the develop branch in PR #${PR_NUMBER}"
+                curl -X POST \
+                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments \
+                  -d "{\"body\":\"${COMMENT_BODY}\"}"
+              
+              elif [[ "$TARGET_BRANCH" == "main" ]]; then
+                # Remove merged-to-develop label
+                curl -X DELETE \
+                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/merged-to-develop || true
+                
+                # Add released label
+                curl -X POST \
+                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels \
+                  -d '{"labels":["released"]}'
+                
+                # Add comment
+                COMMENT_BODY="This feature has been released to production in PR #${PR_NUMBER}"
+                curl -X POST \
+                  -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                  -H "Accept: application/vnd.github.v3+json" \
+                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments \
+                  -d "{\"body\":\"${COMMENT_BODY}\"}"
+              fi
+            done
+          fi

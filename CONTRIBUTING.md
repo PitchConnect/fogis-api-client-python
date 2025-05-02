@@ -94,7 +94,16 @@ We follow a modified GitFlow workflow to ensure that the main branch is always i
    - Mention blockers or dependencies in comments
    - Regularly update long-running issues with progress reports
 
-3. **Closing Issues**:
+3. **Automated Issue Lifecycle**:
+   - Issues are automatically labeled as `triage` when created
+   - When a draft PR references an issue, it's labeled as `in-progress`
+   - When a PR is marked as ready for review, the issue is labeled as `review-ready`
+   - When a PR is merged to develop, the issue is labeled as `merged-to-develop`
+   - When a PR is merged to main, the issue is labeled as `released`
+   - Comments are automatically added to issues at each stage of the lifecycle
+   - Do not manually close issues when merging PRs - this happens automatically
+
+4. **Closing Issues**:
    - Issues should be closed when the corresponding PR is merged
    - Use closing keywords in PR descriptions (e.g., "Closes #123")
    - If an issue is invalid or duplicate, close with a clear explanation
@@ -135,6 +144,37 @@ We follow a modified GitFlow workflow to ensure that the main branch is always i
 - Example: `Fix: Ensure proper payload structure in fetch_matches_list_json`
 - Keep messages clear, concise, and descriptive
 - Reference issue numbers when applicable: `Fix #123: Add error handling`
+
+## Work in Progress
+
+When your work is not yet ready for review:
+
+1. Create a **Draft Pull Request** instead of a regular PR
+   - Use the dropdown menu next to "Create Pull Request" to select "Create Draft Pull Request"
+   - This clearly indicates your PR is a work in progress
+   - The PR cannot be merged until you mark it as ready for review
+
+2. **IMPORTANT**: Do not mark a PR as ready for review until:
+   - All CI/CD checks are passing
+   - All pre-commit hooks have been run successfully
+   - You have addressed any automated feedback
+   - The code is fully ready for human review
+
+3. When your work is complete and all checks pass:
+   - Click "Ready for Review" to convert the Draft PR to a regular PR
+   - This signals to reviewers that your work is ready for their attention
+
+### CI/CD Pipeline Failures
+
+If your PR fails CI/CD checks:
+
+1. Review the failure logs carefully
+2. Fix the issues in your branch
+3. Push the changes to update the PR
+4. Verify that all checks pass before marking as ready for review
+5. If the CI/CD caught issues that should have been caught by pre-commit hooks, update the pre-commit configuration as well
+
+Draft PRs are preferred over other methods like "WIP" in titles or special branches, as they provide a standard, built-in way to indicate work in progress.
 
 ## Code Standards
 
@@ -255,11 +295,11 @@ If integration tests fail:
    docker inspect --format='{{.State.Health.Status}}' fogis-api-client-dev
    ```
 
-### Pre-commit Hooks
+## Pre-commit Hooks
 
 We use pre-commit hooks to automate testing and code quality checks. This helps catch issues early and ensures consistent code quality.
 
-#### Quick Setup (Recommended)
+### Quick Setup (Recommended)
 
 Use our update script to install and configure pre-commit hooks that match our CI/CD pipeline:
 
@@ -272,7 +312,7 @@ This script will:
 - Generate hooks that match our CI/CD configuration
 - Install the hooks automatically
 
-#### Manual Setup
+### Manual Setup
 
 If you prefer to set up manually:
 
@@ -288,7 +328,7 @@ If you prefer to set up manually:
 
 3. The hooks will now run automatically before each commit
 
-#### What the Hooks Do
+### What the Hooks Do
 
 Pre-commit hooks will:
 - Format your code with Black and isort
@@ -299,7 +339,7 @@ Pre-commit hooks will:
 - Run unit tests to ensure they pass
 - Check if hooks need updating to match CI/CD
 
-#### Keeping Hooks in Sync with CI/CD
+### Keeping Hooks in Sync with CI/CD
 
 Our project uses a dynamic pre-commit hook generator to ensure local checks match CI/CD:
 
@@ -312,7 +352,7 @@ Our project uses a dynamic pre-commit hook generator to ensure local checks matc
 
 This system ensures that checks that pass locally will also pass in CI, preventing surprises when you push your code.
 
-#### Troubleshooting
+### Troubleshooting
 
 If your pre-commit hooks are failing in ways that don't match CI:
 
@@ -494,7 +534,153 @@ If you are an AI assistant reading this:
      - Simplifies editing and reviewing before submission
      - Works better with AI-generated content
 
-5. **Proper Issue Management**:
+5. **Navigating Issue and PR Comments**
+
+   AI assistants must process the entire conversation thread for proper context:
+
+   1. **Check all comments**, not just the initial description
+      - The most recent comments may contain critical information
+      - Later comments may override or clarify earlier instructions
+      - Context evolves throughout the conversation
+
+   2. **Process comments chronologically**
+      - Start with the initial description
+      - Read through all comments in order
+      - Pay special attention to the most recent comments
+
+   3. **Prioritize maintainer comments**
+      - Comments from repository maintainers may contain important guidance
+      - Look for official clarifications or direction changes
+
+   4. **Example of proper comment navigation**:
+      ```
+      Initial issue: "We need feature X"
+      Comment 1: "Let's implement it using approach A"
+      Comment 2: "Actually, approach B would be better because..."
+      Comment 3: "After testing, we should use approach C instead"
+      
+      → AI should implement using approach C, not A or B
+      ```
+
+6. **Implementation Challenges for AI Agents**
+
+   AI agents may encounter specific challenges when implementing code changes or working with repositories. This section documents common challenges and provides solutions to minimize the need for human intervention.
+
+   #### File Editing Challenges
+
+   When editing large files or making complex changes:
+
+   1. **Challenge**: Direct editing of large files can be error-prone
+      - **Solution**: Use a temporary file approach:
+        ```bash
+        # Save original file to temp location
+        cat original_file.md > /tmp/temp_file.md
+        
+        # Edit the temp file (using sed, awk, etc.)
+        sed -i '' 's/old text/new text/g' /tmp/temp_file.md
+        
+        # Copy back to original location
+        cp /tmp/temp_file.md original_file.md
+        ```
+
+   2. **Challenge**: Complex replacements with special characters
+      - **Solution**: Use delimiter characters that don't appear in your text:
+        ```bash
+        # Using | as delimiter instead of / when text contains slashes
+        sed -i '' 's|http://example.com|https://example.com|g' file.md
+        ```
+
+   3. **Challenge**: Finding the right line numbers for targeted edits
+      - **Solution**: Use grep with line numbers to locate insertion points:
+        ```bash
+        grep -n "## Section Title" file.md
+        ```
+
+   #### Command Line Tool Limitations
+
+   When working with command-line tools like `gh`:
+
+   1. **Challenge**: Commands failing silently or with unclear errors
+      - **Solution**: Add explicit error checking and verbose flags:
+        ```bash
+        # Use verbose mode when available
+        gh pr create --verbose [other options]
+        
+        # Check return codes
+        if [ $? -ne 0 ]; then
+          echo "Command failed, trying alternative approach"
+          # Alternative approach here
+        fi
+        ```
+
+   2. **Challenge**: Context switching between different tools
+      - **Solution**: Minimize tool switching by batching similar operations:
+        ```bash
+        # Batch all gh operations together
+        gh repo clone repo1
+        gh repo clone repo2
+        
+        # Then batch all git operations
+        cd repo1 && git checkout -b feature/new-feature
+        cd ../repo2 && git checkout -b feature/new-feature
+        ```
+
+   3. **Challenge**: Handling repository-specific configurations
+      - **Solution**: Check for configuration files before executing commands:
+        ```bash
+        # Check if pre-commit is configured
+        if [ -f .pre-commit-config.yaml ]; then
+          pre-commit run --all-files
+        else
+          echo "No pre-commit configuration found"
+        fi
+        ```
+
+   #### GitHub Actions Testing
+
+   When implementing or modifying GitHub Actions:
+
+   1. **Challenge**: Difficulty verifying if actions are working correctly
+      - **Solution**: Create a test workflow file with explicit logging:
+        ```yaml
+        name: Test Workflow
+        on: [push]
+        jobs:
+          test:
+            runs-on: ubuntu-latest
+            steps:
+              - name: Debug Info
+                run: |
+                  echo "Event name: ${{ github.event_name }}"
+                  echo "Event payload: ${{ toJSON(github.event) }}"
+              - name: Test Step
+                run: echo "This is a test"
+        ```
+
+   2. **Challenge**: Actions requiring specific permissions
+      - **Solution**: Explicitly define required permissions in the workflow:
+        ```yaml
+        permissions:
+          issues: write
+          pull-requests: write
+          contents: read
+        ```
+
+   3. **Challenge**: Triggering actions for testing
+      - **Solution**: Use the `workflow_dispatch` event for manual testing:
+        ```yaml
+        on:
+          workflow_dispatch:
+            inputs:
+              test-param:
+                description: 'Test parameter'
+                required: true
+                default: 'test'
+        ```
+
+   By documenting these challenges and solutions, we aim to reduce context switching and the need for human intervention when AI agents are implementing changes.
+
+7. **Proper Issue Management**:
    - Create well-structured issues with clear descriptions
    - Add appropriate labels to issues (bug, enhancement, documentation, etc.)
    - Close issues when the corresponding PR is merged
@@ -506,7 +692,7 @@ If you are an AI assistant reading this:
    - Mention blockers or dependencies in comments
    - For "won't fix" decisions, explain the rationale
 
-6. **Branch Cleanup**:
+8. **Branch Cleanup**:
    - Always delete branches after merging
    - Remind users to delete branches after PRs are merged
    - Don't leave stale branches in the repository
@@ -515,7 +701,7 @@ If you are an AI assistant reading this:
    - Use `git push origin --delete branch-name` for remote branch deletion
    - Periodically review and clean up old branches
 
-6. **PR Best Practices**:
+9. **PR Best Practices**:
    - Create descriptive PR titles
    - Include detailed descriptions of changes
    - Reference related issues
@@ -535,7 +721,7 @@ If you are an AI assistant reading this:
      gh pr edit 123 --body-file pr_description.md
      ```
 
-7. **Guidelines for AI Agents**:
+10. **Guidelines for AI Agents**:
    - Follow all the same guidelines as human contributors
    - Always use the markdown file approach for complex GitHub content (as described in section 4)
    - This is especially important for AI-generated content, which can be lengthy and complex
@@ -547,13 +733,13 @@ If you are an AI assistant reading this:
    - When in doubt, ask for clarification rather than making assumptions
    - Consider creating templates for common tasks to ensure consistency
 
-8. **Include Reminders in Issues and PRs**:
+11. **Include Reminders in Issues and PRs**:
    - All issues and pull requests should include a reminder about following these guidelines
    - Issue templates and PR templates have checkboxes to confirm reading this document
    - When creating issues or PRs manually, include a link to this document
    - This ensures consistency across all contributions, regardless of who handles them
 
-9. **Maintaining Documentation and Scripts**:
+12. **Maintaining Documentation and Scripts**:
    - Keep documentation and scripts up to date with code changes
    - When adding new features, update relevant documentation
    - When changing workflows, update related scripts
@@ -565,7 +751,7 @@ If you are an AI assistant reading this:
    - Consider documentation and scripts as part of the codebase, not an afterthought
    - When switching between computers, use it as an opportunity to verify onboarding docs
 
-10. **Remind Users of the Process**:
+13. **Remind Users of the Process**:
    - If a user asks you to push directly to main, remind them of the GitFlow process
    - Suggest creating a proper branch and PR instead
    - Reference this document when explaining the process
