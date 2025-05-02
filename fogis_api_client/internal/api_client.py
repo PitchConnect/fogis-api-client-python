@@ -14,11 +14,7 @@ import requests
 from bs4 import BeautifulSoup
 from jsonschema import ValidationError
 
-from fogis_api_client.internal.api_contracts import (
-    extract_endpoint_from_url,
-    validate_request,
-    validate_response,
-)
+from fogis_api_client.internal.api_contracts import extract_endpoint_from_url, validate_request, validate_response
 from fogis_api_client.internal.types import (
     InternalCookieDict,
     InternalEventDict,
@@ -80,6 +76,13 @@ class InternalApiClient:
             "Accept": "application/json, text/javascript, */*; q=0.01",
             "X-Requested-With": "XMLHttpRequest",
         }
+
+        # Check if the URL is using the default base URL and replace it with the current base URL
+        default_base_url = "https://fogis.svenskfotboll.se/mdk"
+        if url.startswith(default_base_url):
+            endpoint_path = url[len(default_base_url):]
+            url = f"{self.BASE_URL}{endpoint_path}"
+            self.logger.debug(f"Using current base URL: {url}")
 
         # Extract the endpoint for validation
         endpoint = extract_endpoint_from_url(url)

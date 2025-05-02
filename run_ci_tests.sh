@@ -14,8 +14,30 @@ docker build -t fogis-api-client-test -f Dockerfile.test .
 echo "Running unit tests..."
 docker run --rm fogis-api-client-test pytest tests -v
 
-# Skip integration tests for now to get the PR passing
-echo "Skipping integration tests for now..."
+# Run the integration tests
+echo "Running integration tests..."
 
-# Return success
-exit 0
+# Start the Docker Compose environment
+docker compose -f docker-compose.ci.yml up -d
+
+# Wait for the mock server to be ready
+echo "Waiting for mock server to be ready..."
+sleep 20
+
+# Check if the mock server is running
+docker ps
+
+# Run the integration tests
+docker compose -f docker-compose.ci.yml run --rm integration-tests
+
+# Store the exit code
+INTEGRATION_TEST_EXIT_CODE=$?
+
+# Print the logs for debugging
+docker compose -f docker-compose.ci.yml logs
+
+# Stop the Docker Compose environment
+docker compose -f docker-compose.ci.yml down
+
+# Return the integration test exit code
+exit $INTEGRATION_TEST_EXIT_CODE

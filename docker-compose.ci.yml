@@ -13,6 +13,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     command: ["python", "fogis_api_gateway.py"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   mock-fogis-server:
     build:
@@ -26,6 +28,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - MOCK_SERVER_PORT=5001
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   integration-tests:
     build:
@@ -42,6 +46,8 @@ services:
       - fogis-api-client
       - mock-fogis-server
     command: ["pytest", "integration_tests", "-v", "--log-cli-level=INFO"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   fogis-network:
