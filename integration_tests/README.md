@@ -148,6 +148,33 @@ To add new tests, follow these steps:
 
 ### Test Structure
 
+Each test should use the `mock_api_urls` fixture to handle API URL overrides. This fixture temporarily overrides the API URLs to point to the mock server and restores them after the test completes. It also clears the request history at the beginning of each test for better isolation.
+
+Example test structure:
+
+```python
+def test_some_functionality(self, mock_fogis_server, test_credentials, mock_api_urls):
+    """Test some functionality."""
+    # Create a client with test credentials
+    client = FogisApiClient(
+        username=test_credentials["username"],
+        password=test_credentials["password"],
+    )
+
+    # Test the functionality
+    result = client.some_method()
+
+    # Verify the result
+    assert result is not None
+```
+
+The `mock_api_urls` fixture handles:
+1. Storing the original base URLs
+2. Overriding the base URLs to use the mock server
+3. Clearing request history for better test isolation
+4. Restoring the original URLs after the test completes, even if the test fails
+
+
 Integration tests should follow this structure:
 
 1. **Setup**: Configure the client to use the mock server
