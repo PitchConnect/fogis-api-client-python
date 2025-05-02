@@ -24,11 +24,13 @@ jobs:
             
             # Process each issue
             for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+              echo "Processing issue #$ISSUE_NUMBER for draft PR"
+              
               # Add in-progress label
               curl -X POST \
                 -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                 -H "Accept: application/vnd.github.v3+json" \
-                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels" \
                 -d '{"labels":["in-progress"]}'
               
               # Add comment
@@ -36,7 +38,7 @@ jobs:
               curl -X POST \
                 -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                 -H "Accept: application/vnd.github.v3+json" \
-                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" \
                 -d "{\"body\":\"${COMMENT_BODY}\"}"
             done
           
@@ -51,17 +53,19 @@ jobs:
             
             # Process each issue
             for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+              echo "Processing issue #$ISSUE_NUMBER for ready PR"
+              
               # Remove in-progress label
               curl -X DELETE \
                 -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                 -H "Accept: application/vnd.github.v3+json" \
-                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/in-progress || true
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/in-progress" || true
               
               # Add review-ready label
               curl -X POST \
                 -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                 -H "Accept: application/vnd.github.v3+json" \
-                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels" \
                 -d '{"labels":["review-ready"]}'
               
               # Add comment
@@ -69,7 +73,7 @@ jobs:
               curl -X POST \
                 -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                 -H "Accept: application/vnd.github.v3+json" \
-                https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" \
                 -d "{\"body\":\"${COMMENT_BODY}\"}"
             done
           
@@ -85,18 +89,20 @@ jobs:
             
             # Process each issue
             for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+              echo "Processing issue #$ISSUE_NUMBER for merged PR to $TARGET_BRANCH"
+              
               if [[ "$TARGET_BRANCH" == "develop" ]]; then
                 # Remove review-ready label
                 curl -X DELETE \
                   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                   -H "Accept: application/vnd.github.v3+json" \
-                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/review-ready || true
+                  "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/review-ready" || true
                 
                 # Add merged-to-develop label
                 curl -X POST \
                   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                   -H "Accept: application/vnd.github.v3+json" \
-                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels \
+                  "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels" \
                   -d '{"labels":["merged-to-develop"]}'
                 
                 # Add comment
@@ -104,7 +110,7 @@ jobs:
                 curl -X POST \
                   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                   -H "Accept: application/vnd.github.v3+json" \
-                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments \
+                  "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" \
                   -d "{\"body\":\"${COMMENT_BODY}\"}"
               
               elif [[ "$TARGET_BRANCH" == "main" ]]; then
@@ -112,13 +118,13 @@ jobs:
                 curl -X DELETE \
                   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                   -H "Accept: application/vnd.github.v3+json" \
-                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/merged-to-develop || true
+                  "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/merged-to-develop" || true
                 
                 # Add released label
                 curl -X POST \
                   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                   -H "Accept: application/vnd.github.v3+json" \
-                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels \
+                  "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels" \
                   -d '{"labels":["released"]}'
                 
                 # Add comment
@@ -126,7 +132,7 @@ jobs:
                 curl -X POST \
                   -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
                   -H "Accept: application/vnd.github.v3+json" \
-                  https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments \
+                  "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" \
                   -d "{\"body\":\"${COMMENT_BODY}\"}"
               fi
             done
