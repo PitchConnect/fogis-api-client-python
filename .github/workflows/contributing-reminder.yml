@@ -1,0 +1,43 @@
+name: Contributing Guidelines Reminder
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  check-contributing-reference:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Check for CONTRIBUTING.md reference
+        run: |
+          # For issues
+          if [[ "${{ github.event_name }}" == "issues" && "${{ github.event.action }}" == "opened" ]]; then
+            BODY="${{ github.event.issue.body }}"
+            ITEM_NUMBER="${{ github.event.issue.number }}"
+            ITEM_TYPE="issue"
+          # For PRs
+          elif [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.action }}" == "opened" ]]; then
+            BODY="${{ github.event.pull_request.body }}"
+            ITEM_NUMBER="${{ github.event.pull_request.number }}"
+            ITEM_TYPE="pull request"
+          else
+            echo "Event not supported"
+            exit 0
+          fi
+          
+          # Check if body contains reference to CONTRIBUTING.md
+          if [[ "$BODY" != *"CONTRIBUTING.md"* && "$BODY" != *"contribution guidelines"* && "$BODY" != *"contributing guidelines"* ]]; then
+            # Create comment with reminder
+            COMMENT_BODY="## Contribution Guidelines Reminder\n\nThank you for your ${ITEM_TYPE}!\n\nPlease take a moment to review our [CONTRIBUTING.md](https://github.com/PitchConnect/fogis-api-client-python/blob/main/CONTRIBUTING.md) file, which contains important information about:\n\n- Our development workflow\n- Coding standards\n- Pull request process\n- Issue lifecycle\n\n### For AI Assistants\n\nIf you're an AI assistant, please note that:\n- You should always check all comments on issues and PRs, not just the initial description\n- Use GitHub CLI (gh) for GitHub operations when applicable\n- Follow our GitFlow branching model\n- Use pre-commit hooks to catch issues early\n\nPlease update your ${ITEM_TYPE} to indicate that you've reviewed the contribution guidelines."
+            
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${ITEM_NUMBER}/comments" \
+              -d "{\"body\":\"${COMMENT_BODY}\"}"
+          fi
