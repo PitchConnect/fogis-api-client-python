@@ -10,6 +10,10 @@ from typing import Dict, Generator
 import pytest
 import requests
 
+# Import the API clients
+from fogis_api_client import FogisApiClient
+from fogis_api_client.internal.api_client import InternalApiClient
+
 # Import the mock server
 from integration_tests.mock_fogis_server import MockFogisServer
 
@@ -123,3 +127,41 @@ def test_credentials() -> Dict[str, str]:
         "username": "test_user",
         "password": "test_password",
     }
+
+
+@pytest.fixture
+def mock_api_urls(mock_fogis_server: Dict[str, str]) -> None:
+    """
+    Temporarily override API URLs to point to mock server.
+
+    This fixture handles setting up and tearing down the API URLs for tests.
+    It ensures that the URLs are properly restored after the test completes,
+    even if the test fails.
+
+    Args:
+        mock_fogis_server: The mock server fixture
+
+    Yields:
+        None
+    """
+    # Store original base URLs
+    original_base_url = FogisApiClient.BASE_URL
+    original_internal_base_url = InternalApiClient.BASE_URL
+
+    # Override base URLs to use the mock server
+    FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+    InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+
+    # Clear request history at the beginning of each test for better isolation
+    try:
+        requests.post(f"{mock_fogis_server['base_url']}/clear-request-history")
+    except requests.exceptions.RequestException as e:
+        logger.warning(f"Failed to clear request history: {e}")
+
+    try:
+        # Yield control to the test
+        yield
+    finally:
+        # Restore original URLs, even if the test fails
+        FogisApiClient.BASE_URL = original_base_url
+        InternalApiClient.BASE_URL = original_internal_base_url

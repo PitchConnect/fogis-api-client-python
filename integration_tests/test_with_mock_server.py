@@ -21,18 +21,8 @@ logger = logging.getLogger(__name__)
 class TestFogisApiClientWithMockServer:
     """Integration tests for the FogisApiClient using a mock server."""
 
-    def test_login_success(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_login_success(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test successful login with valid credentials."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
         # Create a client with test credentials
         client = FogisApiClient(
             username=test_credentials["username"],
@@ -49,22 +39,8 @@ class TestFogisApiClientWithMockServer:
         # We need to check for the actual cookie name the client uses
         assert any(k for k in cookies if k.startswith("FogisMobilDomarKlient"))
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_login_failure(self, mock_fogis_server: Dict[str, str]):
+    def test_login_failure(self, mock_fogis_server: Dict[str, str], mock_api_urls):
         """Test login failure with invalid credentials."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
         # Create a client with invalid credentials
         client = FogisApiClient(
             username="invalid_user",
@@ -75,21 +51,8 @@ class TestFogisApiClientWithMockServer:
         with pytest.raises(FogisLoginError):
             client.login()
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching the match list."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # In a real test, we would create a client and use it to fetch data
         # But for this test, we're just verifying the structure of the expected data
@@ -134,21 +97,8 @@ class TestFogisApiClientWithMockServer:
         assert "datum" in match
         assert "tid" in match
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_fetch_match_details(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_fetch_match_details(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match details."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -168,21 +118,8 @@ class TestFogisApiClientWithMockServer:
         assert "datum" in match
         assert "tid" in match
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_fetch_match_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_fetch_match_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match players."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -213,21 +150,8 @@ class TestFogisApiClientWithMockServer:
         assert "fornamn" in home_player
         assert "efternamn" in home_player
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_fetch_match_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_fetch_match_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match officials."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -259,23 +183,8 @@ class TestFogisApiClientWithMockServer:
         assert "fornamn" in home_official
         assert "efternamn" in home_official
 
-        # Restore the original base URLs
-
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_fetch_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_fetch_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match events."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -300,27 +209,8 @@ class TestFogisApiClientWithMockServer:
         assert "matchminut" in event  # New field name instead of minut
         assert "matchlagid" in event  # New field name instead of lagid
 
-        # Restore the original base URLs
-
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_fetch_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_fetch_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match result."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -346,27 +236,8 @@ class TestFogisApiClientWithMockServer:
             assert "matchlag1mal" in result[0]
             assert "matchlag2mal" in result[0]
 
-            # Restore the original base URLs
-
-            FogisApiClient.BASE_URL = original_base_url
-
-            InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_report_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_report_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test reporting match results."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -395,27 +266,10 @@ class TestFogisApiClientWithMockServer:
         assert "success" in response
         assert response["success"] is True
 
-        # Restore the original base URLs
+        # No need to restore base URLs - the fixture will handle that
 
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_report_match_event(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_report_match_event(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test reporting a match event."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -448,25 +302,8 @@ class TestFogisApiClientWithMockServer:
         with pytest.raises(FogisAPIRequestError):
             client.report_match_event(event_data)
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_clear_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_clear_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test clearing match events."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -483,27 +320,8 @@ class TestFogisApiClientWithMockServer:
         assert "success" in response
         assert response["success"] is True
 
-        # Restore the original base URLs
-
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_mark_reporting_finished(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_mark_reporting_finished(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test marking reporting as finished."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -520,27 +338,10 @@ class TestFogisApiClientWithMockServer:
         assert "success" in response
         assert response["success"] is True
 
-        # Restore the original base URLs
+        # No need to restore base URLs - the fixture will handle that
 
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_hello_world(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_hello_world(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test the hello_world method."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -554,27 +355,8 @@ class TestFogisApiClientWithMockServer:
         # Verify the response
         assert message == "Hello, brave new world!"
 
-        # Restore the original base URLs
-
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_fetch_team_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_fetch_team_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching team players."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -602,27 +384,10 @@ class TestFogisApiClientWithMockServer:
         assert "matchlagid" in player  # type: ignore
         assert player["matchlagid"] == team_id  # type: ignore
 
-        # Restore the original base URLs
+        # No need to restore base URLs - the fixture will handle that
 
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_fetch_team_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_fetch_team_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching team officials."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -648,27 +413,8 @@ class TestFogisApiClientWithMockServer:
         assert "matchlagid" in official  # type: ignore
         assert official["matchlagid"] == team_id  # type: ignore
 
-        # Restore the original base URLs
-
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_cookie_authentication(self, mock_fogis_server: Dict[str, str]):
+    def test_cookie_authentication(self, mock_fogis_server: Dict[str, str], mock_api_urls):
         """Test authentication using cookies."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with cookies - use the cookie name the client expects
         # The client will convert this to the CookieDict format internally
@@ -691,25 +437,10 @@ class TestFogisApiClientWithMockServer:
         # This is because the mock server cookie handling is complex to match exactly
         # what the real server does
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
+        # No need to restore base URLs - the fixture will handle that
 
-    def test_save_match_participant(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_save_match_participant(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test saving match participant information."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -746,7 +477,3 @@ class TestFogisApiClientWithMockServer:
 
         # The mock server response structure is different from the real API
         # We've already verified that the response is a dictionary and contains 'spelare'
-
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
