@@ -5,7 +5,7 @@ These tests verify that the match result reporting functionality works correctly
 and that the client sends the correct data structure to the API.
 """
 import logging
-from typing import Dict, cast
+from typing import Any, Dict, Union, cast
 
 import pytest
 import requests
@@ -21,28 +21,69 @@ logger = logging.getLogger(__name__)
 class TestMatchResultReporting:
     """Integration tests for match result reporting."""
 
-    def test_report_match_result_flat_format(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
+    @pytest.mark.parametrize(
+        "scenario,result_data,expected_success",
+        [
+            # Flat format test case
+            (
+                "flat_format",
+                cast(
+                    MatchResultDict,
+                    {
+                        "matchid": 12345,
+                        "hemmamal": 2,
+                        "bortamal": 1,
+                        "halvtidHemmamal": 1,
+                        "halvtidBortamal": 0,
+                    },
+                ),
+                True,
+            ),
+            # Nested format test case
+            (
+                "nested_format",
+                {
+                    "matchresultatListaJSON": [
+                        {
+                            "matchid": 12345,
+                            "matchresultattypid": 1,  # Full time
+                            "matchlag1mal": 2,
+                            "matchlag2mal": 1,
+                            "wo": False,
+                            "ow": False,
+                            "ww": False,
+                        },
+                        {
+                            "matchid": 12345,
+                            "matchresultattypid": 2,  # Half-time
+                            "matchlag1mal": 1,
+                            "matchlag2mal": 0,
+                            "wo": False,
+                            "ow": False,
+                            "ww": False,
+                        },
+                    ]
+                },
+                True,
+            ),
+        ],
+        ids=["flat_format", "nested_format"],
+    )
+    def test_report_match_result_formats(
+        self,
+        mock_fogis_server: Dict[str, str],
+        test_credentials: Dict[str, str],
+        mock_api_urls,
+        scenario: str,
+        result_data: Union[Dict[str, Any], MatchResultDict],
+        expected_success: bool,
     ):
-        """Test reporting match results using the flat format."""
+        """Test reporting match results using different formats."""
 
         # Create a client with test credentials
         client = FogisApiClient(
             username=test_credentials["username"],
             password=test_credentials["password"],
-        )
-
-        # Create match result data in flat format
-        match_id = 12345
-        result_data = cast(
-            MatchResultDict,
-            {
-                "matchid": match_id,
-                "hemmamal": 2,
-                "bortamal": 1,
-                "halvtidHemmamal": 1,
-                "halvtidBortamal": 0,
-            },
         )
 
         # Report the match result
@@ -51,197 +92,130 @@ class TestMatchResultReporting:
         # Verify the response
         assert isinstance(response, dict)
         assert "success" in response
-        assert response["success"] is True
+        assert response["success"] is expected_success
 
-        # No need to restore base URLs - the fixture will handle that
-
-    def test_report_match_result_nested_format(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
-        """Test reporting match results using the nested format."""
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
-        # Create match result data in nested format
-        match_id = 12345
-        result_data = {
-            "matchresultatListaJSON": [
-                {
-                    "matchid": match_id,
-                    "matchresultattypid": 1,  # Full time
-                    "matchlag1mal": 2,
-                    "matchlag2mal": 1,
-                    "wo": False,
-                    "ow": False,
-                    "ww": False,
-                },
-                {
-                    "matchid": match_id,
-                    "matchresultattypid": 2,  # Half-time
-                    "matchlag1mal": 1,
-                    "matchlag2mal": 0,
-                    "wo": False,
-                    "ow": False,
-                    "ww": False,
-                },
-            ]
-        }
-
-        # Report the match result
-        response = client.report_match_result(result_data)
-
-        # Verify the response
-        assert isinstance(response, dict)
-        assert "success" in response
-        assert response["success"] is True
-
-    def test_report_match_result_missing_fields(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
-    ):
-        """Test reporting match results with missing fields."""
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
-        # Create invalid match result data (missing required fields)
-        result_data = {
-            "matchid": 12345,
-            # Missing hemmamal and bortamal
-        }
-
-        # Attempt to report the match result and expect failure
-        with pytest.raises(ValueError):
-            client.report_match_result(result_data)
-
-        # No need to restore base URLs - the fixture will handle that
-
-    def test_report_match_result_invalid_nested_format(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
-    ):
-        """Test reporting match results with invalid nested format."""
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
-        # Create invalid match result data (missing required fields in nested structure)
-        result_data = {
-            "matchresultatListaJSON": [
+    @pytest.mark.parametrize(
+        "scenario,result_data,expected_exception",
+        [
+            # Missing fields test case
+            (
+                "missing_fields",
                 {
                     "matchid": 12345,
-                    # Missing matchresultattypid, matchlag1mal, matchlag2mal
-                    "wo": False,
-                    "ow": False,
-                    "ww": False,
-                }
-            ]
-        }
+                    # Missing hemmamal and bortamal
+                },
+                ValueError,
+            ),
+            # Invalid nested format test case
+            (
+                "invalid_nested_format",
+                {
+                    "matchresultatListaJSON": [
+                        {
+                            "matchid": 12345,
+                            # Missing matchresultattypid, matchlag1mal, matchlag2mal
+                            "wo": False,
+                            "ow": False,
+                            "ww": False,
+                        }
+                    ]
+                },
+                FogisAPIRequestError,
+            ),
+        ],
+        ids=["missing_fields", "invalid_nested_format"],
+    )
+    def test_report_match_result_error_cases(
+        self,
+        mock_fogis_server: Dict[str, str],
+        test_credentials: Dict[str, str],
+        mock_api_urls,
+        scenario: str,
+        result_data: Dict[str, Any],
+        expected_exception: type,
+    ):
+        """Test reporting match results with error cases."""
+
+        # Create a client with test credentials
+        client = FogisApiClient(
+            username=test_credentials["username"],
+            password=test_credentials["password"],
+        )
 
         # Attempt to report the match result and expect failure
-        with pytest.raises(FogisAPIRequestError):
+        with pytest.raises(expected_exception):
             client.report_match_result(result_data)
 
-    def test_report_match_result_with_extra_time(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
-    ):
-        """Test reporting match results with extra time."""
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
-        # Create match result data with extra time using flat format
-        # Note: We're using the flat format because the nested format only supports
-        # matchresultattypid values 1 and 2
-        match_id = 12345
-        result_data = {
-            "matchid": match_id,
-            "hemmamal": 3,  # Final result after extra time
-            "bortamal": 2,  # Final result after extra time
-            "halvtidHemmamal": 1,
-            "halvtidBortamal": 1,
-            "fullTimeHemmamal": 2,  # Result after regular time
-            "fullTimeBortamal": 2,  # Result after regular time
-        }
-
-        # Report the match result
-        response = client.report_match_result(result_data)
-
-        # Verify the response
-        assert isinstance(response, dict)
-        assert "success" in response
-        assert response["success"] is True
-
-        # No need to restore base URLs - the fixture will handle that
-
-    def test_report_match_result_with_penalties(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
-        """Test reporting match results with penalties."""
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
-        # Create match result data with penalties using flat format
-        # Note: We're using the flat format because the nested format only supports
-        # matchresultattypid values 1 and 2
-        match_id = 12345
-        result_data = {
-            "matchid": match_id,
-            "hemmamal": 3,  # Final result after extra time
-            "bortamal": 3,  # Final result after extra time
-            "halvtidHemmamal": 1,
-            "halvtidBortamal": 1,
-            "fullTimeHemmamal": 2,  # Result after regular time
-            "fullTimeBortamal": 2,  # Result after regular time
-            "penaltiesHemmamal": 5,  # Result after penalties
-            "penaltiesBortamal": 4,  # Result after penalties
-        }
-
-        # Report the match result
-        response = client.report_match_result(result_data)
-
-        # Verify the response
-        assert isinstance(response, dict)
-        assert "success" in response
-        assert response["success"] is True
-
-    def test_report_match_result_walkover(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
-    ):
-        """Test reporting match results with walkover."""
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
-        # Create match result data with walkover
-        match_id = 12345
-        result_data = {
-            "matchresultatListaJSON": [
+    @pytest.mark.parametrize(
+        "scenario,result_data,expected_success",
+        [
+            # Extra time test case
+            (
+                "extra_time",
                 {
-                    "matchid": match_id,
-                    "matchresultattypid": 1,  # Full time
-                    "matchlag1mal": 3,
-                    "matchlag2mal": 0,
-                    "wo": True,  # Walkover
-                    "ow": False,
-                    "ww": False,
-                }
-            ]
-        }
+                    "matchid": 12345,
+                    "hemmamal": 3,  # Final result after extra time
+                    "bortamal": 2,  # Final result after extra time
+                    "halvtidHemmamal": 1,
+                    "halvtidBortamal": 1,
+                    "fullTimeHemmamal": 2,  # Result after regular time
+                    "fullTimeBortamal": 2,  # Result after regular time
+                },
+                True,
+            ),
+            # Penalties test case
+            (
+                "penalties",
+                {
+                    "matchid": 12345,
+                    "hemmamal": 3,  # Final result after extra time
+                    "bortamal": 3,  # Final result after extra time
+                    "halvtidHemmamal": 1,
+                    "halvtidBortamal": 1,
+                    "fullTimeHemmamal": 2,  # Result after regular time
+                    "fullTimeBortamal": 2,  # Result after regular time
+                    "penaltiesHemmamal": 5,  # Result after penalties
+                    "penaltiesBortamal": 4,  # Result after penalties
+                },
+                True,
+            ),
+            # Walkover test case
+            (
+                "walkover",
+                {
+                    "matchresultatListaJSON": [
+                        {
+                            "matchid": 12345,
+                            "matchresultattypid": 1,  # Full time
+                            "matchlag1mal": 3,
+                            "matchlag2mal": 0,
+                            "wo": True,  # Walkover
+                            "ow": False,
+                            "ww": False,
+                        }
+                    ]
+                },
+                True,
+            ),
+        ],
+        ids=["extra_time", "penalties", "walkover"],
+    )
+    def test_report_match_result_special_cases(
+        self,
+        mock_fogis_server: Dict[str, str],
+        test_credentials: Dict[str, str],
+        mock_api_urls,
+        scenario: str,
+        result_data: Union[Dict[str, Any], MatchResultDict],
+        expected_success: bool,
+    ):
+        """Test reporting match results with special cases (extra time, penalties, walkover)."""
+
+        # Create a client with test credentials
+        client = FogisApiClient(
+            username=test_credentials["username"],
+            password=test_credentials["password"],
+        )
 
         # Report the match result
         response = client.report_match_result(result_data)
@@ -249,11 +223,11 @@ class TestMatchResultReporting:
         # Verify the response
         assert isinstance(response, dict)
         assert "success" in response
-        assert response["success"] is True
+        assert response["success"] is expected_success
 
-        # No need to restore base URLs - the fixture will handle that
-
-    def test_complete_match_reporting_workflow(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_complete_match_reporting_workflow(
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
+    ):
         """Test the complete match reporting workflow."""
 
         # Create a client with test credentials
