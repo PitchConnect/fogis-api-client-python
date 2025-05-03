@@ -97,8 +97,6 @@ class TestFogisApiClientWithMockServer:
         assert "datum" in match
         assert "tid" in match
 
-
-
     def test_fetch_match_details(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match details."""
 
@@ -119,8 +117,6 @@ class TestFogisApiClientWithMockServer:
         assert "bortalag" in match
         assert "datum" in match
         assert "tid" in match
-
-
 
     def test_fetch_match_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match players."""
@@ -153,8 +149,6 @@ class TestFogisApiClientWithMockServer:
         assert "trojnummer" in home_player
         assert "fornamn" in home_player
         assert "efternamn" in home_player
-
-
 
     def test_fetch_match_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match officials."""
@@ -189,8 +183,6 @@ class TestFogisApiClientWithMockServer:
         assert "fornamn" in home_official
         assert "efternamn" in home_official
 
-
-
     def test_fetch_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match events."""
 
@@ -217,14 +209,8 @@ class TestFogisApiClientWithMockServer:
         assert "matchminut" in event  # New field name instead of minut
         assert "matchlagid" in event  # New field name instead of lagid
 
-
-
     def test_fetch_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching match result."""
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -249,8 +235,6 @@ class TestFogisApiClientWithMockServer:
             assert "matchid" in result[0]
             assert "matchlag1mal" in result[0]
             assert "matchlag2mal" in result[0]
-
-
 
     def test_report_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test reporting match results."""
@@ -282,11 +266,7 @@ class TestFogisApiClientWithMockServer:
         assert "success" in response
         assert response["success"] is True
 
-        # Restore the original base URLs
-
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
+        # No need to restore base URLs - the fixture will handle that
 
     def test_report_match_event(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test reporting a match event."""
@@ -322,12 +302,8 @@ class TestFogisApiClientWithMockServer:
         with pytest.raises(FogisAPIRequestError):
             client.report_match_event(event_data)
 
-
-
     def test_clear_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test clearing match events."""
-
-
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -343,8 +319,6 @@ class TestFogisApiClientWithMockServer:
         assert isinstance(response, dict)
         assert "success" in response
         assert response["success"] is True
-
-
 
     def test_mark_reporting_finished(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test marking reporting as finished."""
@@ -364,11 +338,7 @@ class TestFogisApiClientWithMockServer:
         assert "success" in response
         assert response["success"] is True
 
-        # Restore the original base URLs
-
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
+        # No need to restore base URLs - the fixture will handle that
 
     def test_hello_world(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test the hello_world method."""
@@ -384,8 +354,6 @@ class TestFogisApiClientWithMockServer:
 
         # Verify the response
         assert message == "Hello, brave new world!"
-
-
 
     def test_fetch_team_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching team players."""
@@ -416,27 +384,10 @@ class TestFogisApiClientWithMockServer:
         assert "matchlagid" in player  # type: ignore
         assert player["matchlagid"] == team_id  # type: ignore
 
-        # Restore the original base URLs
+        # No need to restore base URLs - the fixture will handle that
 
-        FogisApiClient.BASE_URL = original_base_url
-
-        InternalApiClient.BASE_URL = original_internal_base_url
-
-    def test_fetch_team_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_fetch_team_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test fetching team officials."""
-        # Override the base URL to use the mock server
-
-        original_base_url = FogisApiClient.BASE_URL
-
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-
-        from fogis_api_client.internal.api_client import InternalApiClient
-
-        original_internal_base_url = InternalApiClient.BASE_URL
-
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -461,8 +412,6 @@ class TestFogisApiClientWithMockServer:
         # Note: matchlagid is not in OfficialDict but is present in the mock server response
         assert "matchlagid" in official  # type: ignore
         assert official["matchlagid"] == team_id  # type: ignore
-
-
 
     def test_cookie_authentication(self, mock_fogis_server: Dict[str, str], mock_api_urls):
         """Test authentication using cookies."""
@@ -528,4 +477,3 @@ class TestFogisApiClientWithMockServer:
 
         # The mock server response structure is different from the real API
         # We've already verified that the response is a dictionary and contains 'spelare'
-

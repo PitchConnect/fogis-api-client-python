@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 class TestMatchResultReporting:
     """Integration tests for match result reporting."""
 
-    def test_report_match_result_flat_format(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_report_match_result_flat_format(
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
+    ):
         """Test reporting match results using the flat format."""
 
         # Create a client with test credentials
@@ -51,20 +53,10 @@ class TestMatchResultReporting:
         assert "success" in response
         assert response["success"] is True
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
+        # No need to restore base URLs - the fixture will handle that
 
-    def test_report_match_result_nested_format(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_report_match_result_nested_format(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test reporting match results using the nested format."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -105,9 +97,9 @@ class TestMatchResultReporting:
         assert "success" in response
         assert response["success"] is True
 
-
-
-    def test_report_match_result_missing_fields(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_report_match_result_missing_fields(
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
+    ):
         """Test reporting match results with missing fields."""
 
         # Create a client with test credentials
@@ -126,22 +118,12 @@ class TestMatchResultReporting:
         with pytest.raises(ValueError):
             client.report_match_result(result_data)
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
+        # No need to restore base URLs - the fixture will handle that
 
     def test_report_match_result_invalid_nested_format(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
     ):
         """Test reporting match results with invalid nested format."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -166,9 +148,9 @@ class TestMatchResultReporting:
         with pytest.raises(FogisAPIRequestError):
             client.report_match_result(result_data)
 
-
-
-    def test_report_match_result_with_extra_time(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_report_match_result_with_extra_time(
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
+    ):
         """Test reporting match results with extra time."""
 
         # Create a client with test credentials
@@ -199,20 +181,10 @@ class TestMatchResultReporting:
         assert "success" in response
         assert response["success"] is True
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
+        # No need to restore base URLs - the fixture will handle that
 
-    def test_report_match_result_with_penalties(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_report_match_result_with_penalties(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test reporting match results with penalties."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -244,9 +216,9 @@ class TestMatchResultReporting:
         assert "success" in response
         assert response["success"] is True
 
-
-
-    def test_report_match_result_walkover(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_report_match_result_walkover(
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
+    ):
         """Test reporting match results with walkover."""
 
         # Create a client with test credentials
@@ -279,20 +251,10 @@ class TestMatchResultReporting:
         assert "success" in response
         assert response["success"] is True
 
-        # Restore the original base URLs
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
+        # No need to restore base URLs - the fixture will handle that
 
-    def test_complete_match_reporting_workflow(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
+    def test_complete_match_reporting_workflow(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
         """Test the complete match reporting workflow."""
-        # Override the base URL to use the mock server
-        original_base_url = FogisApiClient.BASE_URL
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Also override the internal API client's base URL
-        from fogis_api_client.internal.api_client import InternalApiClient
-        original_internal_base_url = InternalApiClient.BASE_URL
-        InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with test credentials
         client = FogisApiClient(
@@ -353,8 +315,6 @@ class TestMatchResultReporting:
         assert half_time["matchid"] == match_id
         assert half_time["matchlag1mal"] == 1
         assert half_time["matchlag2mal"] == 0
-
-
 
     def test_verify_request_structure_with_extra_time_and_penalties(
         self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
@@ -424,4 +384,3 @@ class TestMatchResultReporting:
 
         # Note: Extra time and penalties are not sent as separate result types in the API
         # They are only included in the flat format, but the API only supports result types 1 and 2
-

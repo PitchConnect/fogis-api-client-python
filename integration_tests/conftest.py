@@ -10,12 +10,12 @@ from typing import Dict, Generator
 import pytest
 import requests
 
+# Import the API clients
+from fogis_api_client.public_api_client import FogisApiClient
+from fogis_api_client.internal.api_client import InternalApiClient
+
 # Import the mock server
 from integration_tests.mock_fogis_server import MockFogisServer
-
-# Import the API clients
-from fogis_api_client.fogis_api_client import FogisApiClient
-from fogis_api_client.internal.api_client import InternalApiClient
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
