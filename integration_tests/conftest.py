@@ -154,7 +154,7 @@ def mock_api_urls(mock_fogis_server: Dict[str, str]) -> None:
 
     # Clear request history at the beginning of each test for better isolation
     try:
-        requests.get(f"{mock_fogis_server['base_url']}/clear-request-history")
+        requests.post(f"{mock_fogis_server['base_url']}/clear-request-history")
     except requests.exceptions.RequestException as e:
         logger.warning(f"Failed to clear request history: {e}")
 
