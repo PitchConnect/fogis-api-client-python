@@ -11,7 +11,7 @@ import pytest
 import requests
 
 # Import the API clients
-from fogis_api_client.public_api_client import FogisApiClient
+from fogis_api_client import FogisApiClient
 from fogis_api_client.internal.api_client import InternalApiClient
 
 # Import the mock server
