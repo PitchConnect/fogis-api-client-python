@@ -1,0 +1,13 @@
+name: Contributing Guidelines Reminder
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  check-contributing-reference:
+    uses: PitchConnect/.github/.github/workflows/contributing-reminder.yml@main
+    with:
+      contributing_url: 'https://github.com/PitchConnect/contribution-guidelines/blob/main/CONTRIBUTING.md'

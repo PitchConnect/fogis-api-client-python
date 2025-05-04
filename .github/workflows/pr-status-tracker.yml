@@ -1,0 +1,13 @@
+name: PR Status Tracker
+
+on:
+  pull_request:
+    types: [opened, converted_to_draft, ready_for_review, closed]
+
+jobs:
+  track-pr-status:
+    uses: PitchConnect/.github/.github/workflows/pr-status-tracker.yml@main
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: read
