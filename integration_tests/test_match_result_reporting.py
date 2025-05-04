@@ -74,6 +74,7 @@ class TestMatchResultReporting:
         mock_fogis_server: Dict[str, str],
         test_credentials: Dict[str, str],
         mock_api_urls,
+        clear_request_history,
         scenario: str,
         result_data: Union[Dict[str, Any], MatchResultDict],
         expected_success: bool,
@@ -130,6 +131,7 @@ class TestMatchResultReporting:
         mock_fogis_server: Dict[str, str],
         test_credentials: Dict[str, str],
         mock_api_urls,
+        clear_request_history,
         scenario: str,
         result_data: Dict[str, Any],
         expected_exception: type,
@@ -143,8 +145,21 @@ class TestMatchResultReporting:
         )
 
         # Attempt to report the match result and expect failure
-        with pytest.raises(expected_exception):
+        with pytest.raises(expected_exception) as excinfo:
             client.report_match_result(result_data)
+
+        # Verify the error message contains useful information
+        error_message = str(excinfo.value)
+
+        # Check for specific error information based on the scenario
+        if scenario == "missing_fields":
+            assert "hemmamal" in error_message.lower() or "bortamal" in error_message.lower(), \
+                "Error message should mention the missing fields"
+            assert "required" in error_message.lower(), "Error message should indicate fields are required"
+        elif scenario == "invalid_nested_format":
+            assert "matchresultattypid" in error_message.lower() or "matchlag1mal" in error_message.lower() \
+                or "matchlag2mal" in error_message.lower(), "Error message should mention the missing fields"
+            assert "required" in error_message.lower(), "Error message should indicate a required field is missing"
 
     @pytest.mark.parametrize(
         "scenario,result_data,expected_success",
@@ -205,6 +220,7 @@ class TestMatchResultReporting:
         mock_fogis_server: Dict[str, str],
         test_credentials: Dict[str, str],
         mock_api_urls,
+        clear_request_history,
         scenario: str,
         result_data: Union[Dict[str, Any], MatchResultDict],
         expected_success: bool,
@@ -226,7 +242,7 @@ class TestMatchResultReporting:
         assert response["success"] is expected_success
 
     def test_complete_match_reporting_workflow(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history
     ):
         """Test the complete match reporting workflow."""
 
@@ -236,8 +252,7 @@ class TestMatchResultReporting:
             password=test_credentials["password"],
         )
 
-        # Clear request history before starting the test
-        requests.post(f"{mock_fogis_server['base_url']}/clear-request-history")
+        # Request history is already cleared by the fixture
 
         # 1. Report match result
         match_id = 12345
@@ -291,7 +306,7 @@ class TestMatchResultReporting:
         assert half_time["matchlag2mal"] == 0
 
     def test_verify_request_structure_with_extra_time_and_penalties(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history
     ):
         """Test that verifies the structure of requests with extra time and penalties."""
 
@@ -301,8 +316,7 @@ class TestMatchResultReporting:
             password=test_credentials["password"],
         )
 
-        # Clear request history before starting the test
-        requests.post(f"{mock_fogis_server['base_url']}/clear-request-history")
+        # Request history is already cleared by the fixture
 
         # Create match result data with extra time and penalties
         match_id = 12345
