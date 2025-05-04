@@ -1,0 +1,14 @@
+name: Issue Labeler
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  label-issue:
+    uses: PitchConnect/.github/.github/workflows/issue-labeler.yml@main
+    permissions:
+      issues: write
+      contents: read
+    with:
+      label_name: 'triage'
