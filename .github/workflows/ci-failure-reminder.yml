@@ -2,38 +2,10 @@ name: CI Failure Reminder
 
 on:
   workflow_run:
-    workflows: ["Test", "Docker Build"]
+    workflows: ["CI", "Build", "Test"]
     types:
       - completed
 
 jobs:
   remind-on-failure:
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Get PR information
-        id: get-pr
-        run: |
-          # Get the PR that triggered the workflow
-          PR_INFO=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/pulls?head=${{ github.event.workflow_run.head_branch }}")
-          
-          PR_NUMBER=$(echo "$PR_INFO" | jq -r '.[0].number')
-          
-          if [[ "$PR_NUMBER" != "null" ]]; then
-            echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
-          fi
-      
-      - name: Add reminder comment
-        if: ${{ env.PR_NUMBER != '' }}
-        run: |
-          COMMENT_BODY="## CI/CD Pipeline Failure\n\nIt looks like the CI/CD pipeline failed for this PR. Please:\n\n1. **Check the failure logs** to understand what went wrong\n2. **Use pre-commit hooks** to catch these issues locally before pushing\n3. **Ensure your pre-commit hooks are up-to-date** and aligned with the CI/CD pipeline\n4. **Fix the issues** and push the changes\n\nRemember: PRs should not be marked as ready for review until all CI/CD checks pass.\n\nIf the CI/CD caught issues that should have been caught by pre-commit hooks, please update your pre-commit configuration to match the CI/CD pipeline."
-          
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            "https://api.github.com/repos/${{ github.repository }}/issues/${{ env.PR_NUMBER }}/comments" \
-            -d "{\"body\":\"${COMMENT_BODY}\"}"
+    uses: PitchConnect/.github/.github/workflows/ci-failure-reminder.yml@main
