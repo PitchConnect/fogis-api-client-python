@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class TestFogisApiClientWithMockServer:
     """Integration tests for the FogisApiClient using a mock server."""
 
-    def test_login_success(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_login_success(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test successful login with valid credentials."""
         # Create a client with test credentials
         client = FogisApiClient(
@@ -39,7 +39,7 @@ class TestFogisApiClientWithMockServer:
         # We need to check for the actual cookie name the client uses
         assert any(k for k in cookies if k.startswith("FogisMobilDomarKlient"))
 
-    def test_login_failure(self, mock_fogis_server: Dict[str, str], mock_api_urls):
+    def test_login_failure(self, mock_fogis_server: Dict[str, str], mock_api_urls, clear_request_history):
         """Test login failure with invalid credentials."""
         # Create a client with invalid credentials
         client = FogisApiClient(
@@ -48,10 +48,14 @@ class TestFogisApiClientWithMockServer:
         )
 
         # Attempt to login and expect failure
-        with pytest.raises(FogisLoginError):
+        with pytest.raises(FogisLoginError) as excinfo:
             client.login()
 
-    def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+        # Verify the error message contains useful information
+        error_message = str(excinfo.value)
+        assert "invalid" in error_message.lower(), "Error message should indicate invalid credentials"
+
+    def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching the match list."""
 
         # In a real test, we would create a client and use it to fetch data
@@ -97,7 +101,7 @@ class TestFogisApiClientWithMockServer:
         assert "datum" in match
         assert "tid" in match
 
-    def test_fetch_match_details(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_fetch_match_details(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching match details."""
 
         # Create a client with test credentials
@@ -118,7 +122,7 @@ class TestFogisApiClientWithMockServer:
         assert "datum" in match
         assert "tid" in match
 
-    def test_fetch_match_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_fetch_match_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching match players."""
 
         # Create a client with test credentials
@@ -150,7 +154,7 @@ class TestFogisApiClientWithMockServer:
         assert "fornamn" in home_player
         assert "efternamn" in home_player
 
-    def test_fetch_match_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_fetch_match_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching match officials."""
 
         # Create a client with test credentials
@@ -183,7 +187,7 @@ class TestFogisApiClientWithMockServer:
         assert "fornamn" in home_official
         assert "efternamn" in home_official
 
-    def test_fetch_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_fetch_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching match events."""
 
         # Create a client with test credentials
@@ -209,7 +213,7 @@ class TestFogisApiClientWithMockServer:
         assert "matchminut" in event  # New field name instead of minut
         assert "matchlagid" in event  # New field name instead of lagid
 
-    def test_fetch_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_fetch_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching match result."""
 
         # Create a client with test credentials
@@ -236,7 +240,7 @@ class TestFogisApiClientWithMockServer:
             assert "matchlag1mal" in result[0]
             assert "matchlag2mal" in result[0]
 
-    def test_report_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_report_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test reporting match results."""
 
         # Create a client with test credentials
@@ -268,7 +272,7 @@ class TestFogisApiClientWithMockServer:
 
         # No need to restore base URLs - the fixture will handle that
 
-    def test_report_match_event(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_report_match_event(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test reporting a match event."""
 
         # Create a client with test credentials
@@ -299,10 +303,17 @@ class TestFogisApiClientWithMockServer:
 
         # Report the event - expect an error because the mock server requires 'matchhandelsetypid'
         # but the client doesn't include it in the request
-        with pytest.raises(FogisAPIRequestError):
+        with pytest.raises(FogisAPIRequestError) as excinfo:
             client.report_match_event(event_data)
 
-    def test_clear_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+        # Verify the error message contains useful information
+        error_message = str(excinfo.value)
+        # The error message might not contain the specific field name in all cases
+        # but it should indicate that there was a client error (400 Bad Request)
+        assert "400" in error_message, "Error message should indicate a 400 Bad Request error"
+        assert "bad request" in error_message.lower(), "Error message should indicate a Bad Request error"
+
+    def test_clear_match_events(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test clearing match events."""
 
         # Create a client with test credentials
@@ -320,7 +331,7 @@ class TestFogisApiClientWithMockServer:
         assert "success" in response
         assert response["success"] is True
 
-    def test_mark_reporting_finished(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_mark_reporting_finished(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test marking reporting as finished."""
 
         # Create a client with test credentials
@@ -340,7 +351,7 @@ class TestFogisApiClientWithMockServer:
 
         # No need to restore base URLs - the fixture will handle that
 
-    def test_hello_world(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_hello_world(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test the hello_world method."""
 
         # Create a client with test credentials
@@ -355,7 +366,7 @@ class TestFogisApiClientWithMockServer:
         # Verify the response
         assert message == "Hello, brave new world!"
 
-    def test_fetch_team_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_fetch_team_players(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching team players."""
 
         # Create a client with test credentials
@@ -386,7 +397,7 @@ class TestFogisApiClientWithMockServer:
 
         # No need to restore base URLs - the fixture will handle that
 
-    def test_fetch_team_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_fetch_team_officials(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching team officials."""
 
         # Create a client with test credentials
@@ -413,7 +424,7 @@ class TestFogisApiClientWithMockServer:
         assert "matchlagid" in official  # type: ignore
         assert official["matchlagid"] == team_id  # type: ignore
 
-    def test_cookie_authentication(self, mock_fogis_server: Dict[str, str], mock_api_urls):
+    def test_cookie_authentication(self, mock_fogis_server: Dict[str, str], mock_api_urls, clear_request_history):
         """Test authentication using cookies."""
 
         # Create a client with cookies - use the cookie name the client expects
@@ -439,7 +450,7 @@ class TestFogisApiClientWithMockServer:
 
         # No need to restore base URLs - the fixture will handle that
 
-    def test_save_match_participant(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
+    def test_save_match_participant(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test saving match participant information."""
 
         # Create a client with test credentials
