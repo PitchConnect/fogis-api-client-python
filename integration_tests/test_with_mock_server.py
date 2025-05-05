@@ -45,17 +45,13 @@ class TestFogisApiClientWithMockServer:
         with pytest.raises(FogisLoginError) as excinfo:
             client.login()
 
-<<<<<<< HEAD
         # Note: We don't use fogis_test_client here because we need to test with invalid credentials
 
-    def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls):
-=======
         # Verify the error message contains useful information
         error_message = str(excinfo.value)
         assert "invalid" in error_message.lower(), "Error message should indicate invalid credentials"
 
     def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
->>>>>>> origin/develop
         """Test fetching the match list."""
 
         # In a real test, we would create a client and use it to fetch data
@@ -282,11 +278,7 @@ class TestFogisApiClientWithMockServer:
         assert "success" in response
         assert response["success"] is True
 
-<<<<<<< HEAD
-    def test_mark_reporting_finished(self, fogis_test_client: FogisApiClient):
-=======
-    def test_mark_reporting_finished(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
->>>>>>> origin/develop
+    def test_mark_reporting_finished(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test marking reporting as finished."""
 
         # Mark reporting as finished
