@@ -71,9 +71,7 @@ class TestMatchResultReporting:
     )
     def test_report_match_result_formats(
         self,
-        mock_fogis_server: Dict[str, str],
-        test_credentials: Dict[str, str],
-        mock_api_urls,
+        fogis_test_client: FogisApiClient,
         clear_request_history,
         scenario: str,
         result_data: Union[Dict[str, Any], MatchResultDict],
@@ -81,14 +79,8 @@ class TestMatchResultReporting:
     ):
         """Test reporting match results using different formats."""
 
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
         # Report the match result
-        response = client.report_match_result(result_data)
+        response = fogis_test_client.report_match_result(result_data)
 
         # Verify the response
         assert isinstance(response, dict)
@@ -128,9 +120,7 @@ class TestMatchResultReporting:
     )
     def test_report_match_result_error_cases(
         self,
-        mock_fogis_server: Dict[str, str],
-        test_credentials: Dict[str, str],
-        mock_api_urls,
+        fogis_test_client: FogisApiClient,
         clear_request_history,
         scenario: str,
         result_data: Dict[str, Any],
@@ -138,15 +128,9 @@ class TestMatchResultReporting:
     ):
         """Test reporting match results with error cases."""
 
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
         # Attempt to report the match result and expect failure
         with pytest.raises(expected_exception) as excinfo:
-            client.report_match_result(result_data)
+            fogis_test_client.report_match_result(result_data)
 
         # Verify the error message contains useful information
         error_message = str(excinfo.value)
@@ -217,9 +201,7 @@ class TestMatchResultReporting:
     )
     def test_report_match_result_special_cases(
         self,
-        mock_fogis_server: Dict[str, str],
-        test_credentials: Dict[str, str],
-        mock_api_urls,
+        fogis_test_client: FogisApiClient,
         clear_request_history,
         scenario: str,
         result_data: Union[Dict[str, Any], MatchResultDict],
@@ -227,14 +209,8 @@ class TestMatchResultReporting:
     ):
         """Test reporting match results with special cases (extra time, penalties, walkover)."""
 
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
         # Report the match result
-        response = client.report_match_result(result_data)
+        response = fogis_test_client.report_match_result(result_data)
 
         # Verify the response
         assert isinstance(response, dict)
@@ -242,15 +218,9 @@ class TestMatchResultReporting:
         assert response["success"] is expected_success
 
     def test_complete_match_reporting_workflow(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history
+        self, mock_fogis_server: Dict[str, str], fogis_test_client: FogisApiClient, clear_request_history
     ):
         """Test the complete match reporting workflow."""
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
 
         # Request history is already cleared by the fixture
 
@@ -266,11 +236,11 @@ class TestMatchResultReporting:
                 "halvtidBortamal": 0,
             },
         )
-        result_response = client.report_match_result(result_data)
+        result_response = fogis_test_client.report_match_result(result_data)
         assert result_response["success"] is True
 
         # 2. Mark reporting as finished
-        finish_response = client.mark_reporting_finished(match_id)
+        finish_response = fogis_test_client.mark_reporting_finished(match_id)
         assert finish_response["success"] is True
 
         # 3. Verify the request structure sent to the API

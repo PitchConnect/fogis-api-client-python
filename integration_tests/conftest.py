@@ -182,3 +182,29 @@ def mock_api_urls(mock_fogis_server: Dict[str, str]) -> None:
         # Restore original URLs, even if the test fails
         FogisApiClient.BASE_URL = original_base_url
         InternalApiClient.BASE_URL = original_internal_base_url
+
+
+@pytest.fixture
+def fogis_test_client(mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls) -> FogisApiClient:
+    """
+    Fixture that provides a configured FogisApiClient for testing.
+
+    This fixture combines the mock_fogis_server, test_credentials, and mock_api_urls fixtures
+    to create a properly configured client for testing. It reduces code duplication by
+    handling the common pattern of creating a client with test credentials.
+
+    Args:
+        mock_fogis_server: The mock server fixture
+        test_credentials: The test credentials fixture
+        mock_api_urls: The fixture that temporarily overrides API URLs
+
+    Returns:
+        A configured FogisApiClient instance
+    """
+    # Create a client with test credentials
+    client = FogisApiClient(
+        username=test_credentials["username"],
+        password=test_credentials["password"],
+    )
+
+    return client
