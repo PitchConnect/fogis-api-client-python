@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.2] - 2025-05-15
+
+### Fixed
+- Fixed PyPI publishing workflow by adding a build step (Issue #146)
+
 ## [0.4.1] - 2025-05-15
 
 ### Fixed

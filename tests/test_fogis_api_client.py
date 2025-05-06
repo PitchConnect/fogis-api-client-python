@@ -416,7 +416,7 @@ class TestFogisApiClient(unittest.TestCase):
 
         # Call report_match_result
         result_data = {
-            "matchid": 12345,  # Changed from string to integer
+            "matchid": "12345",
             "hemmamal": 2,
             "bortamal": 1,
             "halvtidHemmamal": 1,
@@ -427,32 +427,32 @@ class TestFogisApiClient(unittest.TestCase):
         # Verify the result
         self.assertEqual(response, {"success": True})
 
-        # Verify the API call
-        self.client._api_request.assert_called_once()
-        call_args = self.client._api_request.call_args
-        url = call_args[0][0]  # First positional argument is the URL
-        payload = call_args[0][1]  # Second positional argument is the payload
-
-        # Check URL
-        self.assertEqual(url, f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista")
-
-        # Check payload structure
-        self.assertIn("matchresultatListaJSON", payload)
-        self.assertEqual(len(payload["matchresultatListaJSON"]), 2)
-
-        # Check full-time result
-        fulltime = payload["matchresultatListaJSON"][0]
-        self.assertEqual(fulltime["matchid"], 12345)
-        self.assertEqual(fulltime["matchresultattypid"], 1)
-        self.assertEqual(fulltime["matchlag1mal"], 2)
-        self.assertEqual(fulltime["matchlag2mal"], 1)
-
-        # Check half-time result
-        halftime = payload["matchresultatListaJSON"][1]
-        self.assertEqual(halftime["matchid"], 12345)
-        self.assertEqual(halftime["matchresultattypid"], 2)
-        self.assertEqual(halftime["matchlag1mal"], 1)
-        self.assertEqual(halftime["matchlag2mal"], 0)
+        # Verify the API call - now using the nested structure
+        self.client._api_request.assert_called_once_with(
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista",
+            {
+                "matchresultatListaJSON": [
+                    {
+                        "matchid": 12345,  # Should be converted to int
+                        "matchresultattypid": 1,  # Full time
+                        "matchlag1mal": 2,
+                        "matchlag2mal": 1,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    },
+                    {
+                        "matchid": 12345,
+                        "matchresultattypid": 2,  # Half-time
+                        "matchlag1mal": 1,
+                        "matchlag2mal": 0,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    }
+                ]
+            },
+        )
 
     def test_report_match_result_error(self):
         """Unit test for report_match_result method with error."""
@@ -461,32 +461,39 @@ class TestFogisApiClient(unittest.TestCase):
         self.client._api_request = MagicMock(side_effect=FogisAPIRequestError(error_msg))
 
         # Call report_match_result and expect an exception
-        result_data = {"matchid": 12345, "hemmamal": 2, "bortamal": 1}  # Changed from string to integer
+        result_data = {"matchid": "12345", "hemmamal": 2, "bortamal": 1}
         with self.assertRaises(FogisAPIRequestError) as excinfo:
             self.client.report_match_result(result_data)
 
         # Verify the exception message
         self.assertIn("API request failed", str(excinfo.exception))
 
-        # Verify the API call
-        self.client._api_request.assert_called_once()
-        call_args = self.client._api_request.call_args
-        url = call_args[0][0]  # First positional argument is the URL
-        payload = call_args[0][1]  # Second positional argument is the payload
-
-        # Check URL
-        self.assertEqual(url, f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista")
-
-        # Check payload structure
-        self.assertIn("matchresultatListaJSON", payload)
-        self.assertEqual(len(payload["matchresultatListaJSON"]), 2)
-
-        # Check full-time result
-        fulltime = payload["matchresultatListaJSON"][0]
-        self.assertEqual(fulltime["matchid"], 12345)
-        self.assertEqual(fulltime["matchresultattypid"], 1)
-        self.assertEqual(fulltime["matchlag1mal"], 2)
-        self.assertEqual(fulltime["matchlag2mal"], 1)
+        # Verify the API call - now using the nested structure
+        self.client._api_request.assert_called_once_with(
+            f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista",
+            {
+                "matchresultatListaJSON": [
+                    {
+                        "matchid": 12345,  # Should be converted to int
+                        "matchresultattypid": 1,  # Full time
+                        "matchlag1mal": 2,
+                        "matchlag2mal": 1,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    },
+                    {
+                        "matchid": 12345,
+                        "matchresultattypid": 2,  # Half-time
+                        "matchlag1mal": 0,
+                        "matchlag2mal": 0,
+                        "wo": False,
+                        "ow": False,
+                        "ww": False
+                    }
+                ]
+            },
+        )
 
     def test_event_types_dictionary(self):
         """Test that the event_types dictionary is present and properly formatted."""
