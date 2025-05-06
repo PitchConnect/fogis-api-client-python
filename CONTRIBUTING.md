@@ -153,3 +153,70 @@ When using AI tools (GitHub Copilot, Claude, ChatGPT, etc.):
 - Add appropriate labels
 - Reference related issues or PRs
 
+## Repository-Specific Guidelines
+
+### Testing in fogis_api_client
+
+#### Running Tests
+
+Before submitting a pull request, please ensure all tests pass:
+
+1. **Run unit tests**:
+   ```bash
+   python -m unittest discover tests
+   ```
+
+2. **Run integration tests**:
+   ```bash
+   python -m pytest integration_tests
+   ```
+
+3. **When adding new features or modifying existing ones**:
+   - Add or update unit tests in the `tests/` directory
+   - Add or update integration tests in the `integration_tests/` directory
+   - Ensure test coverage for both success and error cases
+
+### Dynamic Pre-commit Hook Generator
+
+This project uses a dynamic pre-commit hook generator powered by Google's Gemini LLM:
+
+```bash
+# Generate pre-commit hooks interactively
+python3 scripts/dynamic_precommit_generator.py
+
+# Generate pre-commit hooks non-interactively
+python3 scripts/dynamic_precommit_generator.py --non-interactive
+
+# Generate and install pre-commit hooks
+python3 scripts/dynamic_precommit_generator.py --non-interactive --install
+```
+
+See `scripts/README_DYNAMIC_HOOKS.md` for more information.
+
+<!-- END COMMON SECTION -->
+
+## For Maintainers
+
+The following guidelines are primarily for repository maintainers:
+
+### Stale Branch Management
+
+- Periodically review and clean up old branches
+- Consider deleting branches that haven't been updated in 3+ months
+- Before deleting, check if the branch contains unique work
+- If a branch contains valuable work, create an issue to track it
+
+### Abandoned PR Handling
+
+- If a PR is abandoned, comment asking for status
+- After 2 weeks without response, consider closing the PR
+- Mention that the work can be continued in a new PR if needed
+
+### Issue Status Automation
+
+- When a draft PR is created: Issue status → "in-progress"
+- When PR is marked as ready for review: Issue status → "review-ready"
+- When PR is merged: Issue status → "merged-to-develop"
+- When PR is closed without merging: Remove "in-progress" label and add a comment explaining why
+
+Thank you for contributing!
