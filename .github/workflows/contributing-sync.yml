@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         
-      - name: Get source CONTRIBUTING.md
+      - name: Sync CONTRIBUTING.md while preserving repository-specific content
         run: |
           # Download source CONTRIBUTING.md
           curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -23,19 +23,74 @@ jobs:
           
           # Check if target CONTRIBUTING.md exists
           if [ -f "CONTRIBUTING.md" ]; then
-            # Extract repository-specific section
-            REPO_SPECIFIC=$(sed -n "/^## Repository-Specific Guidelines/,/<!-- END COMMON SECTION -->/p" "CONTRIBUTING.md" || echo "## Repository-Specific Guidelines\n\n<!-- Add repository-specific guidelines here -->\n\n<!-- END COMMON SECTION -->")
+            # Create temporary files
+            touch repo_specific.tmp
+            touch maintainer_section.tmp
             
-            # Replace repository-specific section in source file
-            sed -i "/^## Repository-Specific Guidelines/,/<!-- END COMMON SECTION -->/c\\$REPO_SPECIFIC" source_contributing.md
+            # Check if the repository-specific section exists
+            if grep -q "^## Repository-Specific Guidelines" "CONTRIBUTING.md"; then
+              echo "Found repository-specific section, preserving it..."
+              # Extract everything between Repository-Specific Guidelines and END COMMON SECTION
+              awk '/^## Repository-Specific Guidelines/,/<!-- END COMMON SECTION -->/' "CONTRIBUTING.md" > repo_specific.tmp
+              
+              # Check if we also have a maintainer section after the common section
+              if grep -q "^## For Maintainers" "CONTRIBUTING.md"; then
+                echo "Found maintainer section, preserving it..."
+                # Extract everything after END COMMON SECTION
+                awk '/<!-- END COMMON SECTION -->/,0' "CONTRIBUTING.md" | grep -v "<!-- END COMMON SECTION -->" > maintainer_section.tmp
+              fi
+            else
+              echo "No repository-specific section found, creating default..."
+              # Create a default repository-specific section
+              echo -e "## Repository-Specific Guidelines\n\n<!-- Add repository-specific guidelines here -->\n\n<!-- END COMMON SECTION -->" > repo_specific.tmp
+            fi
+            
+            # Check if the source file has a Repository-Specific Guidelines section
+            if grep -q "^## Repository-Specific Guidelines" "source_contributing.md"; then
+              echo "Source has Repository-Specific Guidelines section, replacing it..."
+              # Replace the section in the source file with our preserved content
+              sed -i '/^## Repository-Specific Guidelines/,/<!-- END COMMON SECTION -->/d' source_contributing.md
+              cat source_contributing.md > merged_contributing.md
+              cat repo_specific.tmp >> merged_contributing.md
+              
+              # Add the maintainer section if it's not empty
+              if [ -s "maintainer_section.tmp" ]; then
+                echo "Adding preserved maintainer section..."
+                cat maintainer_section.tmp >> merged_contributing.md
+              fi
+            else
+              echo "Source doesn't have Repository-Specific Guidelines section, appending ours..."
+              # If the source doesn't have the section, append our section to the end
+              cat source_contributing.md > merged_contributing.md
+              echo "" >> merged_contributing.md
+              cat repo_specific.tmp >> merged_contributing.md
+              
+              # Add the maintainer section if it's not empty
+              if [ -s "maintainer_section.tmp" ]; then
+                echo "Adding preserved maintainer section..."
+                cat maintainer_section.tmp >> merged_contributing.md
+              fi
+            fi
+            
+            # Update the CONTRIBUTING.md file
+            mv merged_contributing.md "CONTRIBUTING.md"
+            
+            # Clean up temporary files
+            rm -f repo_specific.tmp maintainer_section.tmp source_contributing.md
+          else
+            echo "No existing CONTRIBUTING.md found, using source version..."
+            # If no existing CONTRIBUTING.md, just use the source
+            mv source_contributing.md "CONTRIBUTING.md"
           fi
-          
-          # Update target CONTRIBUTING.md
-          mv source_contributing.md "CONTRIBUTING.md"
           
           # Commit changes if any
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add "CONTRIBUTING.md"
-          git diff --staged --quiet || git commit -m "Update CONTRIBUTING.md from contribution-guidelines"
-          git push
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update CONTRIBUTING.md from contribution-guidelines"
+            git push
+            echo "Changes committed and pushed"
+          fi
