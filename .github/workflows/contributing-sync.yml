@@ -1,0 +1,41 @@
+name: Sync CONTRIBUTING.md
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0'  # Run every Sunday at midnight
+
+jobs:
+  sync-contributing:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Get source CONTRIBUTING.md
+        run: |
+          # Download source CONTRIBUTING.md
+          curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3.raw" \
+            "https://api.github.com/repos/PitchConnect/contribution-guidelines/contents/CONTRIBUTING.md" > source_contributing.md
+          
+          # Check if target CONTRIBUTING.md exists
+          if [ -f "CONTRIBUTING.md" ]; then
+            # Extract repository-specific section
+            REPO_SPECIFIC=$(sed -n "/^## Repository-Specific Guidelines/,/<!-- END COMMON SECTION -->/p" "CONTRIBUTING.md" || echo "## Repository-Specific Guidelines\n\n<!-- Add repository-specific guidelines here -->\n\n<!-- END COMMON SECTION -->")
+            
+            # Replace repository-specific section in source file
+            sed -i "/^## Repository-Specific Guidelines/,/<!-- END COMMON SECTION -->/c\\$REPO_SPECIFIC" source_contributing.md
+          fi
+          
+          # Update target CONTRIBUTING.md
+          mv source_contributing.md "CONTRIBUTING.md"
+          
+          # Commit changes if any
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add "CONTRIBUTING.md"
+          git diff --staged --quiet || git commit -m "Update CONTRIBUTING.md from contribution-guidelines"
+          git push
