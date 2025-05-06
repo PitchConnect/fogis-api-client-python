@@ -92,30 +92,36 @@ def test_root_endpoint():
     assert "FOGIS API Gateway" in data["message"]
 
 
-def test_matches_endpoint():
-    """Test the /matches endpoint returns a list of matches."""
+@pytest.mark.parametrize(
+    "endpoint,path_param,expected_type",
+    [
+        ("/matches", None, list),
+        ("/match", "1", dict),
+    ],
+    ids=["matches_endpoint", "match_details_endpoint"],
+)
+def test_api_endpoints(endpoint, path_param, expected_type):
+    """Test various API endpoints return valid responses.
+
+    Args:
+        endpoint: The API endpoint to test (without the base URL)
+        path_param: Optional path parameter to append to the endpoint
+        expected_type: The expected type of the response data (list or dict)
+    """
+    # Construct the full URL
+    url = f"{API_URL}{endpoint}"
+    if path_param:
+        url = f"{url}/{path_param}"
+
     # This endpoint might return an error if not authenticated
     # We'll just check that it returns a valid response
-    response = requests.get(f"{API_URL}/matches")
+    response = requests.get(url)
     assert response.status_code in [200, 500]  # Either success or error is acceptable
 
     # If successful, check the structure
     if response.status_code == 200:
         data = response.json()
-        assert isinstance(data, list)
-
-
-def test_match_details_endpoint():
-    """Test the /match/<match_id> endpoint returns match details."""
-    # This endpoint might return an error if not authenticated
-    # We'll just check that it returns a valid response
-    response = requests.get(f"{API_URL}/match/1")
-    assert response.status_code in [200, 500]  # Either success or error is acceptable
-
-    # If successful, check that it's a dict
-    if response.status_code == 200:
-        data = response.json()
-        assert isinstance(data, dict)
+        assert isinstance(data, expected_type)
 
 
 if __name__ == "__main__":
