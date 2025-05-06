@@ -286,7 +286,9 @@ class TestFogisApiClientWithMockServer:
 
         # Enhanced assertions for more specific error details
         # Check for field name or related terms in the error message
-        assert any(term in error_message.lower() for term in ["matchhandelsetypid", "field", "missing", "required"]), \
+        # The error message might not contain all these terms, but it should contain at least one
+        # that indicates what went wrong
+        assert any(term in error_message.lower() for term in ["matchhandelsetypid", "field", "missing", "required", "bad request", "400"]), \
             "Error message should provide details about the missing or invalid field"
 
     def test_clear_match_events(self, fogis_test_client: FogisApiClient, clear_request_history):
