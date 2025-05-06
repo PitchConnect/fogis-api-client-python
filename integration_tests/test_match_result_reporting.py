@@ -196,8 +196,38 @@ class TestMatchResultReporting:
                 },
                 True,
             ),
+            # Abandoned match test case
+            (
+                "abandoned_match",
+                {
+                    "matchresultatListaJSON": [
+                        {
+                            "matchid": 12345,
+                            "matchresultattypid": 1,  # Full time
+                            "matchlag1mal": 1,
+                            "matchlag2mal": 1,
+                            "wo": False,
+                            "ow": False,
+                            "ww": True,  # Abandoned match
+                        }
+                    ]
+                },
+                True,
+            ),
+            # High score test case
+            (
+                "high_score",
+                {
+                    "matchid": 12345,
+                    "hemmamal": 10,
+                    "bortamal": 0,
+                    "halvtidHemmamal": 5,
+                    "halvtidBortamal": 0,
+                },
+                True,
+            ),
         ],
-        ids=["extra_time", "penalties", "walkover"],
+        ids=["extra_time", "penalties", "walkover", "abandoned_match", "high_score"],
     )
     def test_report_match_result_special_cases(
         self,

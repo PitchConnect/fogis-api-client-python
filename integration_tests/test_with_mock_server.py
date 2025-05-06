@@ -21,35 +21,63 @@ logger = logging.getLogger(__name__)
 class TestFogisApiClientWithMockServer:
     """Integration tests for the FogisApiClient using a mock server."""
 
-    def test_login_success(self, fogis_test_client: FogisApiClient, clear_request_history):
-        """Test successful login with valid credentials."""
-        # Attempt to login
-        cookies = fogis_test_client.login()
+    @pytest.mark.parametrize(
+        "scenario,credentials,expected_success,error_message_contains",
+        [
+            (
+                "valid_credentials",
+                {"username": "test_user", "password": "test_password"},
+                True,
+                None,
+            ),
+            (
+                "invalid_credentials",
+                {"username": "invalid_user", "password": "invalid_password"},
+                False,
+                "invalid",
+            ),
+        ],
+        ids=["login_success", "login_failure"],
+    )
+    def test_login(self, mock_fogis_server: Dict[str, str], mock_api_urls, clear_request_history,
+                  scenario: str, credentials: Dict[str, str], expected_success: bool,
+                  error_message_contains: str):
+        """Test login with different credentials.
 
-        # Verify that login was successful
-        assert cookies is not None
-        # The client uses FogisMobilDomarKlient.ASPXAUTH but CookieDict expects
-        # FogisMobilDomarKlient_ASPXAUTH
-        # We need to check for the actual cookie name the client uses
-        assert any(k for k in cookies if k.startswith("FogisMobilDomarKlient"))
-
-    def test_login_failure(self, mock_fogis_server: Dict[str, str], mock_api_urls, clear_request_history):
-        """Test login failure with invalid credentials."""
-        # Create a client with invalid credentials
+        Args:
+            mock_fogis_server: The mock server fixture
+            mock_api_urls: Fixture to override API URLs
+            clear_request_history: Fixture to clear request history
+            scenario: Test scenario name
+            credentials: Username and password to use
+            expected_success: Whether login should succeed
+            error_message_contains: Text expected in error message if login fails
+        """
+        # Create a client with the provided credentials
         client = FogisApiClient(
-            username="invalid_user",
-            password="invalid_password",
+            username=credentials["username"],
+            password=credentials["password"],
         )
 
-        # Attempt to login and expect failure
-        with pytest.raises(FogisLoginError) as excinfo:
-            client.login()
+        if expected_success:
+            # Attempt to login and expect success
+            cookies = client.login()
 
-        # Note: We don't use fogis_test_client here because we need to test with invalid credentials
+            # Verify that login was successful
+            assert cookies is not None
+            # The client uses FogisMobilDomarKlient.ASPXAUTH but CookieDict expects
+            # FogisMobilDomarKlient_ASPXAUTH
+            # We need to check for the actual cookie name the client uses
+            assert any(k for k in cookies if k.startswith("FogisMobilDomarKlient"))
+        else:
+            # Attempt to login and expect failure
+            with pytest.raises(FogisLoginError) as excinfo:
+                client.login()
 
-        # Verify the error message contains useful information
-        error_message = str(excinfo.value)
-        assert "invalid" in error_message.lower(), "Error message should indicate invalid credentials"
+            # Verify the error message contains useful information
+            error_message = str(excinfo.value)
+            assert error_message_contains in error_message.lower(), \
+                f"Error message should contain '{error_message_contains}'"
 
     def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching the match list."""
@@ -97,73 +125,63 @@ class TestFogisApiClientWithMockServer:
         assert "datum" in match
         assert "tid" in match
 
-    def test_fetch_match_details(self, fogis_test_client: FogisApiClient, clear_request_history):
-        """Test fetching match details."""
+    @pytest.mark.parametrize(
+        "fetch_method,expected_fields,entity_fields",
+        [
+            (
+                "fetch_match_json",
+                ["matchid", "hemmalag", "bortalag", "datum", "tid"],
+                None,
+            ),
+            (
+                "fetch_match_players_json",
+                ["hemmalag", "bortalag"],
+                ["matchdeltagareid", "matchid", "matchlagid", "spelareid", "trojnummer", "fornamn", "efternamn"],
+            ),
+            (
+                "fetch_match_officials_json",
+                ["hemmalag", "bortalag"],
+                ["personid", "fornamn", "efternamn"],
+            ),
+        ],
+        ids=["match_details", "match_players", "match_officials"],
+    )
+    def test_fetch_match_data(self, fogis_test_client: FogisApiClient, clear_request_history,
+                             fetch_method: str, expected_fields: list, entity_fields: list):
+        """Test fetching various match-related data.
 
-        # Fetch match details
+        Args:
+            fogis_test_client: The API client fixture
+            clear_request_history: Fixture to clear request history
+            fetch_method: The method name to call on the client
+            expected_fields: Fields expected in the response
+            entity_fields: Fields expected in the entities (players, officials)
+        """
+        # Get the method from the client
+        client_method = getattr(fogis_test_client, fetch_method)
+
+        # Fetch the data
         match_id = 12345
-        match = fogis_test_client.fetch_match_json(match_id)
+        response = client_method(match_id)
 
         # Verify the response
-        assert isinstance(match, dict)
-        assert match["matchid"] == match_id
-        assert "hemmalag" in match
-        assert "bortalag" in match
-        assert "datum" in match
-        assert "tid" in match
+        assert isinstance(response, dict)
 
-    def test_fetch_match_players(self, fogis_test_client: FogisApiClient, clear_request_history):
-        """Test fetching match players."""
+        # Check expected fields
+        for field in expected_fields:
+            assert field in response
 
-        # Fetch match players
-        match_id = 12345
-        players = fogis_test_client.fetch_match_players_json(match_id)
+        # If this is a response with team entities (players, officials)
+        if "hemmalag" in expected_fields and "bortalag" in expected_fields and entity_fields:
+            assert isinstance(response["hemmalag"], list)
+            assert isinstance(response["bortalag"], list)
+            assert len(response["hemmalag"]) > 0
+            assert len(response["bortalag"]) > 0
 
-        # Verify the response
-        assert isinstance(players, dict)
-        assert "hemmalag" in players
-        assert "bortalag" in players
-        assert isinstance(players["hemmalag"], list)
-        assert isinstance(players["bortalag"], list)
-        assert len(players["hemmalag"]) > 0
-        assert len(players["bortalag"]) > 0
-
-        # Check the structure of the first player
-        home_player = players["hemmalag"][0]
-        assert "matchdeltagareid" in home_player
-        assert "matchid" in home_player
-        assert "matchlagid" in home_player
-        assert "spelareid" in home_player
-        assert "trojnummer" in home_player
-        assert "fornamn" in home_player
-        assert "efternamn" in home_player
-
-    def test_fetch_match_officials(self, fogis_test_client: FogisApiClient, clear_request_history):
-        """Test fetching match officials."""
-
-        # Fetch match officials
-        match_id = 12345
-        officials = fogis_test_client.fetch_match_officials_json(match_id)
-
-        # Verify the response
-        assert isinstance(officials, dict)
-        assert "hemmalag" in officials
-        assert "bortalag" in officials
-        assert isinstance(officials["hemmalag"], list)
-        assert isinstance(officials["bortalag"], list)
-        assert len(officials["hemmalag"]) > 0
-        assert len(officials["bortalag"]) > 0
-
-        # Check the structure of the officials response
-        assert "hemmalag" in officials
-        assert isinstance(officials["hemmalag"], list)
-        assert len(officials["hemmalag"]) > 0
-
-        # Check the structure of the first official
-        home_official = officials["hemmalag"][0]
-        assert "personid" in home_official
-        assert "fornamn" in home_official
-        assert "efternamn" in home_official
+            # Check the structure of the first entity
+            home_entity = response["hemmalag"][0]
+            for field in entity_fields:
+                assert field in home_entity
 
     def test_fetch_match_events(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test fetching match events."""
@@ -301,51 +319,68 @@ class TestFogisApiClientWithMockServer:
         # Verify the response
         assert message == "Hello, brave new world!"
 
-    def test_fetch_team_players(self, fogis_test_client: FogisApiClient, clear_request_history):
-        """Test fetching team players."""
+    @pytest.mark.parametrize(
+        "fetch_method,response_type,entity_container,entity_fields,id_field",
+        [
+            (
+                "fetch_team_players_json",
+                dict,
+                "spelare",
+                ["personid", "fornamn", "efternamn", "position", "matchlagid"],
+                "matchlagid",
+            ),
+            (
+                "fetch_team_officials_json",
+                list,
+                None,
+                ["personid", "fornamn", "efternamn", "roll", "matchlagid"],
+                "matchlagid",
+            ),
+        ],
+        ids=["team_players", "team_officials"],
+    )
+    def test_fetch_team_data(self, fogis_test_client: FogisApiClient, clear_request_history,
+                            fetch_method: str, response_type: type, entity_container: str,
+                            entity_fields: list, id_field: str):
+        """Test fetching various team-related data.
 
-        # Fetch team players
+        Args:
+            fogis_test_client: The API client fixture
+            clear_request_history: Fixture to clear request history
+            fetch_method: The method name to call on the client
+            response_type: Expected type of the response (dict or list)
+            entity_container: Field containing entities if response is a dict
+            entity_fields: Fields expected in each entity
+            id_field: Field that should match the team_id
+        """
+        # Get the method from the client
+        client_method = getattr(fogis_test_client, fetch_method)
+
+        # Fetch the data
         team_id = 12345
-        players = fogis_test_client.fetch_team_players_json(team_id)
+        response = client_method(team_id)
 
-        # Verify the response
-        assert isinstance(players, dict)
-        assert "spelare" in players
-        assert isinstance(players["spelare"], list)
-        assert len(players["spelare"]) > 0
+        # Verify the response type
+        assert isinstance(response, response_type)
 
-        # Check the structure of the first player
-        player = players["spelare"][0]
-        assert "personid" in player
-        assert "fornamn" in player
-        assert "efternamn" in player
-        assert "position" in player
-        # Note: matchlagid is not in PlayerDict but is present in the mock server response
-        assert "matchlagid" in player  # type: ignore
-        assert player["matchlagid"] == team_id  # type: ignore
+        # Get the entities to check
+        if response_type == dict and entity_container:
+            assert entity_container in response
+            assert isinstance(response[entity_container], list)
+            assert len(response[entity_container]) > 0
+            entities = response[entity_container]
+        else:
+            # If response is already a list of entities
+            assert len(response) > 0
+            entities = response
 
-        # No need to restore base URLs - the fixture will handle that
+        # Check the first entity
+        entity = entities[0]
+        for field in entity_fields:
+            assert field in entity
 
-    def test_fetch_team_officials(self, fogis_test_client: FogisApiClient, clear_request_history):
-        """Test fetching team officials."""
-
-        # Fetch team officials
-        team_id = 12345
-        officials = fogis_test_client.fetch_team_officials_json(team_id)
-
-        # Verify the response
-        assert isinstance(officials, list)
-        assert len(officials) > 0
-
-        # Check the structure of the first official
-        official = officials[0]
-        assert "personid" in official
-        assert "fornamn" in official
-        assert "efternamn" in official
-        assert "roll" in official
-        # Note: matchlagid is not in OfficialDict but is present in the mock server response
-        assert "matchlagid" in official  # type: ignore
-        assert official["matchlagid"] == team_id  # type: ignore
+        # Check that the ID field matches the team_id
+        assert entity[id_field] == team_id  # type: ignore
 
     def test_cookie_authentication(self, mock_fogis_server: Dict[str, str], mock_api_urls, clear_request_history):
         """Test authentication using cookies."""
