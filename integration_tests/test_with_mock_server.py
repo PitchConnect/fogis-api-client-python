@@ -284,6 +284,11 @@ class TestFogisApiClientWithMockServer:
         assert "400" in error_message, "Error message should indicate a 400 Bad Request error"
         assert "bad request" in error_message.lower(), "Error message should indicate a Bad Request error"
 
+        # Enhanced assertions for more specific error details
+        # Check for field name or related terms in the error message
+        assert any(term in error_message.lower() for term in ["matchhandelsetypid", "field", "missing", "required"]), \
+            "Error message should provide details about the missing or invalid field"
+
     def test_clear_match_events(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test clearing match events."""
 

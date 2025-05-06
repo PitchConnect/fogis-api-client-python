@@ -132,9 +132,14 @@ def test_credentials() -> Dict[str, str]:
 @pytest.fixture
 def clear_request_history(mock_fogis_server: Dict[str, str]) -> None:
     """
-    Fixture that clears the request history before each test.
+    Fixture that clears the request history before and after each test.
 
     This ensures test isolation by preventing previous test requests from affecting current tests.
+    Using this fixture is CRITICAL for proper test isolation and should be included in all test methods
+    that interact with the mock server.
+
+    Without this fixture, tests may interfere with each other as the mock server maintains state
+    between test runs, which can lead to flaky tests and false positives/negatives.
 
     Args:
         mock_fogis_server: The mock server information
@@ -142,7 +147,8 @@ def clear_request_history(mock_fogis_server: Dict[str, str]) -> None:
     # Clear request history at the beginning of the test
     requests.post(f"{mock_fogis_server['base_url']}/clear-request-history")
     yield
-    # Optionally clear again after the test (not strictly necessary but helps with debugging)
+    # Clear again after the test to leave a clean state for the next test
+    # This helps with debugging and ensures proper isolation
     requests.post(f"{mock_fogis_server['base_url']}/clear-request-history")
 
 
