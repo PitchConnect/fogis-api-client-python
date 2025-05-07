@@ -25,6 +25,15 @@ jobs:
         echo "Current setup.py content:"
         cat setup.py
         grep -n "version" setup.py
+    - name: Modify setup.py version
+      run: |
+        # Extract version from release tag
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "Extracted version: $VERSION"
+        # Update version in setup.py
+        sed -i "s/version=\".*\"/version=\"$VERSION\"/" setup.py
+        echo "Updated setup.py:"
+        cat setup.py | grep version
     - name: Build package
       run: python -m build
     - name: Build and publish
