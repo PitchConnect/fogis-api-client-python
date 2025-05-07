@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.4.4] - 2025-05-20
+
+### Fixed
+- Fixed package name capitalization in setup.py (correct to timmyBird)
+- Updated publish-to-pypi.yml workflow to explicitly set version from release tag
+
 ## [0.4.3] - 2025-05-20
 
 ### Fixed
