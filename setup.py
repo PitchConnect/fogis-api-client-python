@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="fogis-api-client-timmybird",
+    name="fogis-api-client-timmyBird",
     version="0.4.3",
     author="Bartek Svaberg",
     author_email="bartek.svaberg@gmail.com",
