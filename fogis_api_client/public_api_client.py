@@ -406,7 +406,13 @@ class PublicApiClient:
             self.login()
 
         # Validate required fields
-        required_fields = ["matchid", "handelsekod", "minut", "lagid", "period"]
+        required_fields = [
+            "matchid",
+            "matchhandelsetypid",
+            "matchminut",
+            "matchlagid",
+            "period"
+        ]
         for field in required_fields:
             if field not in event_data:
                 error_msg = f"Missing required field '{field}' in event data"

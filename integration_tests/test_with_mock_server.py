@@ -198,10 +198,10 @@ class TestFogisApiClientWithMockServer:
         event = events[0]
         assert "matchhandelseid" in event
         assert "matchid" in event
-        assert "matchhandelsetypid" in event  # New field name instead of handelsekod
-        assert "matchhandelsetypnamn" in event  # New field name instead of handelsetyp
-        assert "matchminut" in event  # New field name instead of minut
-        assert "matchlagid" in event  # New field name instead of lagid
+        assert "matchhandelsetypid" in event  # New field name
+        assert "matchhandelsetypnamn" in event  # New field name
+        assert "matchminut" in event  # New field name
+        assert "matchlagid" in event  # New field name
 
     def test_fetch_match_result(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test fetching match result."""
@@ -258,31 +258,27 @@ class TestFogisApiClientWithMockServer:
             {
                 "matchid": 12345,
                 "matchhandelseid": 54321,  # Required by the mock server
-                "handelsekod": 6,  # Goal
-                "handelsetyp": "Mål",
-                "minut": 75,
-                "lagid": 1001,
-                "lag": "Home Team FC",
-                "personid": 2003,
-                "spelare": "Player Three",
+                "matchhandelsetypid": 6,  # Goal - using new property name
+                "matchhandelsetypnamn": "Mål",  # Using new property name
+                "matchminut": 75,  # Using new property name
+                "matchlagid": 1001,  # Using new property name
+                "matchlagnamn": "Home Team FC",  # Using new property name
+                "spelareid": 2003,  # Using new property name
+                "spelarenamn": "Player Three",  # Using new property name
                 "period": 2,
                 "mal": True,
-                "resultatHemma": 2,
-                "resultatBorta": 1,
+                "hemmamal": 2,  # Using new property name
+                "bortamal": 1,  # Using new property name
             },
         )
 
-        # Report the event - expect an error because the mock server requires 'matchhandelsetypid'
-        # but the client doesn't include it in the request
-        with pytest.raises(FogisAPIRequestError) as excinfo:
-            fogis_test_client.report_match_event(event_data)
+        # Report the event
+        response = fogis_test_client.report_match_event(event_data)
 
-        # Verify the error message contains useful information
-        error_message = str(excinfo.value)
-        # The error message might not contain the specific field name in all cases
-        # but it should indicate that there was a client error (400 Bad Request)
-        assert "400" in error_message, "Error message should indicate a 400 Bad Request error"
-        assert "bad request" in error_message.lower(), "Error message should indicate a Bad Request error"
+        # Verify the response
+        assert isinstance(response, dict)
+        assert "success" in response
+        assert response["success"] is True
 
     def test_clear_match_events(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test clearing match events."""
