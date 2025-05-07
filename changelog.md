@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.3] - 2025-05-20
+
+### Fixed
+- Reverted property name changes to maintain backward compatibility (Issue #187)
+- Restored original property names in API client: matchhandelsetypid, matchminut, matchlagid, spelareid, hemmamal, bortamal
+- Updated validation schemas to accept both original and new property names
+- Fixed adapters to properly handle original property names
+
 ## [0.4.2] - 2025-05-15
 
 ### Fixed
