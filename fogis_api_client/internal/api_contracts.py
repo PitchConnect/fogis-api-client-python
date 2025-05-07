@@ -81,10 +81,15 @@ MATCH_RESULT_FLAT_SCHEMA = {
 # Schema for match event reporting
 MATCH_EVENT_SCHEMA = {
     "type": "object",
-    "required": ["matchid", "handelsekod", "minut", "lagid", "period"],
+    "required": ["matchid", "period"],
+    "anyOf": [
+        {"required": ["matchhandelsetypid", "matchminut", "matchlagid"]},
+        {"required": ["handelsekod", "minut", "lagid"]}
+    ],
     "properties": {
         "matchid": {"type": "integer"},
         "matchhandelseid": {"type": "integer"},
+        # Original property names
         "handelsekod": {"type": "integer"},
         "handelsetyp": {"type": "string"},
         "minut": {"type": "integer", "minimum": 0},
@@ -92,12 +97,23 @@ MATCH_EVENT_SCHEMA = {
         "lag": {"type": "string"},
         "personid": {"type": ["integer", "null"]},
         "spelare": {"type": ["string", "null"]},
+        "resultatHemma": {"type": ["integer", "null"], "minimum": 0},
+        "resultatBorta": {"type": ["integer", "null"], "minimum": 0},
+        # New property names
+        "matchhandelsetypid": {"type": "integer"},
+        "matchhandelsetypnamn": {"type": "string"},
+        "matchminut": {"type": "integer", "minimum": 0},
+        "matchlagid": {"type": "integer"},
+        "matchlagnamn": {"type": "string"},
+        "spelareid": {"type": ["integer", "null"]},
+        "spelarenamn": {"type": ["string", "null"]},
+        "hemmamal": {"type": ["integer", "null"], "minimum": 0},
+        "bortamal": {"type": ["integer", "null"], "minimum": 0},
+        # Common properties
         "assisterande": {"type": ["string", "null"]},
         "assisterandeid": {"type": ["integer", "null"]},
         "period": {"type": "integer", "minimum": 1},
         "mal": {"type": ["boolean", "null"]},
-        "resultatHemma": {"type": ["integer", "null"], "minimum": 0},
-        "resultatBorta": {"type": ["integer", "null"], "minimum": 0},
         "strafflage": {"type": ["string", "null"]},
         "straffriktning": {"type": ["string", "null"]},
         "straffresultat": {"type": ["string", "null"]},
@@ -124,13 +140,23 @@ MARK_REPORTING_FINISHED_SCHEMA = {
 # Schema for team official action reporting
 TEAM_OFFICIAL_ACTION_SCHEMA = {
     "type": "object",
-    "required": ["matchid", "lagid", "personid", "matchlagledaretypid"],
+    "required": ["matchid", "matchlagledaretypid"],
+    "anyOf": [
+        {"required": ["matchlagid", "matchlagledareid"]},
+        {"required": ["lagid", "personid"]}
+    ],
     "properties": {
         "matchid": {"type": "integer"},
+        # Original property names
         "lagid": {"type": "integer"},
         "personid": {"type": "integer"},
-        "matchlagledaretypid": {"type": "integer"},
         "minut": {"type": ["integer", "null"], "minimum": 0},
+        # New property names
+        "matchlagid": {"type": "integer"},
+        "matchlagledareid": {"type": "integer"},
+        "matchminut": {"type": ["integer", "null"], "minimum": 0},
+        # Common properties
+        "matchlagledaretypid": {"type": "integer"},
     },
     "additionalProperties": False,
 }

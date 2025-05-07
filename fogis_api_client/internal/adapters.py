@@ -54,7 +54,7 @@ def convert_match_result_to_internal(
     if "matchresultatListaJSON" in result_data:
         # Create a deep copy to avoid modifying the original
         result_data_copy = json.loads(json.dumps(result_data))
-        
+
         # Ensure numeric fields are integers in each result object
         for result_obj in result_data_copy.get("matchresultatListaJSON", []):
             for field in ["matchid", "matchresultattypid", "matchlag1mal", "matchlag2mal"]:
@@ -62,23 +62,23 @@ def convert_match_result_to_internal(
                     value = result_obj[field]
                     if isinstance(value, str):
                         result_obj[field] = int(value)
-        
+
         return cast(InternalMatchResultDict, result_data_copy)
-    
+
     # Otherwise, convert from flat format to nested format
     match_id = int(result_data["matchid"]) if isinstance(result_data["matchid"], str) else result_data["matchid"]
     fulltime_home = int(result_data["hemmamal"]) if isinstance(result_data["hemmamal"], str) else result_data["hemmamal"]
     fulltime_away = int(result_data["bortamal"]) if isinstance(result_data["bortamal"], str) else result_data["bortamal"]
-    
+
     # Half-time scores are optional
     halftime_home = 0
     if "halvtidHemmamal" in result_data and result_data["halvtidHemmamal"] is not None:
         halftime_home = int(result_data["halvtidHemmamal"]) if isinstance(result_data["halvtidHemmamal"], str) else result_data["halvtidHemmamal"]
-    
+
     halftime_away = 0
     if "halvtidBortamal" in result_data and result_data["halvtidBortamal"] is not None:
         halftime_away = int(result_data["halvtidBortamal"]) if isinstance(result_data["halvtidBortamal"], str) else result_data["halvtidBortamal"]
-    
+
     # Create the nested structure
     nested_data: InternalMatchResultDict = {
         "matchresultatListaJSON": [
@@ -102,7 +102,7 @@ def convert_match_result_to_internal(
             },
         ]
     }
-    
+
     return nested_data
 
 
@@ -123,55 +123,55 @@ def convert_internal_to_match_result(
         # If it's a list, find the full-time and half-time results
         fulltime_result = None
         halftime_result = None
-        
+
         for result in internal_result:
             if result.get("matchresultattypid") == 1:  # Full-time
                 fulltime_result = result
             elif result.get("matchresultattypid") == 2:  # Half-time
                 halftime_result = result
-        
+
         if not fulltime_result:
             # If no full-time result found, use the first item
             fulltime_result = internal_result[0] if internal_result else {}
-        
+
         match_id = fulltime_result.get("matchid")
         hemmamal = fulltime_result.get("matchlag1mal", 0)
         bortamal = fulltime_result.get("matchlag2mal", 0)
-        
+
         result_dict: MatchResultDict = {
             "matchid": match_id,
             "hemmamal": hemmamal,
             "bortamal": bortamal,
         }
-        
+
         # Add half-time scores if available
         if halftime_result:
             result_dict["halvtidHemmamal"] = halftime_result.get("matchlag1mal", 0)
             result_dict["halvtidBortamal"] = halftime_result.get("matchlag2mal", 0)
-        
+
         return result_dict
-    
+
     elif isinstance(internal_result, dict):
         # If it's a dictionary, it might be a direct result or have a nested structure
         if "matchresultatListaJSON" in internal_result:
             # Nested structure, extract the results
             return convert_internal_to_match_result(internal_result["matchresultatListaJSON"])
-        
+
         # Direct result format (might be from a different endpoint)
         result_dict: MatchResultDict = {
             "matchid": internal_result.get("matchid", 0),
             "hemmamal": internal_result.get("hemmamal", 0),
             "bortamal": internal_result.get("bortamal", 0),
         }
-        
+
         # Add half-time scores if available
         if "halvtidHemmamal" in internal_result:
             result_dict["halvtidHemmamal"] = internal_result.get("halvtidHemmamal", 0)
         if "halvtidBortamal" in internal_result:
             result_dict["halvtidBortamal"] = internal_result.get("halvtidBortamal", 0)
-        
+
         return result_dict
-    
+
     # Fallback for unexpected formats
     return {"matchid": 0, "hemmamal": 0, "bortamal": 0}
 
@@ -188,24 +188,24 @@ def convert_event_to_internal(event_data: EventDict) -> InternalEventDict:
     """
     # Create a copy to avoid modifying the original
     event_data_copy = dict(event_data)
-    
+
     # Ensure numeric fields are integers
     for field in [
         "matchid",
-        "handelsekod",
-        "minut",
-        "lagid",
-        "personid",
+        "matchhandelsetypid",
+        "matchminut",
+        "matchlagid",
+        "spelareid",
         "assisterandeid",
         "period",
-        "resultatHemma",
-        "resultatBorta",
+        "hemmamal",
+        "bortamal",
     ]:
         if field in event_data_copy and event_data_copy[field] is not None:
             value = event_data_copy[field]
             if isinstance(value, str):
                 event_data_copy[field] = int(value)
-    
+
     return cast(InternalEventDict, event_data_copy)
 
 
@@ -279,14 +279,26 @@ def convert_official_action_to_internal(
     """
     # Create a copy to avoid modifying the original
     action_data_copy = dict(action_data)
-    
+
+    # Map field names
+    field_mapping = {
+        "lagid": "matchlagid",
+        "personid": "matchlagledareid",
+        "minut": "matchminut",
+    }
+
+    # Convert field names
+    for old_field, new_field in field_mapping.items():
+        if old_field in action_data_copy:
+            action_data_copy[new_field] = action_data_copy.pop(old_field)
+
     # Ensure IDs are integers
-    for key in ["matchid", "lagid", "personid", "matchlagledaretypid", "minut"]:
+    for key in ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid", "matchminut"]:
         if key in action_data_copy and action_data_copy[key] is not None:
             value = action_data_copy[key]
             if isinstance(value, str):
                 action_data_copy[key] = int(value)
-    
+
     return cast(InternalOfficialActionDict, action_data_copy)
 
 
@@ -304,21 +316,21 @@ def convert_match_participant_to_internal(
     """
     # Create a copy to avoid modifying the original
     participant_data_copy = dict(participant_data)
-    
+
     # Ensure numeric fields are integers
     for field in ["matchdeltagareid", "trojnummer", "lagdelid", "positionsnummerhv"]:
         if field in participant_data_copy and participant_data_copy[field] is not None:
             value = participant_data_copy[field]
             if isinstance(value, str):
                 participant_data_copy[field] = int(value)
-    
+
     # Ensure boolean fields are booleans
     for field in ["lagkapten", "ersattare", "arSpelandeLedare", "ansvarig"]:
         if field in participant_data_copy and participant_data_copy[field] is not None:
             value = participant_data_copy[field]
             if not isinstance(value, bool):
                 participant_data_copy[field] = bool(value)
-    
+
     return cast(InternalMatchParticipantDict, participant_data_copy)
 
 
