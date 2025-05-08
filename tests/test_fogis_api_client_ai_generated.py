@@ -118,9 +118,9 @@ class TestFogisApiClient(unittest.TestCase):
         # Create a valid payload for the endpoint
         valid_payload = {
             "matchid": 123456,
-            "handelsekod": 1,
-            "minut": 10,
-            "lagid": 1,
+            "matchhandelsetypid": 1,
+            "matchminut": 10,
+            "matchlagid": 1,
             "period": 1
         }
 
@@ -165,9 +165,9 @@ class TestFogisApiClient(unittest.TestCase):
         # Create a valid payload for the endpoint
         valid_payload = {
             "matchid": 123456,
-            "handelsekod": 1,
-            "minut": 10,
-            "lagid": 1,
+            "matchhandelsetypid": 1,
+            "matchminut": 10,
+            "matchlagid": 1,
             "period": 1
         }
 
@@ -300,11 +300,11 @@ class TestFogisApiClient(unittest.TestCase):
         """Test successful report_match_event."""
         # Create event data
         event_data = {
-            "matchid": "123",
-            "handelsekod": 6,  # Regular goal
-            "lagid": "789",
-            "minut": 35,
-            "personid": "456",
+            "matchid": 123,  # Integer instead of string
+            "matchhandelsetypid": 6,  # Regular goal
+            "matchlagid": 789,  # Integer instead of string
+            "matchminut": 35,
+            "spelareid": 456,  # Integer instead of string
             "period": 1  # Add required period field
         }
 

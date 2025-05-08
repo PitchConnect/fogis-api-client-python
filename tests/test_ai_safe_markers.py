@@ -90,13 +90,13 @@ class TestAISafeMarkers(unittest.TestCase):
         # Create event data for a goal
         event_data = {
             "matchid": 12345,
-            "handelsekod": 6,  # Regular goal
-            "minut": 35,
-            "lagid": 78910,  # Team ID
-            "personid": 12345,  # Player ID
+            "matchhandelsetypid": 6,  # Regular goal
+            "matchminut": 35,
+            "matchlagid": 78910,  # Team ID
+            "spelareid": 12345,  # Player ID
             "period": 1,
-            "resultatHemma": 1,
-            "resultatBorta": 0
+            "hemmamal": 1,
+            "bortamal": 0
         }
 
         response = self.client.report_match_event(event_data)
@@ -122,13 +122,13 @@ class TestAISafeMarkers(unittest.TestCase):
 
         self.assertEqual(url, f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchhandelse")
         self.assertEqual(actual_payload["matchid"], 12345)
-        self.assertEqual(actual_payload["handelsekod"], 6)
-        self.assertEqual(actual_payload["minut"], 35)
-        self.assertEqual(actual_payload["lagid"], 78910)
-        self.assertEqual(actual_payload["personid"], 12345)
+        self.assertEqual(actual_payload["matchhandelsetypid"], 6)
+        self.assertEqual(actual_payload["matchminut"], 35)
+        self.assertEqual(actual_payload["matchlagid"], 78910)
+        self.assertEqual(actual_payload["spelareid"], 12345)
         self.assertEqual(actual_payload["period"], 1)
-        self.assertEqual(actual_payload["resultatHemma"], 1)
-        self.assertEqual(actual_payload["resultatBorta"], 0)
+        self.assertEqual(actual_payload["hemmamal"], 1)
+        self.assertEqual(actual_payload["bortamal"], 0)
 
     def test_mark_reporting_finished_with_ai_markers(self):
         """Test that mark_reporting_finished works correctly with AI-safe markers."""

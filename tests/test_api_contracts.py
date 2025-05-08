@@ -127,25 +127,25 @@ class TestApiContracts(unittest.TestCase):
         """Test that a valid match event passes validation."""
         data = {
             "matchid": 123456,
-            "handelsekod": 6,  # Regular goal
-            "minut": 35,
-            "lagid": 78910,
-            "personid": 12345,
+            "matchhandelsetypid": 6,  # Regular goal
+            "matchminut": 35,
+            "matchlagid": 78910,
+            "spelareid": 12345,
             "period": 1,
-            "resultatHemma": 1,
-            "resultatBorta": 0,
+            "hemmamal": 1,
+            "bortamal": 0,
         }
         # This should not raise an exception
         validate_request("/MatchWebMetoder.aspx/SparaMatchhandelse", data)
 
     def test_match_event_schema_invalid(self):
         """Test that an invalid match event fails validation."""
-        # Missing required field minut
+        # Missing required field matchminut
         data = {
             "matchid": 123456,
-            "handelsekod": 6,
-            "lagid": 78910,
-            "personid": 12345,
+            "matchhandelsetypid": 6,
+            "matchlagid": 78910,
+            "spelareid": 12345,
             "period": 1,
         }
         with self.assertRaises(ValidationError):
@@ -192,13 +192,13 @@ class TestApiContracts(unittest.TestCase):
         # Test with valid event data
         valid_data = {
             "matchid": 123456,
-            "handelsekod": 6,  # Regular goal
-            "minut": 35,
-            "lagid": 78910,
-            "personid": 12345,
+            "matchhandelsetypid": 6,  # Regular goal
+            "matchminut": 35,
+            "matchlagid": 78910,
+            "spelareid": 12345,
             "period": 1,
-            "resultatHemma": 1,
-            "resultatBorta": 0,
+            "hemmamal": 1,
+            "bortamal": 0,
         }
         result = client.report_match_event(valid_data)
         self.assertTrue(result["success"])
@@ -206,8 +206,8 @@ class TestApiContracts(unittest.TestCase):
         # Test with invalid event data (missing required field)
         invalid_data = {
             "matchid": 123456,
-            "handelsekod": 6,
-            # Missing minut and lagid
+            "matchhandelsetypid": 6,
+            # Missing matchminut and matchlagid
             "personid": 12345,
             "period": 1,
         }

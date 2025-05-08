@@ -280,18 +280,6 @@ def convert_official_action_to_internal(
     # Create a copy to avoid modifying the original
     action_data_copy = dict(action_data)
 
-    # Map field names
-    field_mapping = {
-        "lagid": "matchlagid",
-        "personid": "matchlagledareid",
-        "minut": "matchminut",
-    }
-
-    # Convert field names
-    for old_field, new_field in field_mapping.items():
-        if old_field in action_data_copy:
-            action_data_copy[new_field] = action_data_copy.pop(old_field)
-
     # Ensure IDs are integers
     for key in ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid", "matchminut"]:
         if key in action_data_copy and action_data_copy[key] is not None:
