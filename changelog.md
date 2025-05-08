@@ -7,6 +7,12 @@
 - Removed support for alternative field names (handelsekod, minut, lagid, personid, resultatHemma, resultatBorta) to reduce complexity
 - Updated validation to only accept the standard field names
 
+## [0.4.4] - 2025-05-20
+
+### Fixed
+- Fixed package name capitalization in setup.py (correct to timmyBird)
+- Updated publish-to-pypi.yml workflow to explicitly set version from release tag
+
 ## [0.4.3] - 2025-05-20
 
 ### Fixed
