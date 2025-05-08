@@ -20,6 +20,7 @@ COPY fogis_api_client/ ./fogis_api_client/
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir wheel && \
     pip install --no-cache-dir marshmallow>=3.26.0 && \
+    pip install --no-cache-dir jsonschema>=4.17.3 && \
     pip install --no-cache-dir -e .
 
 # Stage 2: Runtime image

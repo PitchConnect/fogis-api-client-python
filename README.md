@@ -17,6 +17,26 @@ A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
 * **Logging**: Built-in logging for debugging and monitoring
 * **Docker Support**: Easy deployment and development with Docker
 * **Utility Tools**: Testing utilities and development tools
+* **Clean Architecture**: Separation of public and internal APIs for better maintainability
+
+## Architecture
+
+The FOGIS API Client is designed with a clean architecture that separates the public API from the internal implementation details. This separation allows for better maintainability and makes it easier to adapt to changes in the FOGIS API without breaking the public interface.
+
+### Public API
+
+The public API is what users of the library interact with. It provides a simple, intuitive interface for common operations like fetching match lists, reporting events, and managing match results. The public API is designed to be stable and backward-compatible.
+
+### Internal API
+
+The internal API handles the low-level communication with the FOGIS API server. It's responsible for:
+
+1. Converting between public and internal data formats
+2. Handling authentication and session management
+3. Implementing the low-level API contracts
+4. Validating request and response data
+
+This separation allows the public API to focus on usability and type safety, while the internal API ensures compatibility with the server requirements.
 
 ## Installation
 
@@ -102,6 +122,41 @@ Comprehensive documentation is available in the [docs](docs/) directory:
 * [User Guides](docs/user_guides/)
 * [Architecture Overview](docs/architecture.md)
 * [Troubleshooting](docs/troubleshooting.md)
+
+## Integration Testing
+
+This project includes comprehensive integration tests to verify that the client correctly interacts with the FOGIS API. These tests use a mock server to simulate the FOGIS API, allowing for reliable testing without requiring real credentials or internet access.
+
+### Benefits of Integration Tests
+
+- **Verify API Contracts**: Ensure the client adheres to the expected API contracts
+- **Catch Regressions**: Detect breaking changes before they affect users
+- **Test Edge Cases**: Validate behavior with various input combinations
+- **No Real Credentials**: Test without needing actual FOGIS credentials
+- **Fast and Reliable**: Tests run quickly and consistently in any environment
+
+### Running Integration Tests
+
+The easiest way to run integration tests is using the provided script:
+
+```bash
+./run_integration_tests.sh
+```
+
+This script will:
+1. Start a Docker environment with the mock FOGIS server
+2. Run all integration tests against the mock server
+3. Report the results and clean up the environment
+
+You can also run specific test files directly:
+
+```bash
+python -m pytest integration_tests/test_match_result_reporting.py -v
+```
+
+### Adding New Tests
+
+When implementing new features, it's recommended to add corresponding integration tests. See the [integration tests README](integration_tests/README.md) for detailed instructions on adding new tests and extending the mock server.
 
 #### Usage
 

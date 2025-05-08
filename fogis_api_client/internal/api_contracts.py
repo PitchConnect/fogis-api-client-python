@@ -81,25 +81,10 @@ MATCH_RESULT_FLAT_SCHEMA = {
 # Schema for match event reporting
 MATCH_EVENT_SCHEMA = {
     "type": "object",
-    "required": ["matchid", "period"],
-    "anyOf": [
-        {"required": ["matchhandelsetypid", "matchminut", "matchlagid"]},
-        {"required": ["handelsekod", "minut", "lagid"]}
-    ],
+    "required": ["matchid", "period", "matchhandelsetypid", "matchminut", "matchlagid"],
     "properties": {
         "matchid": {"type": "integer"},
         "matchhandelseid": {"type": "integer"},
-        # Original property names
-        "handelsekod": {"type": "integer"},
-        "handelsetyp": {"type": "string"},
-        "minut": {"type": "integer", "minimum": 0},
-        "lagid": {"type": "integer"},
-        "lag": {"type": "string"},
-        "personid": {"type": ["integer", "null"]},
-        "spelare": {"type": ["string", "null"]},
-        "resultatHemma": {"type": ["integer", "null"], "minimum": 0},
-        "resultatBorta": {"type": ["integer", "null"], "minimum": 0},
-        # New property names
         "matchhandelsetypid": {"type": "integer"},
         "matchhandelsetypnamn": {"type": "string"},
         "matchminut": {"type": "integer", "minimum": 0},
@@ -140,22 +125,12 @@ MARK_REPORTING_FINISHED_SCHEMA = {
 # Schema for team official action reporting
 TEAM_OFFICIAL_ACTION_SCHEMA = {
     "type": "object",
-    "required": ["matchid", "matchlagledaretypid"],
-    "anyOf": [
-        {"required": ["matchlagid", "matchlagledareid"]},
-        {"required": ["lagid", "personid"]}
-    ],
+    "required": ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid"],
     "properties": {
         "matchid": {"type": "integer"},
-        # Original property names
-        "lagid": {"type": "integer"},
-        "personid": {"type": "integer"},
-        "minut": {"type": ["integer", "null"], "minimum": 0},
-        # New property names
         "matchlagid": {"type": "integer"},
         "matchlagledareid": {"type": "integer"},
         "matchminut": {"type": ["integer", "null"], "minimum": 0},
-        # Common properties
         "matchlagledaretypid": {"type": "integer"},
     },
     "additionalProperties": False,

@@ -7,6 +7,7 @@ This section contains step-by-step guides for common use cases with the FOGIS AP
 1. [Match Reporting Guide](match_reporting.md) - How to report match events, results, and complete match reports
 2. [Team Management Guide](team_management.md) - How to fetch and manage team and player information
 3. [Event Tracking Guide](event_tracking.md) - How to track and manage match events
+4. [API Contracts Guide](api_contracts.md) - How to work with the FOGIS API contracts and avoid common pitfalls
 
 ## How to Use These Guides
 

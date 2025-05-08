@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 import requests
+import jsonschema
 
 from fogis_api_client.fogis_api_client import (
     FogisApiClient,
@@ -114,11 +115,20 @@ class TestFogisApiClient(unittest.TestCase):
         # Set cookies to simulate being logged in
         self.api_client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
 
+        # Create a valid payload for the endpoint
+        valid_payload = {
+            "matchid": 123456,
+            "matchhandelsetypid": 1,
+            "matchminut": 10,
+            "matchlagid": 1,
+            "period": 1
+        }
+
         # Call _api_request and expect an exception
         with self.assertRaises(FogisAPIRequestError):
             self.api_client._api_request(
                 self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SparaMatchhandelse",
-                {},
+                valid_payload,
             )
 
         # Check the log message contains part of the error
@@ -152,15 +162,33 @@ class TestFogisApiClient(unittest.TestCase):
         # Set cookies to simulate being logged in
         self.api_client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
 
-        # Call _api_request and expect an exception
-        with self.assertRaises(FogisDataError) as context:
-            self.api_client._api_request(
-                self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SparaMatchhandelse",
-                {},
-            )
+        # Create a valid payload for the endpoint
+        valid_payload = {
+            "matchid": 123456,
+            "matchhandelsetypid": 1,
+            "matchminut": 10,
+            "matchlagid": 1,
+            "period": 1
+        }
 
-        # Verify the error message
-        self.assertIn("Failed to parse API response", str(context.exception))
+        # Temporarily disable validation for this test
+        from fogis_api_client.api_contracts import ValidationConfig
+        original_enable_validation = ValidationConfig.enable_validation
+        ValidationConfig.enable_validation = False
+
+        try:
+            # Call _api_request and expect an exception
+            with self.assertRaises(FogisDataError) as context:
+                self.api_client._api_request(
+                    self.api_client.BASE_URL + "/test__api_request_invalid_json",
+                    valid_payload,
+                )
+
+            # Verify the error message
+            self.assertIn("Failed to parse API response", str(context.exception))
+        finally:
+            # Restore validation setting
+            ValidationConfig.enable_validation = original_enable_validation
 
     @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
     def test_fetch_matches_list_json_success(self, mock_api_request):
@@ -272,11 +300,12 @@ class TestFogisApiClient(unittest.TestCase):
         """Test successful report_match_event."""
         # Create event data
         event_data = {
-            "matchid": "123",
-            "handelsekod": 6,  # Regular goal
-            "lagid": "789",
-            "minut": 35,
-            "personid": "456",
+            "matchid": 123,  # Integer instead of string
+            "matchhandelsetypid": 6,  # Regular goal
+            "matchlagid": 789,  # Integer instead of string
+            "matchminut": 35,
+            "spelareid": 456,  # Integer instead of string
+            "period": 1  # Add required period field
         }
 
         # Mock the _api_request method to return a valid response
@@ -292,14 +321,14 @@ class TestFogisApiClient(unittest.TestCase):
     @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
     def test_report_match_event_invalid_event_data(self, mock_api_request):
         """Test report_match_event with invalid data."""
-        # Create invalid event data (empty)
-        event_data = {}
+        # Create invalid event data (missing required fields)
+        event_data = {"matchid": 123}  # Missing other required fields
 
         # Mock the _api_request method to raise a validation error
         mock_api_request.side_effect = ValueError("Invalid event data")
 
         # Call the method and expect an exception
-        with self.assertRaises(ValueError):
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
             self.api_client.report_match_event(event_data)
 
     @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")

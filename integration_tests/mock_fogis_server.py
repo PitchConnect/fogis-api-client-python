@@ -9,12 +9,14 @@ import json
 import logging
 import random
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Any, Tuple, Optional
 
 from flask import Flask, Response, jsonify, request, session
 
 # Import data factory for the mock server
 from integration_tests.sample_data_factory import MockDataFactory
+# Import request validator
+from integration_tests.request_validator import RequestValidator, RequestValidationError
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -26,7 +28,7 @@ class MockFogisServer:
     A Flask-based mock server that simulates the FOGIS API endpoints.
     """
 
-    def __init__(self, host: str = "localhost", port: int = 5000):
+    def __init__(self, host: str = "localhost", port: int = 5001):
         """
         Initialize the mock server.
 
@@ -49,6 +51,12 @@ class MockFogisServer:
 
         # Store reported events
         self.reported_events: List[Dict] = []
+
+        # Store request history for validation and debugging
+        self.request_history: List[Dict[str, Any]] = []
+
+        # Flag to enable/disable request validation
+        self.validate_requests = True
 
         # Register routes
         self._register_routes()
@@ -234,6 +242,12 @@ class MockFogisServer:
 
             # Get event data from request
             event_data = request.json or {}
+
+            # Validate and log the request
+            endpoint = "/MatchWebMetoder.aspx/SparaMatchhandelse"
+            is_valid, error_msg = self._validate_and_log_request(endpoint, event_data)
+            if not is_valid:
+                return jsonify({"d": json.dumps({"success": False, "error": error_msg})}), 400
 
             # Store the reported event
             self.reported_events.append(event_data)
@@ -421,6 +435,28 @@ class MockFogisServer:
             # Return success response
             return jsonify({"d": json.dumps({"success": True})})
 
+        # Report match result endpoint
+        @self.app.route("/mdk/MatchWebMetoder.aspx/SparaMatchresultatLista", methods=["POST"])
+        def report_match_result():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get result data from request
+            result_data = request.json or {}
+
+            # Validate and log the request
+            endpoint = "/MatchWebMetoder.aspx/SparaMatchresultatLista"
+            is_valid, error_msg = self._validate_and_log_request(endpoint, result_data)
+            if not is_valid:
+                return jsonify({"d": json.dumps({"success": False, "error": error_msg})}), 400
+
+            # Log the match result data for debugging
+            logger.info(f"Received match result data: {json.dumps(result_data, indent=2)}")
+
+            # Return success response
+            return jsonify({"d": json.dumps({"success": True})})
+
         # Save match participant endpoint
         @self.app.route("/mdk/MatchWebMetoder.aspx/SparaMatchdeltagare", methods=["POST"])
         def save_match_participant_endpoint():
@@ -487,10 +523,17 @@ class MockFogisServer:
         # Health check endpoint
         @self.app.route("/health", methods=["GET"])
         def health():
+            # Include more detailed information for debugging
             return jsonify(
                 {
                     "status": "healthy",
                     "timestamp": datetime.now().isoformat(),
+                    "server": {
+                        "host": self.host,
+                        "port": self.port,
+                        "url": self.get_url(),
+                    },
+                    "version": "1.0.0",
                 }
             )
 
@@ -498,6 +541,20 @@ class MockFogisServer:
         @self.app.route("/hello", methods=["GET"])
         def hello():
             return jsonify({"message": "Hello, brave new world!"})
+
+        # Request history endpoint (for debugging and testing)
+        @self.app.route("/request-history", methods=["GET"])
+        def request_history():
+            return jsonify({
+                "history": self.request_history,
+                "count": len(self.request_history),
+            })
+
+        # Clear request history endpoint (for debugging and testing)
+        @self.app.route("/clear-request-history", methods=["POST"])
+        def clear_request_history():
+            self.clear_request_history()
+            return jsonify({"success": True, "message": "Request history cleared"})
 
     def _check_auth(self):
         """Check if the request is authenticated."""
@@ -512,6 +569,43 @@ class MockFogisServer:
         # If we're here, the user is not authenticated
         return Response("Unauthorized", status=401)
 
+    def _validate_and_log_request(self, endpoint: str, data: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
+        """Validate and log a request.
+
+        Args:
+            endpoint: The API endpoint
+            data: The request data
+
+        Returns:
+            Tuple[bool, Optional[str]]: (is_valid, error_message)
+        """
+        # Store the request for later analysis
+        request_record = {
+            "endpoint": endpoint,
+            "data": data,
+            "timestamp": datetime.now().isoformat(),
+            "method": request.method,
+            "headers": dict(request.headers),
+        }
+        self.request_history.append(request_record)
+
+        # Log the request
+        logger.info(f"Request to {endpoint}:")
+        logger.info(json.dumps(data, indent=2, default=str))
+
+        # Skip validation if disabled
+        if not self.validate_requests:
+            return True, None
+
+        # Validate the request
+        try:
+            RequestValidator.validate_request(endpoint, data)
+            return True, None
+        except RequestValidationError as e:
+            error_msg = str(e)
+            logger.error(f"Request validation failed: {error_msg}")
+            return False, error_msg
+
     def run(self):
         """Run the mock server."""
         logger.info(f"Starting mock FOGIS server on {self.host}:{self.port}")
@@ -520,6 +614,18 @@ class MockFogisServer:
     def get_url(self) -> str:
         """Get the URL of the mock server."""
         return f"http://{self.host}:{self.port}"
+
+    def get_request_history(self) -> List[Dict[str, Any]]:
+        """Get the request history.
+
+        Returns:
+            List[Dict[str, Any]]: The request history
+        """
+        return self.request_history
+
+    def clear_request_history(self) -> None:
+        """Clear the request history."""
+        self.request_history = []
 
 
 if __name__ == "__main__":
