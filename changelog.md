@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.5] - 2025-05-21
+
+### Changed
+- Standardized on original field names (matchhandelsetypid, matchminut, matchlagid, spelareid, hemmamal, bortamal)
+- Removed support for alternative field names (handelsekod, minut, lagid, personid, resultatHemma, resultatBorta) to reduce complexity
+- Updated validation to only accept the standard field names
+
 ## [0.4.3] - 2025-05-20
 
 ### Fixed

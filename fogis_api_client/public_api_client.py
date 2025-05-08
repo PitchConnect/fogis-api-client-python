@@ -562,7 +562,7 @@ class PublicApiClient:
             self.login()
 
         # Validate required fields
-        required_fields = ["matchid", "lagid", "personid", "matchlagledaretypid"]
+        required_fields = ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid"]
         for field in required_fields:
             if field not in action_data:
                 error_msg = f"Missing required field '{field}' in action data"
