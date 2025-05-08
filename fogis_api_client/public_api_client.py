@@ -405,17 +405,17 @@ class PublicApiClient:
         if not self.cookies:
             self.login()
 
-        # Validate required fields
+        # Validate required fields - accept both original and internal API field names
         required_fields = [
-            "matchid",
-            "matchhandelsetypid",
-            "matchminut",
-            "matchlagid",
-            "period"
+            ("matchid", "matchid"),
+            ("handelsekod", "matchhandelsetypid"),
+            ("minut", "matchminut"),
+            ("lagid", "matchlagid"),
+            ("period", "period")
         ]
-        for field in required_fields:
-            if field not in event_data:
-                error_msg = f"Missing required field '{field}' in event data"
+        for old_field, new_field in required_fields:
+            if old_field not in event_data and new_field not in event_data:
+                error_msg = f"Missing required field '{old_field}' or '{new_field}' in event data"
                 self.logger.error(error_msg)
                 raise ValueError(error_msg)
 
@@ -561,11 +561,16 @@ class PublicApiClient:
         if not self.cookies:
             self.login()
 
-        # Validate required fields
-        required_fields = ["matchid", "lagid", "personid", "matchlagledaretypid"]
-        for field in required_fields:
-            if field not in action_data:
-                error_msg = f"Missing required field '{field}' in action data"
+        # Validate required fields - accept both original and internal API field names
+        required_fields = [
+            ("matchid", "matchid"),
+            ("lagid", "matchlagid"),
+            ("personid", "matchlagledareid"),
+            ("matchlagledaretypid", "matchlagledaretypid")
+        ]
+        for old_field, new_field in required_fields:
+            if old_field not in action_data and new_field not in action_data:
+                error_msg = f"Missing required field '{old_field}' or '{new_field}' in action data"
                 self.logger.error(error_msg)
                 raise ValueError(error_msg)
 

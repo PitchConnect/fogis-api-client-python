@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.5] - 2025-05-21
+
+### Fixed
+- Fixed field name handling to properly support both original field names and internal API field names
+- Fixed team official action validation to accept both original field names (lagid, personid, minut) and internal API field names (matchlagid, matchlagledareid, matchminut)
+- Improved documentation in code to clarify field name mappings
+
 ## [0.4.4] - 2025-05-20
 
 ### Fixed

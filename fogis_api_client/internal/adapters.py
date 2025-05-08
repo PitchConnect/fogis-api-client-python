@@ -189,6 +189,25 @@ def convert_event_to_internal(event_data: EventDict) -> InternalEventDict:
     # Create a copy to avoid modifying the original
     event_data_copy = dict(event_data)
 
+    # Map old field names to new field names
+    field_mapping = {
+        # Original field names are on the left, internal API names on the right
+        "handelsekod": "matchhandelsetypid",
+        "handelsetyp": "matchhandelsetypnamn",
+        "minut": "matchminut",
+        "lagid": "matchlagid",
+        "lag": "matchlagnamn",
+        "personid": "spelareid",
+        "spelare": "spelarenamn",
+        "resultatHemma": "hemmamal",
+        "resultatBorta": "bortamal",
+    }
+
+    # Convert field names
+    for old_field, new_field in field_mapping.items():
+        if old_field in event_data_copy:
+            event_data_copy[new_field] = event_data_copy.pop(old_field)
+
     # Ensure numeric fields are integers
     for field in [
         "matchid",
@@ -219,8 +238,29 @@ def convert_internal_to_event(internal_event: Dict[str, Any]) -> EventDict:
     Returns:
         EventDict: Event data in the public format
     """
-    # For now, the formats are the same, so we just cast
-    return cast(EventDict, internal_event)
+    # Create a copy to avoid modifying the original
+    event_data_copy = dict(internal_event)
+
+    # Map internal API field names to original field names
+    field_mapping = {
+        # Internal API names on the left, original field names on the right
+        "matchhandelsetypid": "handelsekod",
+        "matchhandelsetypnamn": "handelsetyp",
+        "matchminut": "minut",
+        "matchlagid": "lagid",
+        "matchlagnamn": "lag",
+        "spelareid": "personid",
+        "spelarenamn": "spelare",
+        "hemmamal": "resultatHemma",
+        "bortamal": "resultatBorta",
+    }
+
+    # Convert field names
+    for new_field, old_field in field_mapping.items():
+        if new_field in event_data_copy:
+            event_data_copy[old_field] = event_data_copy.pop(new_field)
+
+    return cast(EventDict, event_data_copy)
 
 
 def convert_internal_to_match(internal_match: Dict[str, Any]) -> MatchDict:
@@ -280,7 +320,7 @@ def convert_official_action_to_internal(
     # Create a copy to avoid modifying the original
     action_data_copy = dict(action_data)
 
-    # Map field names
+    # Map original field names to internal API field names
     field_mapping = {
         "lagid": "matchlagid",
         "personid": "matchlagledareid",

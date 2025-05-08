@@ -73,19 +73,19 @@ class InternalEventDict(TypedDict, total=False):
     """Internal type definition for an event object returned by the API."""
     matchhandelseid: int
     matchid: int
-    matchhandelsetypid: int
-    matchhandelsetypnamn: str
-    matchminut: int
-    matchlagid: int
-    matchlagnamn: str
-    spelareid: Optional[int]
-    spelarenamn: Optional[str]
+    matchhandelsetypid: int  # Internal API name for handelsekod
+    matchhandelsetypnamn: str  # Internal API name for handelsetyp
+    matchminut: int  # Internal API name for minut
+    matchlagid: int  # Internal API name for lagid
+    matchlagnamn: str  # Internal API name for lag
+    spelareid: Optional[int]  # Internal API name for personid
+    spelarenamn: Optional[str]  # Internal API name for spelare
     assisterande: Optional[str]
     assisterandeid: Optional[int]
     period: Optional[int]
     mal: Optional[bool]
-    hemmamal: Optional[int]
-    bortamal: Optional[int]
+    hemmamal: Optional[int]  # Internal API name for resultatHemma
+    bortamal: Optional[int]  # Internal API name for resultatBorta
     strafflage: Optional[str]
     straffriktning: Optional[str]
     straffresultat: Optional[str]
@@ -110,10 +110,10 @@ class InternalMatchResultDict(TypedDict):
 class InternalOfficialActionDict(TypedDict, total=False):
     """Internal type definition for a team official action used in reporting."""
     matchid: int
-    matchlagid: int
-    matchlagledareid: int
+    matchlagid: int  # Internal API name for lagid
+    matchlagledareid: int  # Internal API name for personid
     matchlagledaretypid: int
-    matchminut: Optional[int]
+    matchminut: Optional[int]  # Internal API name for minut
 
 
 class InternalMatchParticipantDict(TypedDict, total=False):
