@@ -1,0 +1,1129 @@
+deploy	Set up job	﻿2025-05-07T19:39:10.5233128Z Current runner version: '2.323.0'
+deploy	Set up job	2025-05-07T19:39:10.5260196Z ##[group]Operating System
+deploy	Set up job	2025-05-07T19:39:10.5260976Z Ubuntu
+deploy	Set up job	2025-05-07T19:39:10.5261474Z 24.04.2
+deploy	Set up job	2025-05-07T19:39:10.5262026Z LTS
+deploy	Set up job	2025-05-07T19:39:10.5262478Z ##[endgroup]
+deploy	Set up job	2025-05-07T19:39:10.5263007Z ##[group]Runner Image
+deploy	Set up job	2025-05-07T19:39:10.5263635Z Image: ubuntu-24.04
+deploy	Set up job	2025-05-07T19:39:10.5264192Z Version: 20250504.1.0
+deploy	Set up job	2025-05-07T19:39:10.5265246Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250504.1/images/ubuntu/Ubuntu2404-Readme.md
+deploy	Set up job	2025-05-07T19:39:10.5266979Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250504.1
+deploy	Set up job	2025-05-07T19:39:10.5267927Z ##[endgroup]
+deploy	Set up job	2025-05-07T19:39:10.5268452Z ##[group]Runner Image Provisioner
+deploy	Set up job	2025-05-07T19:39:10.5269077Z 2.0.422.1
+deploy	Set up job	2025-05-07T19:39:10.5269565Z ##[endgroup]
+deploy	Set up job	2025-05-07T19:39:10.5270641Z ##[group]GITHUB_TOKEN Permissions
+deploy	Set up job	2025-05-07T19:39:10.5272886Z Contents: read
+deploy	Set up job	2025-05-07T19:39:10.5273421Z Metadata: read
+deploy	Set up job	2025-05-07T19:39:10.5273913Z Packages: read
+deploy	Set up job	2025-05-07T19:39:10.5274866Z ##[endgroup]
+deploy	Set up job	2025-05-07T19:39:10.5277509Z Secret source: Actions
+deploy	Set up job	2025-05-07T19:39:10.5278508Z Prepare workflow directory
+deploy	Set up job	2025-05-07T19:39:10.5613580Z Prepare all required actions
+deploy	Set up job	2025-05-07T19:39:10.5650853Z Getting action download info
+deploy	Set up job	2025-05-07T19:39:11.1009563Z Download action repository 'actions/checkout@v3' (SHA:f43a0e5ff2bd294095638e18286ca9a3d1956744)
+deploy	Set up job	2025-05-07T19:39:11.1895782Z Download action repository 'actions/setup-python@v4' (SHA:7f4fc3e22c37d6ff65e88745f38bd3157c663f7c)
+deploy	Set up job	2025-05-07T19:39:11.7641702Z Download action repository 'pypa/gh-action-pypi-publish@release/v1' (SHA:76f52bc884231f62b9a034ebfe128415bbaabdfc)
+deploy	Set up job	2025-05-07T19:39:12.2202884Z Getting action download info
+deploy	Set up job	2025-05-07T19:39:12.3792361Z Download action repository 'actions/setup-python@v5' (SHA:a26af69be951a213d495a4c3e4e4022e16d87065)
+deploy	Set up job	2025-05-07T19:39:12.9814474Z Complete job name: deploy
+deploy	Run actions/checkout@v3	﻿2025-05-07T19:39:13.0541122Z ##[group]Run actions/checkout@v3
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0542310Z with:
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0543101Z   repository: PitchConnect/fogis-api-client-python
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0544316Z   token: ***
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0544971Z   ssh-strict: true
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0545659Z   persist-credentials: true
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0546575Z   clean: true
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0547249Z   sparse-checkout-cone-mode: true
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0548049Z   fetch-depth: 1
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0548689Z   fetch-tags: false
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0549327Z   lfs: false
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0549963Z   submodules: false
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0550663Z   set-safe-directory: true
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.0551617Z ##[endgroup]
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2173379Z Syncing repository: PitchConnect/fogis-api-client-python
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2177498Z ##[group]Getting Git version info
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2179842Z Working directory is '/home/runner/work/fogis-api-client-python/fogis-api-client-python'
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2182743Z [command]/usr/bin/git version
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2224588Z git version 2.49.0
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2256712Z ##[endgroup]
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2275027Z Temporarily overriding HOME='/home/runner/work/_temp/30e06115-7d92-4e2f-aca7-af1d86b93f92' before making global git config changes
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2278994Z Adding repository directory to the temporary git global config as a safe directory
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2282575Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/fogis-api-client-python/fogis-api-client-python
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2315320Z Deleting the contents of '/home/runner/work/fogis-api-client-python/fogis-api-client-python'
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2318861Z ##[group]Initializing the repository
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2321897Z [command]/usr/bin/git init /home/runner/work/fogis-api-client-python/fogis-api-client-python
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2387543Z hint: Using 'master' as the name for the initial branch. This default branch name
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2389979Z hint: is subject to change. To configure the initial branch name to use in all
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2392667Z hint: of your new repositories, which will suppress this warning, call:
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2394333Z hint:
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2395364Z hint: 	git config --global init.defaultBranch <name>
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2396534Z hint:
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2397474Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2399407Z hint: 'development'. The just-created branch can be renamed via this command:
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2400541Z hint:
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2401339Z hint: 	git branch -m <name>
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2403121Z Initialized empty Git repository in /home/runner/work/fogis-api-client-python/fogis-api-client-python/.git/
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2406408Z [command]/usr/bin/git remote add origin https://github.com/PitchConnect/fogis-api-client-python
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2439383Z ##[endgroup]
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2441413Z ##[group]Disabling automatic garbage collection
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2444993Z [command]/usr/bin/git config --local gc.auto 0
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2473094Z ##[endgroup]
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2474862Z ##[group]Setting up auth
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2477756Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2504331Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2786644Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.2816834Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.3039326Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.3077931Z ##[endgroup]
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.3079930Z ##[group]Fetching the repository
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.3087724Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +68424ef0be2b275ea4e97aaec63b98ac1ce82787:refs/tags/v0.4.3
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9095395Z remote: Enumerating objects: 144, done.        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9097762Z remote: Counting objects:   0% (1/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9099466Z remote: Counting objects:   1% (2/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9100770Z remote: Counting objects:   2% (3/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9102079Z remote: Counting objects:   3% (5/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9103418Z remote: Counting objects:   4% (6/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9104634Z remote: Counting objects:   5% (8/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9105584Z remote: Counting objects:   6% (9/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9106751Z remote: Counting objects:   7% (11/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9107725Z remote: Counting objects:   8% (12/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9108993Z remote: Counting objects:   9% (13/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9110238Z remote: Counting objects:  10% (15/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9111217Z remote: Counting objects:  11% (16/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9112173Z remote: Counting objects:  12% (18/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9113146Z remote: Counting objects:  13% (19/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9114146Z remote: Counting objects:  14% (21/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9115111Z remote: Counting objects:  15% (22/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9116281Z remote: Counting objects:  16% (24/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9117261Z remote: Counting objects:  17% (25/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9118221Z remote: Counting objects:  18% (26/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9119180Z remote: Counting objects:  19% (28/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9120145Z remote: Counting objects:  20% (29/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9121201Z remote: Counting objects:  21% (31/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9122164Z remote: Counting objects:  22% (32/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9123126Z remote: Counting objects:  23% (34/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9124323Z remote: Counting objects:  24% (35/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9125285Z remote: Counting objects:  25% (36/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9126393Z remote: Counting objects:  26% (38/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9127365Z remote: Counting objects:  27% (39/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9128385Z remote: Counting objects:  28% (41/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9129346Z remote: Counting objects:  29% (42/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9130307Z remote: Counting objects:  30% (44/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9131270Z remote: Counting objects:  31% (45/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9132214Z remote: Counting objects:  32% (47/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9133164Z remote: Counting objects:  33% (48/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9134116Z remote: Counting objects:  34% (49/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9135063Z remote: Counting objects:  35% (51/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9136170Z remote: Counting objects:  36% (52/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9137138Z remote: Counting objects:  37% (54/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9138080Z remote: Counting objects:  38% (55/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9139031Z remote: Counting objects:  39% (57/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9139970Z remote: Counting objects:  40% (58/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9140924Z remote: Counting objects:  41% (60/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9141865Z remote: Counting objects:  42% (61/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9142817Z remote: Counting objects:  43% (62/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9143764Z remote: Counting objects:  44% (64/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9144706Z remote: Counting objects:  45% (65/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9145668Z remote: Counting objects:  46% (67/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9146820Z remote: Counting objects:  47% (68/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9147774Z remote: Counting objects:  48% (70/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9148741Z remote: Counting objects:  49% (71/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9149903Z remote: Counting objects:  50% (72/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9150857Z remote: Counting objects:  51% (74/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9151814Z remote: Counting objects:  52% (75/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9152748Z remote: Counting objects:  53% (77/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9153696Z remote: Counting objects:  54% (78/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9154646Z remote: Counting objects:  55% (80/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9155593Z remote: Counting objects:  56% (81/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9156755Z remote: Counting objects:  57% (83/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9157713Z remote: Counting objects:  58% (84/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9158677Z remote: Counting objects:  59% (85/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9159634Z remote: Counting objects:  60% (87/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9160575Z remote: Counting objects:  61% (88/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9161522Z remote: Counting objects:  62% (90/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9162475Z remote: Counting objects:  63% (91/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9163435Z remote: Counting objects:  64% (93/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9164383Z remote: Counting objects:  65% (94/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9165336Z remote: Counting objects:  66% (96/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9166430Z remote: Counting objects:  67% (97/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9167387Z remote: Counting objects:  68% (98/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9168341Z remote: Counting objects:  69% (100/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9169297Z remote: Counting objects:  70% (101/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9170732Z remote: Counting objects:  71% (103/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9172355Z remote: Counting objects:  72% (104/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9173644Z remote: Counting objects:  73% (106/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9174621Z remote: Counting objects:  74% (107/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9175566Z remote: Counting objects:  75% (108/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9176731Z remote: Counting objects:  76% (110/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9177890Z remote: Counting objects:  77% (111/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9178840Z remote: Counting objects:  78% (113/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9179800Z remote: Counting objects:  79% (114/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9180752Z remote: Counting objects:  80% (116/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9181698Z remote: Counting objects:  81% (117/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9182643Z remote: Counting objects:  82% (119/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9183597Z remote: Counting objects:  83% (120/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9184552Z remote: Counting objects:  84% (121/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9185504Z remote: Counting objects:  85% (123/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9186653Z remote: Counting objects:  86% (124/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9187604Z remote: Counting objects:  87% (126/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9188562Z remote: Counting objects:  88% (127/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9189522Z remote: Counting objects:  89% (129/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9190472Z remote: Counting objects:  90% (130/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9191415Z remote: Counting objects:  91% (132/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9192368Z remote: Counting objects:  92% (133/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9193313Z remote: Counting objects:  93% (134/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9194249Z remote: Counting objects:  94% (136/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9195195Z remote: Counting objects:  95% (137/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9196305Z remote: Counting objects:  96% (139/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9197267Z remote: Counting objects:  97% (140/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9198214Z remote: Counting objects:  98% (142/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9199158Z remote: Counting objects:  99% (143/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9200113Z remote: Counting objects: 100% (144/144)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9201115Z remote: Counting objects: 100% (144/144), done.        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9202272Z remote: Compressing objects:   0% (1/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9203298Z remote: Compressing objects:   1% (2/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9204278Z remote: Compressing objects:   2% (3/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9205242Z remote: Compressing objects:   3% (5/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9206381Z remote: Compressing objects:   4% (6/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9207352Z remote: Compressing objects:   5% (7/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9208327Z remote: Compressing objects:   6% (9/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9209677Z remote: Compressing objects:   7% (10/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9211409Z remote: Compressing objects:   8% (11/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9212942Z remote: Compressing objects:   9% (13/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9213956Z remote: Compressing objects:  10% (14/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9214943Z remote: Compressing objects:  11% (16/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9215923Z remote: Compressing objects:  12% (17/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9217180Z remote: Compressing objects:  13% (18/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9218169Z remote: Compressing objects:  14% (20/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9219140Z remote: Compressing objects:  15% (21/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9220114Z remote: Compressing objects:  16% (22/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9221129Z remote: Compressing objects:  17% (24/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9222114Z remote: Compressing objects:  18% (25/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9223092Z remote: Compressing objects:  19% (27/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9224074Z remote: Compressing objects:  20% (28/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9225066Z remote: Compressing objects:  21% (29/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9226211Z remote: Compressing objects:  22% (31/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9227205Z remote: Compressing objects:  23% (32/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9228182Z remote: Compressing objects:  24% (33/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9229168Z remote: Compressing objects:  25% (35/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9230146Z remote: Compressing objects:  26% (36/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9231764Z remote: Compressing objects:  27% (37/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9233485Z remote: Compressing objects:  28% (39/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9235014Z remote: Compressing objects:  29% (40/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9236213Z remote: Compressing objects:  30% (42/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9237213Z remote: Compressing objects:  31% (43/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9238183Z remote: Compressing objects:  32% (44/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9239163Z remote: Compressing objects:  33% (46/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9240133Z remote: Compressing objects:  34% (47/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9241102Z remote: Compressing objects:  35% (48/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9242050Z remote: Compressing objects:  36% (50/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9243007Z remote: Compressing objects:  37% (51/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9243980Z remote: Compressing objects:  38% (53/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9244972Z remote: Compressing objects:  39% (54/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9245953Z remote: Compressing objects:  40% (55/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9247111Z remote: Compressing objects:  41% (57/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9248076Z remote: Compressing objects:  42% (58/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9249046Z remote: Compressing objects:  43% (59/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9250000Z remote: Compressing objects:  44% (61/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9250967Z remote: Compressing objects:  45% (62/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9251949Z remote: Compressing objects:  46% (64/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9252911Z remote: Compressing objects:  47% (65/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9253882Z remote: Compressing objects:  48% (66/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9254857Z remote: Compressing objects:  49% (68/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9255823Z remote: Compressing objects:  50% (69/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9257015Z remote: Compressing objects:  51% (70/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9258174Z remote: Compressing objects:  52% (72/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9259149Z remote: Compressing objects:  53% (73/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9260112Z remote: Compressing objects:  54% (74/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9261072Z remote: Compressing objects:  55% (76/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9262048Z remote: Compressing objects:  56% (77/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9263018Z remote: Compressing objects:  57% (79/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9263965Z remote: Compressing objects:  58% (80/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9264930Z remote: Compressing objects:  59% (81/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9265885Z remote: Compressing objects:  60% (83/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9267008Z remote: Compressing objects:  61% (84/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9267983Z remote: Compressing objects:  62% (85/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9268945Z remote: Compressing objects:  63% (87/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9269921Z remote: Compressing objects:  64% (88/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9274289Z remote: Compressing objects:  65% (90/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9275403Z remote: Compressing objects:  66% (91/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9276596Z remote: Compressing objects:  67% (92/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9277796Z remote: Compressing objects:  68% (94/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9279648Z remote: Compressing objects:  69% (95/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9281485Z remote: Compressing objects:  70% (96/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9283198Z remote: Compressing objects:  71% (98/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9284661Z remote: Compressing objects:  72% (99/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9285674Z remote: Compressing objects:  73% (101/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9286865Z remote: Compressing objects:  74% (102/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9287945Z remote: Compressing objects:  75% (103/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9289117Z remote: Compressing objects:  76% (105/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9290260Z remote: Compressing objects:  77% (106/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9291662Z remote: Compressing objects:  78% (107/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9292746Z remote: Compressing objects:  79% (109/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9293948Z remote: Compressing objects:  80% (110/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9295049Z remote: Compressing objects:  81% (111/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9296367Z remote: Compressing objects:  82% (113/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9297502Z remote: Compressing objects:  83% (114/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9298666Z remote: Compressing objects:  84% (116/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9299811Z remote: Compressing objects:  85% (117/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9300962Z remote: Compressing objects:  86% (118/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9302172Z remote: Compressing objects:  87% (120/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9303279Z remote: Compressing objects:  88% (121/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9304559Z remote: Compressing objects:  89% (122/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9305699Z remote: Compressing objects:  90% (124/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9307572Z remote: Compressing objects:  91% (125/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9309285Z remote: Compressing objects:  92% (127/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9310929Z remote: Compressing objects:  93% (128/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9312075Z remote: Compressing objects:  94% (129/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9313210Z remote: Compressing objects:  95% (131/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9314412Z remote: Compressing objects:  96% (132/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9315491Z remote: Compressing objects:  97% (133/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9316889Z remote: Compressing objects:  98% (135/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9317999Z remote: Compressing objects:  99% (136/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9319157Z remote: Compressing objects: 100% (137/137)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9320362Z remote: Compressing objects: 100% (137/137), done.        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9321859Z Receiving objects:   0% (1/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9322749Z Receiving objects:   1% (2/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9323634Z Receiving objects:   2% (3/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9324514Z Receiving objects:   3% (5/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9325381Z Receiving objects:   4% (6/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9326400Z Receiving objects:   5% (8/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9327280Z Receiving objects:   6% (9/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9328054Z Receiving objects:   7% (11/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9328940Z Receiving objects:   8% (12/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9329727Z Receiving objects:   9% (13/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9330607Z Receiving objects:  10% (15/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9461169Z Receiving objects:  11% (16/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9463071Z Receiving objects:  12% (18/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9464966Z Receiving objects:  13% (19/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9466939Z Receiving objects:  14% (21/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9468727Z Receiving objects:  15% (22/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9470482Z Receiving objects:  16% (24/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9472323Z Receiving objects:  17% (25/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9474110Z Receiving objects:  18% (26/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9475666Z Receiving objects:  19% (28/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9477077Z Receiving objects:  20% (29/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9478334Z Receiving objects:  21% (31/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9479577Z Receiving objects:  22% (32/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9480832Z Receiving objects:  23% (34/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9481641Z Receiving objects:  24% (35/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9482428Z Receiving objects:  25% (36/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9483416Z Receiving objects:  26% (38/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9484486Z Receiving objects:  27% (39/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9485288Z Receiving objects:  28% (41/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9486295Z Receiving objects:  29% (42/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9487087Z Receiving objects:  30% (44/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9487868Z Receiving objects:  31% (45/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9488640Z Receiving objects:  32% (47/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9489439Z Receiving objects:  33% (48/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9490215Z Receiving objects:  34% (49/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9491208Z Receiving objects:  35% (51/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9491996Z Receiving objects:  36% (52/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9492767Z Receiving objects:  37% (54/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9493539Z Receiving objects:  38% (55/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9494318Z Receiving objects:  39% (57/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9495094Z Receiving objects:  40% (58/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9495876Z Receiving objects:  41% (60/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9539054Z Receiving objects:  42% (61/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9576640Z Receiving objects:  43% (62/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9596222Z Receiving objects:  44% (64/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9598054Z Receiving objects:  45% (65/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9599809Z Receiving objects:  46% (67/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9650508Z Receiving objects:  47% (68/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9652452Z Receiving objects:  48% (70/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9654249Z Receiving objects:  49% (71/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9655666Z Receiving objects:  50% (72/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9657380Z Receiving objects:  51% (74/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9659117Z Receiving objects:  52% (75/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9660713Z Receiving objects:  53% (77/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9662282Z Receiving objects:  54% (78/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9663839Z Receiving objects:  55% (80/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9665387Z Receiving objects:  56% (81/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9666860Z Receiving objects:  57% (83/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9668116Z Receiving objects:  58% (84/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9669384Z Receiving objects:  59% (85/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9670651Z Receiving objects:  60% (87/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9672513Z Receiving objects:  61% (88/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9673663Z Receiving objects:  62% (90/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9719762Z Receiving objects:  63% (91/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9721537Z Receiving objects:  64% (93/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9725367Z Receiving objects:  65% (94/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9727240Z Receiving objects:  66% (96/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9728619Z Receiving objects:  67% (97/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9729670Z Receiving objects:  68% (98/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9730481Z Receiving objects:  69% (100/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9731458Z Receiving objects:  70% (101/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9732272Z Receiving objects:  71% (103/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9733068Z Receiving objects:  72% (104/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9733866Z Receiving objects:  73% (106/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9756748Z Receiving objects:  74% (107/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9758608Z Receiving objects:  75% (108/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9759879Z Receiving objects:  76% (110/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9760922Z Receiving objects:  77% (111/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9761907Z Receiving objects:  78% (113/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9762888Z Receiving objects:  79% (114/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9763887Z Receiving objects:  80% (116/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9764882Z Receiving objects:  81% (117/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9765859Z Receiving objects:  82% (119/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9767093Z Receiving objects:  83% (120/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9830625Z Receiving objects:  84% (121/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9833664Z remote: Total 144 (delta 10), reused 92 (delta 6), pack-reused 0 (from 0)        
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9841770Z Receiving objects:  85% (123/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9845518Z Receiving objects:  86% (124/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9847595Z Receiving objects:  87% (126/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9850231Z Receiving objects:  88% (127/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9852647Z Receiving objects:  89% (129/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9855125Z Receiving objects:  90% (130/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9863915Z Receiving objects:  91% (132/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9865262Z Receiving objects:  92% (133/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9866749Z Receiving objects:  93% (134/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9868057Z Receiving objects:  94% (136/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9869420Z Receiving objects:  95% (137/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9870748Z Receiving objects:  96% (139/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9879356Z Receiving objects:  97% (140/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9881314Z Receiving objects:  98% (142/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9882805Z Receiving objects:  99% (143/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9884329Z Receiving objects: 100% (144/144)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9886217Z Receiving objects: 100% (144/144), 274.74 KiB | 4.91 MiB/s, done.
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9887784Z Resolving deltas:   0% (0/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9889026Z Resolving deltas:  10% (1/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9891301Z Resolving deltas:  20% (2/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9892568Z Resolving deltas:  30% (3/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9893800Z Resolving deltas:  40% (4/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9895013Z Resolving deltas:  50% (5/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9896404Z Resolving deltas:  60% (6/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9897638Z Resolving deltas:  70% (7/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9898862Z Resolving deltas:  80% (8/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9900088Z Resolving deltas:  90% (9/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9900917Z Resolving deltas: 100% (10/10)
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9901702Z Resolving deltas: 100% (10/10), done.
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9981070Z From https://github.com/PitchConnect/fogis-api-client-python
+deploy	Run actions/checkout@v3	2025-05-07T19:39:13.9983738Z  * [new ref]         68424ef0be2b275ea4e97aaec63b98ac1ce82787 -> v0.4.3
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0013915Z ##[endgroup]
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0016892Z ##[group]Determining the checkout info
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0019144Z ##[endgroup]
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0021021Z ##[group]Checking out the ref
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0022843Z [command]/usr/bin/git checkout --progress --force refs/tags/v0.4.3
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0141642Z Note: switching to 'refs/tags/v0.4.3'.
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0142314Z 
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0142894Z You are in 'detached HEAD' state. You can look around, make experimental
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0144258Z changes and commit them, and you can discard any commits you make in this
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0145588Z state without impacting any branches by switching back to a branch.
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0146594Z 
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0147138Z If you want to create a new branch to retain commits you create, you may
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0148644Z do so (now or later) by using -c with the switch command. Example:
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0149791Z 
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0150310Z   git switch -c <new-branch-name>
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0150932Z 
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0151247Z Or undo this operation with:
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0151724Z 
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0151988Z   git switch -
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0152363Z 
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0152955Z Turn off this advice by setting config variable advice.detachedHead to false
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0153797Z 
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0154449Z HEAD is now at 68424ef Merge pull request #189 from PitchConnect/hotfix/issue-187-main
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0157139Z ##[endgroup]
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0185205Z [command]/usr/bin/git log -1 --format='%H'
+deploy	Run actions/checkout@v3	2025-05-07T19:39:14.0206718Z '68424ef0be2b275ea4e97aaec63b98ac1ce82787'
+deploy	Set up Python	﻿2025-05-07T19:39:14.0461440Z ##[group]Run actions/setup-python@v4
+deploy	Set up Python	2025-05-07T19:39:14.0462277Z with:
+deploy	Set up Python	2025-05-07T19:39:14.0462861Z   python-version: 3.9
+deploy	Set up Python	2025-05-07T19:39:14.0463533Z   check-latest: false
+deploy	Set up Python	2025-05-07T19:39:14.0464404Z   token: ***
+deploy	Set up Python	2025-05-07T19:39:14.0465055Z   update-environment: true
+deploy	Set up Python	2025-05-07T19:39:14.0465799Z   allow-prereleases: false
+deploy	Set up Python	2025-05-07T19:39:14.0466708Z ##[endgroup]
+deploy	Set up Python	2025-05-07T19:39:14.2197331Z ##[group]Installed versions
+deploy	Set up Python	2025-05-07T19:39:14.2262560Z Successfully set up CPython (3.9.22)
+deploy	Set up Python	2025-05-07T19:39:14.2264602Z ##[endgroup]
+deploy	Install dependencies	﻿2025-05-07T19:39:14.2397793Z ##[group]Run python -m pip install --upgrade pip
+deploy	Install dependencies	2025-05-07T19:39:14.2398886Z [36;1mpython -m pip install --upgrade pip[0m
+deploy	Install dependencies	2025-05-07T19:39:14.2399782Z [36;1mpip install build twine[0m
+deploy	Install dependencies	2025-05-07T19:39:14.2432570Z shell: /usr/bin/bash -e {0}
+deploy	Install dependencies	2025-05-07T19:39:14.2433294Z env:
+deploy	Install dependencies	2025-05-07T19:39:14.2434063Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Install dependencies	2025-05-07T19:39:14.2435281Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib/pkgconfig
+deploy	Install dependencies	2025-05-07T19:39:14.2436719Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Install dependencies	2025-05-07T19:39:14.2437813Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Install dependencies	2025-05-07T19:39:14.2438892Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Install dependencies	2025-05-07T19:39:14.2440213Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib
+deploy	Install dependencies	2025-05-07T19:39:14.2441116Z ##[endgroup]
+deploy	Install dependencies	2025-05-07T19:39:14.7750577Z Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.9.22/x64/lib/python3.9/site-packages (25.1.1)
+deploy	Install dependencies	2025-05-07T19:39:15.3050935Z Collecting build
+deploy	Install dependencies	2025-05-07T19:39:15.3153595Z   Downloading build-1.2.2.post1-py3-none-any.whl.metadata (6.5 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.3464847Z Collecting twine
+deploy	Install dependencies	2025-05-07T19:39:15.3496603Z   Downloading twine-6.1.0-py3-none-any.whl.metadata (3.7 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.3714519Z Collecting packaging>=19.1 (from build)
+deploy	Install dependencies	2025-05-07T19:39:15.3743993Z   Downloading packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.3841250Z Collecting pyproject_hooks (from build)
+deploy	Install dependencies	2025-05-07T19:39:15.3874177Z   Downloading pyproject_hooks-1.2.0-py3-none-any.whl.metadata (1.3 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.4363465Z Collecting importlib-metadata>=4.6 (from build)
+deploy	Install dependencies	2025-05-07T19:39:15.4409904Z   Downloading importlib_metadata-8.7.0-py3-none-any.whl.metadata (4.8 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.4633532Z Collecting tomli>=1.1.0 (from build)
+deploy	Install dependencies	2025-05-07T19:39:15.4667911Z   Downloading tomli-2.2.1-py3-none-any.whl.metadata (10 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.4837974Z Collecting readme-renderer>=35.0 (from twine)
+deploy	Install dependencies	2025-05-07T19:39:15.4871739Z   Downloading readme_renderer-44.0-py3-none-any.whl.metadata (2.8 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.5181209Z Collecting requests>=2.20 (from twine)
+deploy	Install dependencies	2025-05-07T19:39:15.5213255Z   Downloading requests-2.32.3-py3-none-any.whl.metadata (4.6 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.5377182Z Collecting requests-toolbelt!=0.9.0,>=0.8.0 (from twine)
+deploy	Install dependencies	2025-05-07T19:39:15.5409010Z   Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl.metadata (14 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.5732246Z Collecting urllib3>=1.26.0 (from twine)
+deploy	Install dependencies	2025-05-07T19:39:15.5765847Z   Downloading urllib3-2.4.0-py3-none-any.whl.metadata (6.5 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.6392867Z Collecting keyring>=15.1 (from twine)
+deploy	Install dependencies	2025-05-07T19:39:15.6428539Z   Downloading keyring-25.6.0-py3-none-any.whl.metadata (20 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.6639362Z Collecting rfc3986>=1.4.0 (from twine)
+deploy	Install dependencies	2025-05-07T19:39:15.6671673Z   Downloading rfc3986-2.0.0-py2.py3-none-any.whl.metadata (6.6 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.7150079Z Collecting rich>=12.0.0 (from twine)
+deploy	Install dependencies	2025-05-07T19:39:15.7183821Z   Downloading rich-14.0.0-py3-none-any.whl.metadata (18 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.7343571Z Collecting id (from twine)
+deploy	Install dependencies	2025-05-07T19:39:15.7374632Z   Downloading id-1.5.0-py3-none-any.whl.metadata (5.2 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.7603144Z Collecting zipp>=3.20 (from importlib-metadata>=4.6->build)
+deploy	Install dependencies	2025-05-07T19:39:15.7634507Z   Downloading zipp-3.21.0-py3-none-any.whl.metadata (3.7 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.7808076Z Collecting SecretStorage>=3.2 (from keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:15.7839779Z   Downloading SecretStorage-3.3.3-py3-none-any.whl.metadata (4.0 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.7970545Z Collecting jeepney>=0.4.2 (from keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:15.8000947Z   Downloading jeepney-0.9.0-py3-none-any.whl.metadata (1.2 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.8282662Z Collecting jaraco.classes (from keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:15.8315376Z   Downloading jaraco.classes-3.4.0-py3-none-any.whl.metadata (2.6 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.8515190Z Collecting jaraco.functools (from keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:15.8548307Z   Downloading jaraco.functools-4.1.0-py3-none-any.whl.metadata (2.9 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.8719740Z Collecting jaraco.context (from keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:15.8752031Z   Downloading jaraco.context-6.0.1-py3-none-any.whl.metadata (4.1 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.9190641Z Collecting nh3>=0.2.14 (from readme-renderer>=35.0->twine)
+deploy	Install dependencies	2025-05-07T19:39:15.9227117Z   Downloading nh3-0.2.21-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (2.0 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.9403115Z Collecting docutils>=0.21.2 (from readme-renderer>=35.0->twine)
+deploy	Install dependencies	2025-05-07T19:39:15.9434855Z   Downloading docutils-0.21.2-py3-none-any.whl.metadata (2.8 kB)
+deploy	Install dependencies	2025-05-07T19:39:15.9670247Z Collecting Pygments>=2.5.1 (from readme-renderer>=35.0->twine)
+deploy	Install dependencies	2025-05-07T19:39:15.9705320Z   Downloading pygments-2.19.1-py3-none-any.whl.metadata (2.5 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.0695868Z Collecting charset-normalizer<4,>=2 (from requests>=2.20->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.0735745Z   Downloading charset_normalizer-3.4.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (35 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.0914687Z Collecting idna<4,>=2.5 (from requests>=2.20->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.0954549Z   Downloading idna-3.10-py3-none-any.whl.metadata (10 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.1299680Z Collecting certifi>=2017.4.17 (from requests>=2.20->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.1333574Z   Downloading certifi-2025.4.26-py3-none-any.whl.metadata (2.5 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.1687938Z Collecting markdown-it-py>=2.2.0 (from rich>=12.0.0->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.1720424Z   Downloading markdown_it_py-3.0.0-py3-none-any.whl.metadata (6.9 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.2052671Z Collecting typing-extensions<5.0,>=4.0.0 (from rich>=12.0.0->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.2089257Z   Downloading typing_extensions-4.13.2-py3-none-any.whl.metadata (3.0 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.2230551Z Collecting mdurl~=0.1 (from markdown-it-py>=2.2.0->rich>=12.0.0->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.2261861Z   Downloading mdurl-0.1.2-py3-none-any.whl.metadata (1.6 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.4577902Z Collecting cryptography>=2.0 (from SecretStorage>=3.2->keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.4614648Z   Downloading cryptography-44.0.3-cp39-abi3-manylinux_2_34_x86_64.whl.metadata (5.7 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.5933687Z Collecting cffi>=1.12 (from cryptography>=2.0->SecretStorage>=3.2->keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.5976615Z   Downloading cffi-1.17.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (1.5 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.6112687Z Collecting pycparser (from cffi>=1.12->cryptography>=2.0->SecretStorage>=3.2->keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.6144448Z   Downloading pycparser-2.22-py3-none-any.whl.metadata (943 bytes)
+deploy	Install dependencies	2025-05-07T19:39:16.6394643Z Collecting more-itertools (from jaraco.classes->keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.6425921Z   Downloading more_itertools-10.7.0-py3-none-any.whl.metadata (37 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.6545435Z Collecting backports.tarfile (from jaraco.context->keyring>=15.1->twine)
+deploy	Install dependencies	2025-05-07T19:39:16.6579018Z   Downloading backports.tarfile-1.2.0-py3-none-any.whl.metadata (2.0 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.6733361Z Downloading build-1.2.2.post1-py3-none-any.whl (22 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.6788292Z Downloading twine-6.1.0-py3-none-any.whl (40 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.6845409Z Downloading importlib_metadata-8.7.0-py3-none-any.whl (27 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.6906797Z Downloading keyring-25.6.0-py3-none-any.whl (39 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.6962018Z Downloading jeepney-0.9.0-py3-none-any.whl (49 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7023612Z Downloading packaging-25.0-py3-none-any.whl (66 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7080811Z Downloading readme_renderer-44.0-py3-none-any.whl (13 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7140991Z Downloading docutils-0.21.2-py3-none-any.whl (587 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7226154Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 587.4/587.4 kB 73.7 MB/s eta 0:00:00
+deploy	Install dependencies	2025-05-07T19:39:16.7258148Z Downloading nh3-0.2.21-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (739 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7341659Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 739.0/739.0 kB 92.4 MB/s eta 0:00:00
+deploy	Install dependencies	2025-05-07T19:39:16.7374564Z Downloading pygments-2.19.1-py3-none-any.whl (1.2 MB)
+deploy	Install dependencies	2025-05-07T19:39:16.7480479Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 126.5 MB/s eta 0:00:00
+deploy	Install dependencies	2025-05-07T19:39:16.7511842Z Downloading requests-2.32.3-py3-none-any.whl (64 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7578173Z Downloading charset_normalizer-3.4.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (149 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7640062Z Downloading idna-3.10-py3-none-any.whl (70 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7709539Z Downloading urllib3-2.4.0-py3-none-any.whl (128 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7772996Z Downloading certifi-2025.4.26-py3-none-any.whl (159 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7839482Z Downloading requests_toolbelt-1.0.0-py2.py3-none-any.whl (54 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7904578Z Downloading rfc3986-2.0.0-py2.py3-none-any.whl (31 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.7971405Z Downloading rich-14.0.0-py3-none-any.whl (243 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8042236Z Downloading typing_extensions-4.13.2-py3-none-any.whl (45 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8105315Z Downloading markdown_it_py-3.0.0-py3-none-any.whl (87 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8168143Z Downloading mdurl-0.1.2-py3-none-any.whl (10.0 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8228726Z Downloading SecretStorage-3.3.3-py3-none-any.whl (15 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8286248Z Downloading cryptography-44.0.3-cp39-abi3-manylinux_2_34_x86_64.whl (4.2 MB)
+deploy	Install dependencies	2025-05-07T19:39:16.8549327Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.2/4.2 MB 171.4 MB/s eta 0:00:00
+deploy	Install dependencies	2025-05-07T19:39:16.8586796Z Downloading cffi-1.17.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (445 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8677245Z Downloading tomli-2.2.1-py3-none-any.whl (14 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8788527Z Downloading zipp-3.21.0-py3-none-any.whl (9.6 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8852340Z Downloading id-1.5.0-py3-none-any.whl (13 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8911966Z Downloading jaraco.classes-3.4.0-py3-none-any.whl (6.8 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.8966364Z Downloading jaraco.context-6.0.1-py3-none-any.whl (6.8 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.9022042Z Downloading backports.tarfile-1.2.0-py3-none-any.whl (30 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.9080700Z Downloading jaraco.functools-4.1.0-py3-none-any.whl (10 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.9163657Z Downloading more_itertools-10.7.0-py3-none-any.whl (65 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.9223489Z Downloading pycparser-2.22-py3-none-any.whl (117 kB)
+deploy	Install dependencies	2025-05-07T19:39:16.9286878Z Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+deploy	Install dependencies	2025-05-07T19:39:17.0517742Z Installing collected packages: zipp, urllib3, typing-extensions, tomli, rfc3986, pyproject_hooks, Pygments, pycparser, packaging, nh3, more-itertools, mdurl, jeepney, idna, docutils, charset-normalizer, certifi, backports.tarfile, requests, readme-renderer, markdown-it-py, jaraco.functools, jaraco.context, jaraco.classes, importlib-metadata, cffi, rich, requests-toolbelt, id, cryptography, build, SecretStorage, keyring, twine
+deploy	Install dependencies	2025-05-07T19:39:19.1988513Z 
+deploy	Install dependencies	2025-05-07T19:39:19.2055805Z Successfully installed Pygments-2.19.1 SecretStorage-3.3.3 backports.tarfile-1.2.0 build-1.2.2.post1 certifi-2025.4.26 cffi-1.17.1 charset-normalizer-3.4.2 cryptography-44.0.3 docutils-0.21.2 id-1.5.0 idna-3.10 importlib-metadata-8.7.0 jaraco.classes-3.4.0 jaraco.context-6.0.1 jaraco.functools-4.1.0 jeepney-0.9.0 keyring-25.6.0 markdown-it-py-3.0.0 mdurl-0.1.2 more-itertools-10.7.0 nh3-0.2.21 packaging-25.0 pycparser-2.22 pyproject_hooks-1.2.0 readme-renderer-44.0 requests-2.32.3 requests-toolbelt-1.0.0 rfc3986-2.0.0 rich-14.0.0 tomli-2.2.1 twine-6.1.0 typing-extensions-4.13.2 urllib3-2.4.0 zipp-3.21.0
+deploy	Build package	﻿2025-05-07T19:39:19.3327130Z ##[group]Run python -m build
+deploy	Build package	2025-05-07T19:39:19.3327443Z [36;1mpython -m build[0m
+deploy	Build package	2025-05-07T19:39:19.3352403Z shell: /usr/bin/bash -e {0}
+deploy	Build package	2025-05-07T19:39:19.3352661Z env:
+deploy	Build package	2025-05-07T19:39:19.3352917Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build package	2025-05-07T19:39:19.3353364Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib/pkgconfig
+deploy	Build package	2025-05-07T19:39:19.3353789Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build package	2025-05-07T19:39:19.3354160Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build package	2025-05-07T19:39:19.3354532Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build package	2025-05-07T19:39:19.3354912Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib
+deploy	Build package	2025-05-07T19:39:19.3355222Z ##[endgroup]
+deploy	Build package	2025-05-07T19:39:19.4541882Z * Creating isolated environment: venv+pip...
+deploy	Build package	2025-05-07T19:39:19.4603718Z * Installing packages in isolated environment:
+deploy	Build package	2025-05-07T19:39:20.7612130Z   - setuptools>=61.0
+deploy	Build package	2025-05-07T19:39:20.7612866Z   - wheel
+deploy	Build package	2025-05-07T19:39:20.7613178Z * Getting build dependencies for sdist...
+deploy	Build package	2025-05-07T19:39:21.0260535Z /tmp/build-env-j6st7wt6/lib/python3.9/site-packages/setuptools/dist.py:761: SetuptoolsDeprecationWarning: License classifiers are deprecated.
+deploy	Build package	2025-05-07T19:39:21.0262788Z !!
+deploy	Build package	2025-05-07T19:39:21.0263043Z 
+deploy	Build package	2025-05-07T19:39:21.0263333Z         ********************************************************************************
+deploy	Build package	2025-05-07T19:39:21.0264152Z         Please consider removing the following classifiers in favor of a SPDX license expression:
+deploy	Build package	2025-05-07T19:39:21.0264756Z 
+deploy	Build package	2025-05-07T19:39:21.0265057Z         License :: OSI Approved :: MIT License
+deploy	Build package	2025-05-07T19:39:21.0265375Z 
+deploy	Build package	2025-05-07T19:39:21.0265889Z         See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+deploy	Build package	2025-05-07T19:39:21.0267055Z         ********************************************************************************
+deploy	Build package	2025-05-07T19:39:21.0267393Z 
+deploy	Build package	2025-05-07T19:39:21.0267505Z !!
+deploy	Build package	2025-05-07T19:39:21.0267815Z   self._finalize_license_expression()
+deploy	Build package	2025-05-07T19:39:21.0512415Z running egg_info
+deploy	Build package	2025-05-07T19:39:21.0529207Z creating fogis_api_client_timmyBird.egg-info
+deploy	Build package	2025-05-07T19:39:21.0530978Z writing fogis_api_client_timmyBird.egg-info/PKG-INFO
+deploy	Build package	2025-05-07T19:39:21.0541261Z writing dependency_links to fogis_api_client_timmyBird.egg-info/dependency_links.txt
+deploy	Build package	2025-05-07T19:39:21.0547113Z writing requirements to fogis_api_client_timmyBird.egg-info/requires.txt
+deploy	Build package	2025-05-07T19:39:21.0548490Z writing top-level names to fogis_api_client_timmyBird.egg-info/top_level.txt
+deploy	Build package	2025-05-07T19:39:21.0550063Z writing manifest file 'fogis_api_client_timmyBird.egg-info/SOURCES.txt'
+deploy	Build package	2025-05-07T19:39:21.0656410Z reading manifest file 'fogis_api_client_timmyBird.egg-info/SOURCES.txt'
+deploy	Build package	2025-05-07T19:39:21.0658404Z adding license file 'LICENSE.txt'
+deploy	Build package	2025-05-07T19:39:21.0670552Z writing manifest file 'fogis_api_client_timmyBird.egg-info/SOURCES.txt'
+deploy	Build package	2025-05-07T19:39:21.0842236Z * Building sdist...
+deploy	Build package	2025-05-07T19:39:21.2110829Z /tmp/build-env-j6st7wt6/lib/python3.9/site-packages/setuptools/dist.py:761: SetuptoolsDeprecationWarning: License classifiers are deprecated.
+deploy	Build package	2025-05-07T19:39:21.2112113Z !!
+deploy	Build package	2025-05-07T19:39:21.2112267Z 
+deploy	Build package	2025-05-07T19:39:21.2112418Z         ********************************************************************************
+deploy	Build package	2025-05-07T19:39:21.2113100Z         Please consider removing the following classifiers in favor of a SPDX license expression:
+deploy	Build package	2025-05-07T19:39:21.2113628Z 
+deploy	Build package	2025-05-07T19:39:21.2113839Z         License :: OSI Approved :: MIT License
+deploy	Build package	2025-05-07T19:39:21.2114125Z 
+deploy	Build package	2025-05-07T19:39:21.2114568Z         See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+deploy	Build package	2025-05-07T19:39:21.2115275Z         ********************************************************************************
+deploy	Build package	2025-05-07T19:39:21.2115566Z 
+deploy	Build package	2025-05-07T19:39:21.2115662Z !!
+deploy	Build package	2025-05-07T19:39:21.2115935Z   self._finalize_license_expression()
+deploy	Build package	2025-05-07T19:39:21.2152138Z running sdist
+deploy	Build package	2025-05-07T19:39:21.2153864Z running egg_info
+deploy	Build package	2025-05-07T19:39:21.2198849Z writing fogis_api_client_timmyBird.egg-info/PKG-INFO
+deploy	Build package	2025-05-07T19:39:21.2209619Z writing dependency_links to fogis_api_client_timmyBird.egg-info/dependency_links.txt
+deploy	Build package	2025-05-07T19:39:21.2215336Z writing requirements to fogis_api_client_timmyBird.egg-info/requires.txt
+deploy	Build package	2025-05-07T19:39:21.2217427Z writing top-level names to fogis_api_client_timmyBird.egg-info/top_level.txt
+deploy	Build package	2025-05-07T19:39:21.2284829Z reading manifest file 'fogis_api_client_timmyBird.egg-info/SOURCES.txt'
+deploy	Build package	2025-05-07T19:39:21.2292067Z adding license file 'LICENSE.txt'
+deploy	Build package	2025-05-07T19:39:21.2305952Z writing manifest file 'fogis_api_client_timmyBird.egg-info/SOURCES.txt'
+deploy	Build package	2025-05-07T19:39:21.2307967Z running check
+deploy	Build package	2025-05-07T19:39:21.2335248Z creating fogis_api_client_timmybird-0.4.2
+deploy	Build package	2025-05-07T19:39:21.2338663Z creating fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2340357Z creating fogis_api_client_timmybird-0.4.2/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:21.2342039Z creating fogis_api_client_timmybird-0.4.2/fogis_api_client_timmyBird.egg-info
+deploy	Build package	2025-05-07T19:39:21.2343419Z creating fogis_api_client_timmybird-0.4.2/integration_tests
+deploy	Build package	2025-05-07T19:39:21.2345129Z creating fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2346394Z copying files to fogis_api_client_timmybird-0.4.2...
+deploy	Build package	2025-05-07T19:39:21.2347432Z copying LICENSE.txt -> fogis_api_client_timmybird-0.4.2
+deploy	Build package	2025-05-07T19:39:21.2349806Z copying README.md -> fogis_api_client_timmybird-0.4.2
+deploy	Build package	2025-05-07T19:39:21.2351959Z copying pyproject.toml -> fogis_api_client_timmybird-0.4.2
+deploy	Build package	2025-05-07T19:39:21.2353585Z copying setup.py -> fogis_api_client_timmybird-0.4.2
+deploy	Build package	2025-05-07T19:39:21.2355874Z copying fogis_api_client/__init__.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2357822Z copying fogis_api_client/api_contracts.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2359589Z copying fogis_api_client/enums.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2361435Z copying fogis_api_client/event_types.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2363299Z copying fogis_api_client/fogis_api_client.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2366478Z copying fogis_api_client/logging_config.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2368222Z copying fogis_api_client/match_list_filter.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2370102Z copying fogis_api_client/public_api_client.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2372404Z copying fogis_api_client/types.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client
+deploy	Build package	2025-05-07T19:39:21.2374249Z copying fogis_api_client/internal/__init__.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:21.2376291Z copying fogis_api_client/internal/adapters.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:21.2378353Z copying fogis_api_client/internal/api_client.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:21.2380317Z copying fogis_api_client/internal/api_contracts.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:21.2382266Z copying fogis_api_client/internal/auth.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:21.2384142Z copying fogis_api_client/internal/types.py -> fogis_api_client_timmybird-0.4.2/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:21.2386312Z copying fogis_api_client_timmyBird.egg-info/PKG-INFO -> fogis_api_client_timmybird-0.4.2/fogis_api_client_timmyBird.egg-info
+deploy	Build package	2025-05-07T19:39:21.2388271Z copying fogis_api_client_timmyBird.egg-info/SOURCES.txt -> fogis_api_client_timmybird-0.4.2/fogis_api_client_timmyBird.egg-info
+deploy	Build package	2025-05-07T19:39:21.2390126Z copying fogis_api_client_timmyBird.egg-info/dependency_links.txt -> fogis_api_client_timmybird-0.4.2/fogis_api_client_timmyBird.egg-info
+deploy	Build package	2025-05-07T19:39:21.2391825Z copying fogis_api_client_timmyBird.egg-info/requires.txt -> fogis_api_client_timmybird-0.4.2/fogis_api_client_timmyBird.egg-info
+deploy	Build package	2025-05-07T19:39:21.2393522Z copying fogis_api_client_timmyBird.egg-info/top_level.txt -> fogis_api_client_timmybird-0.4.2/fogis_api_client_timmyBird.egg-info
+deploy	Build package	2025-05-07T19:39:21.2395298Z copying integration_tests/__init__.py -> fogis_api_client_timmybird-0.4.2/integration_tests
+deploy	Build package	2025-05-07T19:39:21.2397306Z copying integration_tests/conftest.py -> fogis_api_client_timmybird-0.4.2/integration_tests
+deploy	Build package	2025-05-07T19:39:21.2399171Z copying integration_tests/mock_fogis_server.py -> fogis_api_client_timmybird-0.4.2/integration_tests
+deploy	Build package	2025-05-07T19:39:21.2401240Z copying integration_tests/sample_data.py -> fogis_api_client_timmybird-0.4.2/integration_tests
+deploy	Build package	2025-05-07T19:39:21.2403311Z copying integration_tests/sample_data_factory.py -> fogis_api_client_timmybird-0.4.2/integration_tests
+deploy	Build package	2025-05-07T19:39:21.2405924Z copying integration_tests/test_api_endpoints.py -> fogis_api_client_timmybird-0.4.2/integration_tests
+deploy	Build package	2025-05-07T19:39:21.2407801Z copying integration_tests/test_with_mock_server.py -> fogis_api_client_timmybird-0.4.2/integration_tests
+deploy	Build package	2025-05-07T19:39:21.2409671Z copying tests/__init__.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2411498Z copying tests/test_api_gateway.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2413570Z copying tests/test_auth_routes.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2415382Z copying tests/test_cookie_auth.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2417709Z copying tests/test_docker_setup.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2419403Z copying tests/test_fogis_api_client.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2421975Z copying tests/test_fogis_api_client_ai_generated.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2423771Z copying tests/test_http_wrapper.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2426199Z copying tests/test_lazy_login.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2428073Z copying tests/test_logging_config.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2430010Z copying tests/test_mark_reporting_finished.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2431883Z copying tests/test_match_list_filter.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2433784Z copying tests/test_match_result_formats.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2435579Z copying tests/test_parameter_names.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2437569Z copying tests/test_swagger.py -> fogis_api_client_timmybird-0.4.2/tests
+deploy	Build package	2025-05-07T19:39:21.2439785Z copying fogis_api_client_timmyBird.egg-info/SOURCES.txt -> fogis_api_client_timmybird-0.4.2/fogis_api_client_timmyBird.egg-info
+deploy	Build package	2025-05-07T19:39:21.2451335Z Writing fogis_api_client_timmybird-0.4.2/setup.cfg
+deploy	Build package	2025-05-07T19:39:21.2468715Z Creating tar archive
+deploy	Build package	2025-05-07T19:39:21.2883190Z removing 'fogis_api_client_timmybird-0.4.2' (and everything under it)
+deploy	Build package	2025-05-07T19:39:21.3455321Z * Building wheel from sdist
+deploy	Build package	2025-05-07T19:39:21.3464637Z * Creating isolated environment: venv+pip...
+deploy	Build package	2025-05-07T19:39:21.3479232Z * Installing packages in isolated environment:
+deploy	Build package	2025-05-07T19:39:22.2599302Z   - setuptools>=61.0
+deploy	Build package	2025-05-07T19:39:22.2599775Z   - wheel
+deploy	Build package	2025-05-07T19:39:22.2600028Z * Getting build dependencies for wheel...
+deploy	Build package	2025-05-07T19:39:22.5251630Z /tmp/build-env-26neql17/lib/python3.9/site-packages/setuptools/dist.py:761: SetuptoolsDeprecationWarning: License classifiers are deprecated.
+deploy	Build package	2025-05-07T19:39:22.5253274Z !!
+deploy	Build package	2025-05-07T19:39:22.5253441Z 
+deploy	Build package	2025-05-07T19:39:22.5253622Z         ********************************************************************************
+deploy	Build package	2025-05-07T19:39:22.5254379Z         Please consider removing the following classifiers in favor of a SPDX license expression:
+deploy	Build package	2025-05-07T19:39:22.5254973Z 
+deploy	Build package	2025-05-07T19:39:22.5255206Z         License :: OSI Approved :: MIT License
+deploy	Build package	2025-05-07T19:39:22.5255866Z 
+deploy	Build package	2025-05-07T19:39:22.5257121Z         See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+deploy	Build package	2025-05-07T19:39:22.5257692Z         ********************************************************************************
+deploy	Build package	2025-05-07T19:39:22.5257883Z 
+deploy	Build package	2025-05-07T19:39:22.5257946Z !!
+deploy	Build package	2025-05-07T19:39:22.5258127Z   self._finalize_license_expression()
+deploy	Build package	2025-05-07T19:39:22.5504282Z running egg_info
+deploy	Build package	2025-05-07T19:39:22.5522188Z writing fogis_api_client_timmyBird.egg-info/PKG-INFO
+deploy	Build package	2025-05-07T19:39:22.5533762Z writing dependency_links to fogis_api_client_timmyBird.egg-info/dependency_links.txt
+deploy	Build package	2025-05-07T19:39:22.5540167Z writing requirements to fogis_api_client_timmyBird.egg-info/requires.txt
+deploy	Build package	2025-05-07T19:39:22.5541719Z writing top-level names to fogis_api_client_timmyBird.egg-info/top_level.txt
+deploy	Build package	2025-05-07T19:39:22.5648669Z reading manifest file 'fogis_api_client_timmyBird.egg-info/SOURCES.txt'
+deploy	Build package	2025-05-07T19:39:22.5656321Z adding license file 'LICENSE.txt'
+deploy	Build package	2025-05-07T19:39:22.5670811Z writing manifest file 'fogis_api_client_timmyBird.egg-info/SOURCES.txt'
+deploy	Build package	2025-05-07T19:39:22.5876707Z * Building wheel...
+deploy	Build package	2025-05-07T19:39:22.7147903Z /tmp/build-env-26neql17/lib/python3.9/site-packages/setuptools/dist.py:761: SetuptoolsDeprecationWarning: License classifiers are deprecated.
+deploy	Build package	2025-05-07T19:39:22.7148926Z !!
+deploy	Build package	2025-05-07T19:39:22.7149070Z 
+deploy	Build package	2025-05-07T19:39:22.7149227Z         ********************************************************************************
+deploy	Build package	2025-05-07T19:39:22.7149906Z         Please consider removing the following classifiers in favor of a SPDX license expression:
+deploy	Build package	2025-05-07T19:39:22.7150440Z 
+deploy	Build package	2025-05-07T19:39:22.7150658Z         License :: OSI Approved :: MIT License
+deploy	Build package	2025-05-07T19:39:22.7150949Z 
+deploy	Build package	2025-05-07T19:39:22.7151397Z         See https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#license for details.
+deploy	Build package	2025-05-07T19:39:22.7152116Z         ********************************************************************************
+deploy	Build package	2025-05-07T19:39:22.7152435Z 
+deploy	Build package	2025-05-07T19:39:22.7152533Z !!
+deploy	Build package	2025-05-07T19:39:22.7152808Z   self._finalize_license_expression()
+deploy	Build package	2025-05-07T19:39:22.7534550Z running bdist_wheel
+deploy	Build package	2025-05-07T19:39:22.7721260Z running build
+deploy	Build package	2025-05-07T19:39:22.7721720Z running build_py
+deploy	Build package	2025-05-07T19:39:22.7744329Z creating build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7747159Z copying fogis_api_client/match_list_filter.py -> build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7749683Z copying fogis_api_client/types.py -> build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7752260Z copying fogis_api_client/__init__.py -> build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7754729Z copying fogis_api_client/event_types.py -> build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7757514Z copying fogis_api_client/public_api_client.py -> build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7760116Z copying fogis_api_client/fogis_api_client.py -> build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7763150Z copying fogis_api_client/enums.py -> build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7765571Z copying fogis_api_client/api_contracts.py -> build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7768200Z copying fogis_api_client/logging_config.py -> build/lib/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.7772581Z creating build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7774071Z copying tests/test_match_list_filter.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7776843Z copying tests/test_parameter_names.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7779408Z copying tests/test_auth_routes.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7781901Z copying tests/__init__.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7784199Z copying tests/test_lazy_login.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7786568Z copying tests/test_fogis_api_client.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7789450Z copying tests/test_logging_config.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7791885Z copying tests/test_cookie_auth.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7794312Z copying tests/test_match_result_formats.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7796619Z copying tests/test_api_gateway.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7799196Z copying tests/test_swagger.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7801576Z copying tests/test_docker_setup.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7804074Z copying tests/test_fogis_api_client_ai_generated.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7806882Z copying tests/test_mark_reporting_finished.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7809215Z copying tests/test_http_wrapper.py -> build/lib/tests
+deploy	Build package	2025-05-07T19:39:22.7812926Z creating build/lib/integration_tests
+deploy	Build package	2025-05-07T19:39:22.7814438Z copying integration_tests/__init__.py -> build/lib/integration_tests
+deploy	Build package	2025-05-07T19:39:22.7817235Z copying integration_tests/conftest.py -> build/lib/integration_tests
+deploy	Build package	2025-05-07T19:39:22.7819650Z copying integration_tests/sample_data.py -> build/lib/integration_tests
+deploy	Build package	2025-05-07T19:39:22.7822149Z copying integration_tests/sample_data_factory.py -> build/lib/integration_tests
+deploy	Build package	2025-05-07T19:39:22.7824927Z copying integration_tests/test_api_endpoints.py -> build/lib/integration_tests
+deploy	Build package	2025-05-07T19:39:22.7827444Z copying integration_tests/test_with_mock_server.py -> build/lib/integration_tests
+deploy	Build package	2025-05-07T19:39:22.7830130Z copying integration_tests/mock_fogis_server.py -> build/lib/integration_tests
+deploy	Build package	2025-05-07T19:39:22.7833800Z creating build/lib/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.7835368Z copying fogis_api_client/internal/adapters.py -> build/lib/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.7838391Z copying fogis_api_client/internal/api_client.py -> build/lib/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.7840941Z copying fogis_api_client/internal/types.py -> build/lib/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.7843358Z copying fogis_api_client/internal/__init__.py -> build/lib/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.7845775Z copying fogis_api_client/internal/auth.py -> build/lib/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.7848509Z copying fogis_api_client/internal/api_contracts.py -> build/lib/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.7849906Z running egg_info
+deploy	Build package	2025-05-07T19:39:22.7863745Z writing fogis_api_client_timmyBird.egg-info/PKG-INFO
+deploy	Build package	2025-05-07T19:39:22.7875297Z writing dependency_links to fogis_api_client_timmyBird.egg-info/dependency_links.txt
+deploy	Build package	2025-05-07T19:39:22.7881733Z writing requirements to fogis_api_client_timmyBird.egg-info/requires.txt
+deploy	Build package	2025-05-07T19:39:22.7883385Z writing top-level names to fogis_api_client_timmyBird.egg-info/top_level.txt
+deploy	Build package	2025-05-07T19:39:22.7914559Z reading manifest file 'fogis_api_client_timmyBird.egg-info/SOURCES.txt'
+deploy	Build package	2025-05-07T19:39:22.7922498Z adding license file 'LICENSE.txt'
+deploy	Build package	2025-05-07T19:39:22.7936698Z writing manifest file 'fogis_api_client_timmyBird.egg-info/SOURCES.txt'
+deploy	Build package	2025-05-07T19:39:22.8035660Z installing to build/bdist.linux-x86_64/wheel
+deploy	Build package	2025-05-07T19:39:22.8036400Z running install
+deploy	Build package	2025-05-07T19:39:22.8095791Z running install_lib
+deploy	Build package	2025-05-07T19:39:22.8130597Z creating build/bdist.linux-x86_64/wheel
+deploy	Build package	2025-05-07T19:39:22.8133573Z creating build/bdist.linux-x86_64/wheel/fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8135438Z copying build/lib/fogis_api_client/match_list_filter.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8137767Z copying build/lib/fogis_api_client/types.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8139759Z copying build/lib/fogis_api_client/__init__.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8142452Z creating build/bdist.linux-x86_64/wheel/fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.8144221Z copying build/lib/fogis_api_client/internal/adapters.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.8146518Z copying build/lib/fogis_api_client/internal/api_client.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.8148795Z copying build/lib/fogis_api_client/internal/types.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.8150745Z copying build/lib/fogis_api_client/internal/__init__.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.8152654Z copying build/lib/fogis_api_client/internal/auth.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.8154627Z copying build/lib/fogis_api_client/internal/api_contracts.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client/internal
+deploy	Build package	2025-05-07T19:39:22.8156719Z copying build/lib/fogis_api_client/event_types.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8158731Z copying build/lib/fogis_api_client/public_api_client.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8161080Z copying build/lib/fogis_api_client/fogis_api_client.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8163859Z copying build/lib/fogis_api_client/enums.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8165565Z copying build/lib/fogis_api_client/api_contracts.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8167749Z copying build/lib/fogis_api_client/logging_config.py -> build/bdist.linux-x86_64/wheel/./fogis_api_client
+deploy	Build package	2025-05-07T19:39:22.8170423Z creating build/bdist.linux-x86_64/wheel/tests
+deploy	Build package	2025-05-07T19:39:22.8172444Z copying build/lib/tests/test_match_list_filter.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8174392Z copying build/lib/tests/test_parameter_names.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8176392Z copying build/lib/tests/test_auth_routes.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8178576Z copying build/lib/tests/__init__.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8180228Z copying build/lib/tests/test_lazy_login.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8182146Z copying build/lib/tests/test_fogis_api_client.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8184634Z copying build/lib/tests/test_logging_config.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8186582Z copying build/lib/tests/test_cookie_auth.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8188842Z copying build/lib/tests/test_match_result_formats.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8190544Z copying build/lib/tests/test_api_gateway.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8192391Z copying build/lib/tests/test_swagger.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8194263Z copying build/lib/tests/test_docker_setup.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8196398Z copying build/lib/tests/test_fogis_api_client_ai_generated.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8198404Z copying build/lib/tests/test_mark_reporting_finished.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8200255Z copying build/lib/tests/test_http_wrapper.py -> build/bdist.linux-x86_64/wheel/./tests
+deploy	Build package	2025-05-07T19:39:22.8203184Z creating build/bdist.linux-x86_64/wheel/integration_tests
+deploy	Build package	2025-05-07T19:39:22.8204901Z copying build/lib/integration_tests/__init__.py -> build/bdist.linux-x86_64/wheel/./integration_tests
+deploy	Build package	2025-05-07T19:39:22.8207055Z copying build/lib/integration_tests/conftest.py -> build/bdist.linux-x86_64/wheel/./integration_tests
+deploy	Build package	2025-05-07T19:39:22.8208895Z copying build/lib/integration_tests/sample_data.py -> build/bdist.linux-x86_64/wheel/./integration_tests
+deploy	Build package	2025-05-07T19:39:22.8210830Z copying build/lib/integration_tests/sample_data_factory.py -> build/bdist.linux-x86_64/wheel/./integration_tests
+deploy	Build package	2025-05-07T19:39:22.8213401Z copying build/lib/integration_tests/test_api_endpoints.py -> build/bdist.linux-x86_64/wheel/./integration_tests
+deploy	Build package	2025-05-07T19:39:22.8215113Z copying build/lib/integration_tests/test_with_mock_server.py -> build/bdist.linux-x86_64/wheel/./integration_tests
+deploy	Build package	2025-05-07T19:39:22.8217365Z copying build/lib/integration_tests/mock_fogis_server.py -> build/bdist.linux-x86_64/wheel/./integration_tests
+deploy	Build package	2025-05-07T19:39:22.8218983Z running install_egg_info
+deploy	Build package	2025-05-07T19:39:22.8272655Z Copying fogis_api_client_timmyBird.egg-info to build/bdist.linux-x86_64/wheel/./fogis_api_client_timmyBird-0.4.2-py3.9.egg-info
+deploy	Build package	2025-05-07T19:39:22.8280583Z running install_scripts
+deploy	Build package	2025-05-07T19:39:22.8291347Z creating build/bdist.linux-x86_64/wheel/fogis_api_client_timmybird-0.4.2.dist-info/WHEEL
+deploy	Build package	2025-05-07T19:39:22.8296412Z creating '/home/runner/work/fogis-api-client-python/fogis-api-client-python/dist/.tmp-12pwbh78/fogis_api_client_timmybird-0.4.2-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+deploy	Build package	2025-05-07T19:39:22.8299806Z adding 'fogis_api_client/__init__.py'
+deploy	Build package	2025-05-07T19:39:22.8302896Z adding 'fogis_api_client/api_contracts.py'
+deploy	Build package	2025-05-07T19:39:22.8305354Z adding 'fogis_api_client/enums.py'
+deploy	Build package	2025-05-07T19:39:22.8308070Z adding 'fogis_api_client/event_types.py'
+deploy	Build package	2025-05-07T19:39:22.8325367Z adding 'fogis_api_client/fogis_api_client.py'
+deploy	Build package	2025-05-07T19:39:22.8329969Z adding 'fogis_api_client/logging_config.py'
+deploy	Build package	2025-05-07T19:39:22.8333793Z adding 'fogis_api_client/match_list_filter.py'
+deploy	Build package	2025-05-07T19:39:22.8340459Z adding 'fogis_api_client/public_api_client.py'
+deploy	Build package	2025-05-07T19:39:22.8343180Z adding 'fogis_api_client/types.py'
+deploy	Build package	2025-05-07T19:39:22.8345750Z adding 'fogis_api_client/internal/__init__.py'
+deploy	Build package	2025-05-07T19:39:22.8350124Z adding 'fogis_api_client/internal/adapters.py'
+deploy	Build package	2025-05-07T19:39:22.8354306Z adding 'fogis_api_client/internal/api_client.py'
+deploy	Build package	2025-05-07T19:39:22.8359278Z adding 'fogis_api_client/internal/api_contracts.py'
+deploy	Build package	2025-05-07T19:39:22.8361914Z adding 'fogis_api_client/internal/auth.py'
+deploy	Build package	2025-05-07T19:39:22.8364484Z adding 'fogis_api_client/internal/types.py'
+deploy	Build package	2025-05-07T19:39:22.8368743Z adding 'fogis_api_client_timmybird-0.4.2.dist-info/licenses/LICENSE.txt'
+deploy	Build package	2025-05-07T19:39:22.8370975Z adding 'integration_tests/__init__.py'
+deploy	Build package	2025-05-07T19:39:22.8373547Z adding 'integration_tests/conftest.py'
+deploy	Build package	2025-05-07T19:39:22.8378882Z adding 'integration_tests/mock_fogis_server.py'
+deploy	Build package	2025-05-07T19:39:22.8382000Z adding 'integration_tests/sample_data.py'
+deploy	Build package	2025-05-07T19:39:22.8391010Z adding 'integration_tests/sample_data_factory.py'
+deploy	Build package	2025-05-07T19:39:22.8393877Z adding 'integration_tests/test_api_endpoints.py'
+deploy	Build package	2025-05-07T19:39:22.8398610Z adding 'integration_tests/test_with_mock_server.py'
+deploy	Build package	2025-05-07T19:39:22.8401109Z adding 'tests/__init__.py'
+deploy	Build package	2025-05-07T19:39:22.8403824Z adding 'tests/test_api_gateway.py'
+deploy	Build package	2025-05-07T19:39:22.8407402Z adding 'tests/test_auth_routes.py'
+deploy	Build package	2025-05-07T19:39:22.8410843Z adding 'tests/test_cookie_auth.py'
+deploy	Build package	2025-05-07T19:39:22.8413924Z adding 'tests/test_docker_setup.py'
+deploy	Build package	2025-05-07T19:39:22.8420523Z adding 'tests/test_fogis_api_client.py'
+deploy	Build package	2025-05-07T19:39:22.8424632Z adding 'tests/test_fogis_api_client_ai_generated.py'
+deploy	Build package	2025-05-07T19:39:22.8429315Z adding 'tests/test_http_wrapper.py'
+deploy	Build package	2025-05-07T19:39:22.8432345Z adding 'tests/test_lazy_login.py'
+deploy	Build package	2025-05-07T19:39:22.8435423Z adding 'tests/test_logging_config.py'
+deploy	Build package	2025-05-07T19:39:22.8438548Z adding 'tests/test_mark_reporting_finished.py'
+deploy	Build package	2025-05-07T19:39:22.8442366Z adding 'tests/test_match_list_filter.py'
+deploy	Build package	2025-05-07T19:39:22.8445261Z adding 'tests/test_match_result_formats.py'
+deploy	Build package	2025-05-07T19:39:22.8448260Z adding 'tests/test_parameter_names.py'
+deploy	Build package	2025-05-07T19:39:22.8450980Z adding 'tests/test_swagger.py'
+deploy	Build package	2025-05-07T19:39:22.8456588Z adding 'fogis_api_client_timmybird-0.4.2.dist-info/METADATA'
+deploy	Build package	2025-05-07T19:39:22.8458248Z adding 'fogis_api_client_timmybird-0.4.2.dist-info/WHEEL'
+deploy	Build package	2025-05-07T19:39:22.8459926Z adding 'fogis_api_client_timmybird-0.4.2.dist-info/top_level.txt'
+deploy	Build package	2025-05-07T19:39:22.8463802Z adding 'fogis_api_client_timmybird-0.4.2.dist-info/RECORD'
+deploy	Build package	2025-05-07T19:39:22.8466380Z removing build/bdist.linux-x86_64/wheel
+deploy	Build package	2025-05-07T19:39:22.8900654Z Successfully built fogis_api_client_timmybird-0.4.2.tar.gz and fogis_api_client_timmybird-0.4.2-py3-none-any.whl
+deploy	Build and publish	﻿2025-05-07T19:39:22.9178530Z ##[group]Run pypa/gh-action-pypi-publish@release/v1
+deploy	Build and publish	2025-05-07T19:39:22.9178857Z with:
+deploy	Build and publish	2025-05-07T19:39:22.9180286Z   password: ***
+deploy	Build and publish	2025-05-07T19:39:22.9180470Z   verbose: true
+deploy	Build and publish	2025-05-07T19:39:22.9180640Z   user: __token__
+deploy	Build and publish	2025-05-07T19:39:22.9180860Z   repository_url: https://upload.pypi.org/legacy/
+deploy	Build and publish	2025-05-07T19:39:22.9181147Z   packages_dir: dist
+deploy	Build and publish	2025-05-07T19:39:22.9181333Z   verify_metadata: true
+deploy	Build and publish	2025-05-07T19:39:22.9181527Z   skip_existing: false
+deploy	Build and publish	2025-05-07T19:39:22.9181710Z   print_hash: false
+deploy	Build and publish	2025-05-07T19:39:22.9181878Z   attestations: true
+deploy	Build and publish	2025-05-07T19:39:22.9182048Z env:
+deploy	Build and publish	2025-05-07T19:39:22.9182257Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9182636Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib/pkgconfig
+deploy	Build and publish	2025-05-07T19:39:22.9183007Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9183327Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9183651Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9184007Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib
+deploy	Build and publish	2025-05-07T19:39:22.9184286Z ##[endgroup]
+deploy	Build and publish	2025-05-07T19:39:22.9260335Z ##[group]Run # Reset path if needed
+deploy	Build and publish	2025-05-07T19:39:22.9260635Z [36;1m# Reset path if needed[0m
+deploy	Build and publish	2025-05-07T19:39:22.9260978Z [36;1m# https://github.com/pypa/gh-action-pypi-publish/issues/112[0m
+deploy	Build and publish	2025-05-07T19:39:22.9261523Z [36;1mif [[ $PATH != *"/usr/bin"* ]]; then[0m
+deploy	Build and publish	2025-05-07T19:39:22.9261850Z [36;1m  echo "\$PATH=$PATH. Resetting \$PATH for GitHub Actions."[0m
+deploy	Build and publish	2025-05-07T19:39:22.9262241Z [36;1m  PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"[0m
+deploy	Build and publish	2025-05-07T19:39:22.9262588Z [36;1m  echo "PATH=$PATH" >>"$GITHUB_ENV"[0m
+deploy	Build and publish	2025-05-07T19:39:22.9262844Z [36;1m  echo "$PATH" >>"$GITHUB_PATH"[0m
+deploy	Build and publish	2025-05-07T19:39:22.9263088Z [36;1m  echo "\$PATH reset. \$PATH=$PATH"[0m
+deploy	Build and publish	2025-05-07T19:39:22.9263319Z [36;1mfi[0m
+deploy	Build and publish	2025-05-07T19:39:22.9290114Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+deploy	Build and publish	2025-05-07T19:39:22.9290443Z env:
+deploy	Build and publish	2025-05-07T19:39:22.9290674Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9291079Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib/pkgconfig
+deploy	Build and publish	2025-05-07T19:39:22.9291464Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9291815Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9292166Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9292510Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib
+deploy	Build and publish	2025-05-07T19:39:22.9292804Z ##[endgroup]
+deploy	Build and publish	2025-05-07T19:39:22.9391404Z ##[group]Run # Set repo and ref from which to run Docker container action
+deploy	Build and publish	2025-05-07T19:39:22.9391842Z [36;1m# Set repo and ref from which to run Docker container action[0m
+deploy	Build and publish	2025-05-07T19:39:22.9392216Z [36;1m# to handle cases in which `github.action_` context is not set[0m
+deploy	Build and publish	2025-05-07T19:39:22.9392579Z [36;1m# https://github.com/actions/runner/issues/2473[0m
+deploy	Build and publish	2025-05-07T19:39:22.9392874Z [36;1mREF=release/v1[0m
+deploy	Build and publish	2025-05-07T19:39:22.9393098Z [36;1mREPO=pypa/gh-action-pypi-publish[0m
+deploy	Build and publish	2025-05-07T19:39:22.9393352Z [36;1mREPO_ID=936173898[0m
+deploy	Build and publish	2025-05-07T19:39:22.9393574Z [36;1mecho "ref=$REF" >>"$GITHUB_OUTPUT"[0m
+deploy	Build and publish	2025-05-07T19:39:22.9393844Z [36;1mecho "repo=$REPO" >>"$GITHUB_OUTPUT"[0m
+deploy	Build and publish	2025-05-07T19:39:22.9394137Z [36;1mecho "repo-id=$REPO_ID" >>"$GITHUB_OUTPUT"[0m
+deploy	Build and publish	2025-05-07T19:39:22.9417931Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+deploy	Build and publish	2025-05-07T19:39:22.9418243Z env:
+deploy	Build and publish	2025-05-07T19:39:22.9418474Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9418860Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib/pkgconfig
+deploy	Build and publish	2025-05-07T19:39:22.9419225Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9419553Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9419892Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9420219Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib
+deploy	Build and publish	2025-05-07T19:39:22.9420722Z   ACTION_REF: release/v1
+deploy	Build and publish	2025-05-07T19:39:22.9420953Z   ACTION_REPO: pypa/gh-action-pypi-publish
+deploy	Build and publish	2025-05-07T19:39:22.9421189Z   PR_REF: 
+deploy	Build and publish	2025-05-07T19:39:22.9421344Z   PR_REPO: 
+deploy	Build and publish	2025-05-07T19:39:22.9421494Z   PR_REPO_ID: 
+deploy	Build and publish	2025-05-07T19:39:22.9421676Z ##[endgroup]
+deploy	Build and publish	2025-05-07T19:39:22.9503912Z ##[group]Run # 🔎 Discover pre-installed Python
+deploy	Build and publish	2025-05-07T19:39:22.9504229Z [36;1m# 🔎 Discover pre-installed Python[0m
+deploy	Build and publish	2025-05-07T19:39:22.9504618Z [36;1mecho "python-path=$(command -v python3 || :)" | tee -a "${GITHUB_OUTPUT}"[0m
+deploy	Build and publish	2025-05-07T19:39:22.9528269Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+deploy	Build and publish	2025-05-07T19:39:22.9528586Z env:
+deploy	Build and publish	2025-05-07T19:39:22.9528823Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9529226Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib/pkgconfig
+deploy	Build and publish	2025-05-07T19:39:22.9529621Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9529985Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9530349Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9530704Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib
+deploy	Build and publish	2025-05-07T19:39:22.9530996Z ##[endgroup]
+deploy	Build and publish	2025-05-07T19:39:22.9590136Z python-path=/opt/hostedtoolcache/Python/3.9.22/x64/bin/python3
+deploy	Build and publish	2025-05-07T19:39:22.9618187Z ##[group]Run # Create Docker container action
+deploy	Build and publish	2025-05-07T19:39:22.9618496Z [36;1m# Create Docker container action[0m
+deploy	Build and publish	2025-05-07T19:39:22.9619183Z [36;1m/opt/hostedtoolcache/Python/3.9.22/x64/bin/python3 '/home/runner/work/_actions/pypa/gh-action-pypi-publish/release/v1/create-docker-action.py'[0m
+deploy	Build and publish	2025-05-07T19:39:22.9642929Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+deploy	Build and publish	2025-05-07T19:39:22.9643251Z env:
+deploy	Build and publish	2025-05-07T19:39:22.9643490Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9643889Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib/pkgconfig
+deploy	Build and publish	2025-05-07T19:39:22.9644292Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9644629Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9644975Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:22.9645326Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib
+deploy	Build and publish	2025-05-07T19:39:22.9645626Z   REF: release/v1
+deploy	Build and publish	2025-05-07T19:39:22.9645833Z   REPO: pypa/gh-action-pypi-publish
+deploy	Build and publish	2025-05-07T19:39:22.9646371Z   REPO_ID: 936173898
+deploy	Build and publish	2025-05-07T19:39:22.9646562Z ##[endgroup]
+deploy	Build and publish	2025-05-07T19:39:23.0043539Z ##[group]Run ./.github/.tmp/.generated-actions/run-pypi-publish-in-docker-container
+deploy	Build and publish	2025-05-07T19:39:23.0043942Z with:
+deploy	Build and publish	2025-05-07T19:39:23.0044107Z   user: __token__
+deploy	Build and publish	2025-05-07T19:39:23.0045439Z   password: ***
+deploy	Build and publish	2025-05-07T19:39:23.0045676Z   repository-url: https://upload.pypi.org/legacy/
+deploy	Build and publish	2025-05-07T19:39:23.0045956Z   packages-dir: dist
+deploy	Build and publish	2025-05-07T19:39:23.0046358Z   verify-metadata: true
+deploy	Build and publish	2025-05-07T19:39:23.0046558Z   skip-existing: false
+deploy	Build and publish	2025-05-07T19:39:23.0046755Z   verbose: true
+deploy	Build and publish	2025-05-07T19:39:23.0046926Z   print-hash: false
+deploy	Build and publish	2025-05-07T19:39:23.0047107Z   attestations: true
+deploy	Build and publish	2025-05-07T19:39:23.0047277Z env:
+deploy	Build and publish	2025-05-07T19:39:23.0047496Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:23.0047872Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib/pkgconfig
+deploy	Build and publish	2025-05-07T19:39:23.0048245Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:23.0048582Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:23.0048899Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.22/x64
+deploy	Build and publish	2025-05-07T19:39:23.0049250Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.22/x64/lib
+deploy	Build and publish	2025-05-07T19:39:23.0049537Z ##[endgroup]
+deploy	Build and publish	2025-05-07T19:39:23.0179975Z ##[command]/usr/bin/docker run --name ghcriopypaghactionpypipublishreleasev1_7268e4 --label 8d9cb3 --workdir /github/workspace --rm -e "pythonLocation" -e "PKG_CONFIG_PATH" -e "Python_ROOT_DIR" -e "Python2_ROOT_DIR" -e "Python3_ROOT_DIR" -e "LD_LIBRARY_PATH" -e "INPUT_USER" -e "INPUT_PASSWORD" -e "INPUT_REPOSITORY-URL" -e "INPUT_PACKAGES-DIR" -e "INPUT_VERIFY-METADATA" -e "INPUT_SKIP-EXISTING" -e "INPUT_VERBOSE" -e "INPUT_PRINT-HASH" -e "INPUT_ATTESTATIONS" -e "HOME" -e "GITHUB_JOB" -e "GITHUB_REF" -e "GITHUB_SHA" -e "GITHUB_REPOSITORY" -e "GITHUB_REPOSITORY_OWNER" -e "GITHUB_REPOSITORY_OWNER_ID" -e "GITHUB_RUN_ID" -e "GITHUB_RUN_NUMBER" -e "GITHUB_RETENTION_DAYS" -e "GITHUB_RUN_ATTEMPT" -e "GITHUB_ACTOR_ID" -e "GITHUB_ACTOR" -e "GITHUB_WORKFLOW" -e "GITHUB_HEAD_REF" -e "GITHUB_BASE_REF" -e "GITHUB_EVENT_NAME" -e "GITHUB_SERVER_URL" -e "GITHUB_API_URL" -e "GITHUB_GRAPHQL_URL" -e "GITHUB_REF_NAME" -e "GITHUB_REF_PROTECTED" -e "GITHUB_REF_TYPE" -e "GITHUB_WORKFLOW_REF" -e "GITHUB_WORKFLOW_SHA" -e "GITHUB_REPOSITORY_ID" -e "GITHUB_TRIGGERING_ACTOR" -e "GITHUB_WORKSPACE" -e "GITHUB_ACTION" -e "GITHUB_EVENT_PATH" -e "GITHUB_ACTION_REPOSITORY" -e "GITHUB_ACTION_REF" -e "GITHUB_PATH" -e "GITHUB_ENV" -e "GITHUB_STEP_SUMMARY" -e "GITHUB_STATE" -e "GITHUB_OUTPUT" -e "GITHUB_ACTION_PATH" -e "RUNNER_OS" -e "RUNNER_ARCH" -e "RUNNER_NAME" -e "RUNNER_ENVIRONMENT" -e "RUNNER_TOOL_CACHE" -e "RUNNER_TEMP" -e "RUNNER_WORKSPACE" -e "ACTIONS_RUNTIME_URL" -e "ACTIONS_RUNTIME_TOKEN" -e "ACTIONS_CACHE_URL" -e "ACTIONS_RESULTS_URL" -e GITHUB_ACTIONS=true -e CI=true -v "/var/run/docker.sock":"/var/run/docker.sock" -v "/home/runner/work/_temp/_github_home":"/github/home" -v "/home/runner/work/_temp/_github_workflow":"/github/workflow" -v "/home/runner/work/_temp/_runner_file_commands":"/github/file_commands" -v "/home/runner/work/fogis-api-client-python/fogis-api-client-python":"/github/workspace" ghcr.io/pypa/gh-action-pypi-publish:release-v1
+deploy	Build and publish	2025-05-07T19:39:23.0753282Z Unable to find image 'ghcr.io/pypa/gh-action-pypi-publish:release-v1' locally
+deploy	Build and publish	2025-05-07T19:39:23.7026582Z release-v1: Pulling from pypa/gh-action-pypi-publish
+deploy	Build and publish	2025-05-07T19:39:23.7029631Z d2eb42b4a5eb: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7031045Z 58c78b362c25: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7031847Z 6eae4ea23f4a: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7032943Z c9727c30039b: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7033367Z 477c5ba6d644: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7033755Z 43dd67ced694: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7034145Z 7d23d4cf0062: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7034502Z b7609a7f935b: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7034893Z 17c03e7b6fa9: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7035282Z 15a640bd1d1d: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7035661Z dc6a6ee9c3c0: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7036232Z 61e0b23c0587: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7036630Z e8e6542f440c: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7037015Z 4f4fb700ef54: Pulling fs layer
+deploy	Build and publish	2025-05-07T19:39:23.7040866Z 17c03e7b6fa9: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7041268Z 15a640bd1d1d: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7041593Z dc6a6ee9c3c0: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7041897Z 61e0b23c0587: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7042212Z b7609a7f935b: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7042516Z 4f4fb700ef54: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7042836Z e8e6542f440c: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7043143Z c9727c30039b: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7043435Z 477c5ba6d644: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7043735Z 43dd67ced694: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.7044042Z 7d23d4cf0062: Waiting
+deploy	Build and publish	2025-05-07T19:39:23.8936248Z 58c78b362c25: Download complete
+deploy	Build and publish	2025-05-07T19:39:23.9529546Z 6eae4ea23f4a: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:23.9530054Z 6eae4ea23f4a: Download complete
+deploy	Build and publish	2025-05-07T19:39:23.9712361Z d2eb42b4a5eb: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:23.9712864Z d2eb42b4a5eb: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.1100247Z c9727c30039b: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.1101100Z c9727c30039b: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.2005010Z 477c5ba6d644: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.2005587Z 477c5ba6d644: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.3333912Z 7d23d4cf0062: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.3334732Z 7d23d4cf0062: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.3719777Z b7609a7f935b: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.3720280Z b7609a7f935b: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.5008613Z 17c03e7b6fa9: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.5009192Z 17c03e7b6fa9: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.6017282Z 15a640bd1d1d: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.6017826Z 15a640bd1d1d: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.6727950Z dc6a6ee9c3c0: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.6728474Z dc6a6ee9c3c0: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.7902749Z 61e0b23c0587: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.7903285Z 61e0b23c0587: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.8466344Z 43dd67ced694: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.9721173Z e8e6542f440c: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.9721580Z e8e6542f440c: Download complete
+deploy	Build and publish	2025-05-07T19:39:24.9729189Z 4f4fb700ef54: Verifying Checksum
+deploy	Build and publish	2025-05-07T19:39:24.9729615Z 4f4fb700ef54: Download complete
+deploy	Build and publish	2025-05-07T19:39:25.0402252Z d2eb42b4a5eb: Pull complete
+deploy	Build and publish	2025-05-07T19:39:25.3995070Z 58c78b362c25: Pull complete
+deploy	Build and publish	2025-05-07T19:39:26.0280047Z 6eae4ea23f4a: Pull complete
+deploy	Build and publish	2025-05-07T19:39:26.0400482Z c9727c30039b: Pull complete
+deploy	Build and publish	2025-05-07T19:39:26.0510593Z 477c5ba6d644: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.5158787Z 43dd67ced694: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.5261373Z 7d23d4cf0062: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.5375884Z b7609a7f935b: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.5479843Z 17c03e7b6fa9: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.5587861Z 15a640bd1d1d: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.5683386Z dc6a6ee9c3c0: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.5779236Z 61e0b23c0587: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.5917483Z e8e6542f440c: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.6002713Z 4f4fb700ef54: Pull complete
+deploy	Build and publish	2025-05-07T19:39:27.6045388Z Digest: sha256:95f6a263932ad985f1b29df33a1748fddb8b92b46b7c95a2a3b3c6c7506096a3
+deploy	Build and publish	2025-05-07T19:39:27.6061547Z Status: Downloaded newer image for ghcr.io/pypa/gh-action-pypi-publish:release-v1
+deploy	Build and publish	2025-05-07T19:39:28.1031902Z ##[warning]The workflow was run with the 'attestations: true' input, but an explicit password was also set, disabling Trusted Publishing. As a result, the attestations input is ignored.
+deploy	Build and publish	2025-05-07T19:39:28.1036495Z ##[warning]Trusted Publishers allows publishing packages to PyPI from automated environments like GitHub Actions without needing to use username/password combinations or API tokens to authenticate with PyPI. Read more: https://docs.pypi.org/trusted-publishers
+deploy	Build and publish	2025-05-07T19:39:28.1039908Z ##[warning]A new Trusted Publisher for the currently running publishing workflow can be created by accessing the following link(s) while logged-in as an owner of the package(s):
+deploy	Build and publish	2025-05-07T19:39:28.1041191Z - https://pypi.org/manage/project/fogis-api-client-timmybird/settings/publishing/?provider=github&owner=PitchConnect&repository=fogis-api-client-python&workflow_filename=publish-to-pypi.yml
+deploy	Build and publish	2025-05-07T19:39:28.1041900Z 
+deploy	Build and publish	2025-05-07T19:39:28.7894063Z Checking dist/fogis_api_client_timmybird-0.4.2-py3-none-any.whl: [32mPASSED[0m
+deploy	Build and publish	2025-05-07T19:39:28.8012925Z Checking dist/fogis_api_client_timmybird-0.4.2.tar.gz: [32mPASSED[0m
+deploy	Build and publish	2025-05-07T19:39:28.9314678Z Showing hash values of files to be uploaded:
+deploy	Build and publish	2025-05-07T19:39:28.9315895Z /github/workspace/dist/fogis_api_client_timmybird-0.4.2.tar.gz
+deploy	Build and publish	2025-05-07T19:39:28.9317063Z 
+deploy	Build and publish	2025-05-07T19:39:28.9318001Z SHA256: 5aa60ae7cda501383ae8500c0ae6d3b051fb8b147d1d7cf77593295c7f1cce1d
+deploy	Build and publish	2025-05-07T19:39:28.9318917Z MD5: 628fea1dc8b648ed652fb9b70e306381
+deploy	Build and publish	2025-05-07T19:39:28.9319490Z BLAKE2-256: cb5d993e23d4a9e5cba03977c5b3f28045277cc7bba73e0444cc0ba501c12d00
+deploy	Build and publish	2025-05-07T19:39:28.9319980Z 
+deploy	Build and publish	2025-05-07T19:39:28.9320392Z /github/workspace/dist/fogis_api_client_timmybird-0.4.2-py3-none-any.whl
+deploy	Build and publish	2025-05-07T19:39:28.9321131Z 
+deploy	Build and publish	2025-05-07T19:39:28.9321879Z SHA256: c68619e3c9dc0d3098d0082e8efa43fb2191a1ffe8b55a734b76cfc14e714d90
+deploy	Build and publish	2025-05-07T19:39:28.9322825Z MD5: 7cb1177abfc49d94dbf759803fd500ef
+deploy	Build and publish	2025-05-07T19:39:28.9323432Z BLAKE2-256: 3edfcd953a6ffbe40bec4d8ae57c692485f1440e81be3b82774cacd4555bf680
+deploy	Build and publish	2025-05-07T19:39:28.9323895Z 
+deploy	Build and publish	2025-05-07T19:39:29.5959076Z Uploading distributions to https://upload.pypi.org/legacy/
+deploy	Build and publish	2025-05-07T19:39:29.6033193Z [34mINFO    [0m dist/fogis_api_client_timmybird-0.4.2-py3-none-any.whl (87.4 KB)       
+deploy	Build and publish	2025-05-07T19:39:29.6160839Z [34mINFO    [0m dist/fogis_api_client_timmybird-0.4.2.tar.gz (77.0 KB)                 
+deploy	Build and publish	2025-05-07T19:39:29.6168162Z [34mINFO    [0m username set by command options                                        
+deploy	Build and publish	2025-05-07T19:39:29.6174296Z [34mINFO    [0m password set by command options                                        
+deploy	Build and publish	2025-05-07T19:39:29.6185034Z [34mINFO    [0m username: __token__                                                    
+deploy	Build and publish	2025-05-07T19:39:29.6191679Z [34mINFO    [0m password: <hidden>                                                     
+deploy	Build and publish	2025-05-07T19:39:29.6194869Z Uploading fogis_api_client_timmybird-0.4.2-py3-none-any.whl
+deploy	Build and publish	2025-05-07T19:39:30.3256256Z [34mINFO    [0m Response from https://upload.pypi.org/legacy/:                         
+deploy	Build and publish	2025-05-07T19:39:30.3257111Z          400 File already exists                                                
+deploy	Build and publish	2025-05-07T19:39:30.3257824Z          ('fogis_api_client_timmybird-0.4.2-py3-none-any.whl', with blake2_256  
+deploy	Build and publish	2025-05-07T19:39:30.3258502Z          hash                                                                   
+deploy	Build and publish	2025-05-07T19:39:30.3259173Z          '3edfcd953a6ffbe40bec4d8ae57c692485f1440e81be3b82774cacd4555bf680').   
+deploy	Build and publish	2025-05-07T19:39:30.3259973Z          See https://pypi.org/help/#file-name-reuse for more information.       
+deploy	Build and publish	2025-05-07T19:39:30.3273178Z [34mINFO    [0m <html>                                                                 
+deploy	Build and publish	2025-05-07T19:39:30.3273800Z           <head>                                                                
+deploy	Build and publish	2025-05-07T19:39:30.3274336Z            <title>400 File already exists                                       
+deploy	Build and publish	2025-05-07T19:39:30.3274973Z          ('fogis_api_client_timmybird-0.4.2-py3-none-any.whl', with blake2_256  
+deploy	Build and publish	2025-05-07T19:39:30.3275533Z          hash                                                                   
+deploy	Build and publish	2025-05-07T19:39:30.3276329Z          '3edfcd953a6ffbe40bec4d8ae57c692485f1440e81be3b82774cacd4555bf680').   
+deploy	Build and publish	2025-05-07T19:39:30.3277069Z          See https://pypi.org/help/#file-name-reuse for more                    
+deploy	Build and publish	2025-05-07T19:39:30.3277690Z          information.</title>                                                   
+deploy	Build and publish	2025-05-07T19:39:30.3278195Z           </head>                                                               
+deploy	Build and publish	2025-05-07T19:39:30.3278645Z           <body>                                                                
+deploy	Build and publish	2025-05-07T19:39:30.3279142Z            <h1>400 File already exists                                          
+deploy	Build and publish	2025-05-07T19:39:30.3279756Z          ('fogis_api_client_timmybird-0.4.2-py3-none-any.whl', with blake2_256  
+deploy	Build and publish	2025-05-07T19:39:30.3280311Z          hash                                                                   
+deploy	Build and publish	2025-05-07T19:39:30.3280920Z          '3edfcd953a6ffbe40bec4d8ae57c692485f1440e81be3b82774cacd4555bf680').   
+deploy	Build and publish	2025-05-07T19:39:30.3282449Z          See https://pypi.org/help/#file-name-reuse for more information.</h1>  
+deploy	Build and publish	2025-05-07T19:39:30.3283588Z            The server could not comply with the request since it is either      
+deploy	Build and publish	2025-05-07T19:39:30.3284561Z          malformed or otherwise incorrect.<br/><br/>                            
+deploy	Build and publish	2025-05-07T19:39:30.3285035Z          File already exists                                                    
+deploy	Build and publish	2025-05-07T19:39:30.3285477Z          (&#x27;fogis_api_client_timmybird-0.4.2-py3-none-any.whl&#x27;, with   
+deploy	Build and publish	2025-05-07T19:39:30.3285889Z          blake2_256 hash                                                        
+deploy	Build and publish	2025-05-07T19:39:30.3286523Z          &#x27;3edfcd953a6ffbe40bec4d8ae57c692485f1440e81be3b82774cacd4555bf680&
+deploy	Build and publish	2025-05-07T19:39:30.3287005Z          #x27;). See https://pypi.org/help/#file-name-reuse for more            
+deploy	Build and publish	2025-05-07T19:39:30.3287406Z          information.                                                           
+deploy	Build and publish	2025-05-07T19:39:30.3287757Z                                                                                 
+deploy	Build and publish	2025-05-07T19:39:30.3288039Z                                                                                 
+deploy	Build and publish	2025-05-07T19:39:30.3288577Z           </body>                                                               
+deploy	Build and publish	2025-05-07T19:39:30.3288889Z          </html>                                                                
+deploy	Build and publish	2025-05-07T19:39:30.3289441Z [31mERROR   [0m HTTPError: 400 Bad Request from https://upload.pypi.org/legacy/        
+deploy	Build and publish	2025-05-07T19:39:30.3289920Z          File already exists                                                    
+deploy	Build and publish	2025-05-07T19:39:30.3290355Z          ('fogis_api_client_timmybird-0.4.2-py3-none-any.whl', with blake2_256  
+deploy	Build and publish	2025-05-07T19:39:30.3290742Z          hash                                                                   
+deploy	Build and publish	2025-05-07T19:39:30.3291147Z          '3edfcd953a6ffbe40bec4d8ae57c692485f1440e81be3b82774cacd4555bf680').   
+deploy	Build and publish	2025-05-07T19:39:30.3291640Z          See https://pypi.org/help/#file-name-reuse for more information.       
+deploy	Post Build and publish	﻿2025-05-07T19:39:30.4487085Z Post job cleanup.
+deploy	Post Run actions/checkout@v3	﻿2025-05-07T19:39:30.4530232Z Post job cleanup.
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5248727Z [command]/usr/bin/git version
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5283352Z git version 2.49.0
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5325498Z Temporarily overriding HOME='/home/runner/work/_temp/40ad1aab-0921-4fda-84f3-53a089481c7e' before making global git config changes
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5326878Z Adding repository directory to the temporary git global config as a safe directory
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5330022Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/fogis-api-client-python/fogis-api-client-python
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5362341Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5391326Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5620427Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5640506Z http.https://github.com/.extraheader
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5651548Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+deploy	Post Run actions/checkout@v3	2025-05-07T19:39:30.5679601Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+deploy	Complete job	﻿2025-05-07T19:39:30.6010180Z Cleaning up orphan processes

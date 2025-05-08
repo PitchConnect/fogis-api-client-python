@@ -102,6 +102,13 @@ MATCH_EVENT_SCHEMA = {
         "strafflage": {"type": ["string", "null"]},
         "straffriktning": {"type": ["string", "null"]},
         "straffresultat": {"type": ["string", "null"]},
+        # Default values for rarely used fields
+        "sekund": {"type": ["integer", "null"], "default": 0},
+        "planpositionx": {"type": ["string", "null"], "default": "-1"},
+        "planpositiony": {"type": ["string", "null"], "default": "-1"},
+        "relateradTillMatchhandelseID": {"type": ["integer", "null"], "default": 0},
+        "spelareid2": {"type": ["integer", "null"], "default": -1},
+        "matchdeltagareid2": {"type": ["integer", "null"], "default": -1},
     },
     "additionalProperties": False,
 }

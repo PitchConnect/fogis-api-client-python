@@ -69,9 +69,9 @@ try:
 
     # Group events by type
     goals = [event for event in events if event.get('mal', False)]
-    yellow_cards = [event for event in events if event.get('handelsekod') == 20]
-    red_cards = [event for event in events if event.get('handelsekod') in [8, 9]]
-    substitutions = [event for event in events if event.get('handelsekod') == 17]
+    yellow_cards = [event for event in events if event.get('matchhandelsetypid') == 20]
+    red_cards = [event for event in events if event.get('matchhandelsetypid') in [8, 9]]
+    substitutions = [event for event in events if event.get('matchhandelsetypid') == 17]
 
     print(f"Goals: {len(goals)}")
     print(f"Yellow cards: {len(yellow_cards)}")
@@ -80,26 +80,26 @@ try:
 
     # Print event details
     print("\nEvent Timeline:")
-    sorted_events = sorted(events, key=lambda e: e.get('minut', 0))
+    sorted_events = sorted(events, key=lambda e: e.get('matchminut', 0))
 
     for event in sorted_events:
         event_id = event.get('matchhandelseid')
-        minute = event.get('minut', 0)
+        minute = event.get('matchminut', 0)
         period = event.get('period', 1)
-        team_name = event.get('lag', '')
-        player_name = event.get('spelare', 'Unknown')
-        event_type = event.get('handelsetyp', 'Unknown')
+        team_name = event.get('matchlagnamn', '')
+        player_name = event.get('spelarenamn', 'Unknown')
+        event_type = event.get('matchhandelsetypnamn', 'Unknown')
 
         # Format the event description
         if event.get('mal', False):
-            home_score = event.get('resultatHemma', 0)
-            away_score = event.get('resultatBorta', 0)
+            home_score = event.get('hemmamal', 0)
+            away_score = event.get('bortamal', 0)
             print(f"{minute}' - GOAL! {player_name} ({team_name}) - Score: {home_score}-{away_score}")
-        elif event.get('handelsekod') == 20:
+        elif event.get('matchhandelsetypid') == 20:
             print(f"{minute}' - YELLOW CARD: {player_name} ({team_name})")
-        elif event.get('handelsekod') in [8, 9]:
+        elif event.get('matchhandelsetypid') in [8, 9]:
             print(f"{minute}' - RED CARD: {player_name} ({team_name})")
-        elif event.get('handelsekod') == 17:
+        elif event.get('matchhandelsetypid') == 17:
             player_in = player_name
             player_out = event.get('assisterande', 'Unknown')
             print(f"{minute}' - SUBSTITUTION: {player_in} IN, {player_out} OUT ({team_name})")
@@ -125,7 +125,7 @@ try:
     away_players = players.get('bortalag', [])
 
     # Example: Report a goal by a home team player
-    scorer_id = home_players[0]['personid']  # ID of the player who scored
+    scorer_id = home_players[0]['spelareid']  # ID of the player who scored
 
     # Print available event types for reference
     print("\nAvailable Event Types:")
@@ -135,13 +135,13 @@ try:
     # Create the event data
     goal_event = {
         "matchid": match_id,
-        "handelsekod": 6,  # Regular goal (see EVENT_TYPES for other goal types)
-        "minut": 80,  # Minute when the goal was scored
-        "lagid": home_team_id,
-        "personid": scorer_id,
+        "matchhandelsetypid": 6,  # Regular goal (see EVENT_TYPES for other goal types)
+        "matchminut": 80,  # Minute when the goal was scored
+        "matchlagid": home_team_id,
+        "spelareid": scorer_id,
         "period": 2,  # 1 for first half, 2 for second half
-        "resultatHemma": 2,  # Updated score for home team
-        "resultatBorta": 1   # Updated score for away team
+        "hemmamal": 2,  # Updated score for home team
+        "bortamal": 1   # Updated score for away team
     }
 
     # Report the event
@@ -206,24 +206,24 @@ try:
 
     # Print updated event timeline
     print("\nUpdated Event Timeline:")
-    sorted_events = sorted(updated_events, key=lambda e: e.get('minut', 0))
+    sorted_events = sorted(updated_events, key=lambda e: e.get('matchminut', 0))
 
     for event in sorted_events:
-        minute = event.get('minut', 0)
-        team_name = event.get('lag', '')
-        player_name = event.get('spelare', 'Unknown')
-        event_type = event.get('handelsetyp', 'Unknown')
+        minute = event.get('matchminut', 0)
+        team_name = event.get('matchlagnamn', '')
+        player_name = event.get('spelarenamn', 'Unknown')
+        event_type = event.get('matchhandelsetypnamn', 'Unknown')
 
         # Format the event description
         if event.get('mal', False):
-            home_score = event.get('resultatHemma', 0)
-            away_score = event.get('resultatBorta', 0)
+            home_score = event.get('hemmamal', 0)
+            away_score = event.get('bortamal', 0)
             print(f"{minute}' - GOAL! {player_name} ({team_name}) - Score: {home_score}-{away_score}")
-        elif event.get('handelsekod') == 20:
+        elif event.get('matchhandelsetypid') == 20:
             print(f"{minute}' - YELLOW CARD: {player_name} ({team_name})")
-        elif event.get('handelsekod') in [8, 9]:
+        elif event.get('matchhandelsetypid') in [8, 9]:
             print(f"{minute}' - RED CARD: {player_name} ({team_name})")
-        elif event.get('handelsekod') == 17:
+        elif event.get('matchhandelsetypid') == 17:
             player_in = player_name
             player_out = event.get('assisterande', 'Unknown')
             print(f"{minute}' - SUBSTITUTION: {player_in} IN, {player_out} OUT ({team_name})")
