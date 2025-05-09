@@ -180,7 +180,8 @@ class MockFogisServer:
             match_list = MockDataFactory.generate_match_list()
 
             # Extract the match list from the response and format it for the new API
-            matches_data = json.loads(match_list["d"])
+            # The match_list["d"] is already a JSON string, so we need to parse it
+            matches_data = json.loads(match_list["d"]) if isinstance(match_list["d"], str) else match_list["d"]
 
             # Create a response in the format expected by the new API
             response_data = {
