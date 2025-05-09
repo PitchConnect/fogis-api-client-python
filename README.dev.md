@@ -54,9 +54,11 @@ We provide a Docker-based development environment that makes it easy to develop 
 
 ### Running Integration Tests
 
-To run the integration tests:
+There are two ways to run the integration tests:
 
-```
+#### Using Docker (Recommended for CI/CD)
+
+```bash
 ./run_integration_tests.sh
 ```
 
@@ -64,6 +66,25 @@ This will:
 - Start the development environment if it's not already running
 - Run the integration tests against the API
 - Show the test results
+
+#### Using Local Mock Server (Recommended for Development)
+
+1. Install the mock server dependencies:
+   ```bash
+   pip install -e ".[dev,mock-server]"
+   ```
+
+2. Start the mock server in a separate terminal:
+   ```bash
+   python scripts/run_mock_server.py
+   ```
+
+3. Run the integration tests:
+   ```bash
+   python -m pytest integration_tests
+   ```
+
+The mock server provides a simulated FOGIS API environment for testing without requiring Docker or real credentials.
 
 ### Development Workflow
 

@@ -86,14 +86,42 @@ This script will:
 
 ### Running Tests Locally
 
-To run the integration tests without Docker:
+There are two ways to run the integration tests locally:
+
+#### Using the Pytest Fixture (Automatic Mock Server)
+
+The simplest way is to let the pytest fixture start the mock server automatically:
 
 ```bash
 python -m pytest integration_tests/test_with_mock_server.py -v
 python -m pytest integration_tests/test_match_result_reporting.py -v
 ```
 
-Note: When running locally, you'll need to start the mock server manually or use the pytest fixtures to start it automatically.
+This approach uses the `mock_fogis_server` fixture in `conftest.py` to start the mock server in a separate thread during test execution.
+
+#### Using the Standalone Mock Server (Recommended for Development)
+
+For development and debugging, it's often better to run the mock server separately:
+
+1. Install the mock server dependencies:
+   ```bash
+   pip install -e ".[dev,mock-server]"
+   ```
+
+2. Start the mock server in a separate terminal:
+   ```bash
+   python scripts/run_mock_server.py
+   ```
+
+3. Run the integration tests:
+   ```bash
+   python -m pytest integration_tests
+   ```
+
+Running the mock server separately allows you to:
+- Inspect the server logs in real-time
+- Keep the server running between test runs
+- Test individual API endpoints manually using tools like curl or Postman
 
 ## Request Validation
 

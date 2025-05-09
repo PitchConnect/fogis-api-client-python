@@ -37,6 +37,12 @@ setuptools.setup(
             "flake8",
             "flask-cors",
         ],
+        "mock-server": [
+            "flask",
+            "flask-swagger-ui",
+            "apispec>=6.0.0",
+            "marshmallow>=3.26.0",
+        ],
     },
     include_package_data=True,
 )

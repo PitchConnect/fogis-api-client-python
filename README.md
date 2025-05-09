@@ -135,9 +135,41 @@ This project includes comprehensive integration tests to verify that the client 
 - **No Real Credentials**: Test without needing actual FOGIS credentials
 - **Fast and Reliable**: Tests run quickly and consistently in any environment
 
+### Mock Server
+
+The mock server simulates the FOGIS API for testing and development. You can use it in two ways:
+
+#### Using the CLI Tool
+
+```bash
+# Install the mock server dependencies
+pip install -e ".[mock-server]"
+
+# Start the mock server
+python -m fogis_api_client.cli.mock_server
+
+# With custom host and port
+python -m fogis_api_client.cli.mock_server --host 0.0.0.0 --port 5001
+```
+
+#### Using the Standalone Script
+
+```bash
+# Start the mock server
+python scripts/run_mock_server.py
+```
+
+The mock server provides a simulated FOGIS API environment that you can use for:
+- Running integration tests without Docker
+- Developing and testing new features
+- Debugging API interactions
+- Testing client applications without real credentials
+
 ### Running Integration Tests
 
-The easiest way to run integration tests is using the provided script:
+There are multiple ways to run integration tests:
+
+#### Using Docker (Recommended for CI/CD)
 
 ```bash
 ./run_integration_tests.sh
@@ -147,6 +179,16 @@ This script will:
 1. Start a Docker environment with the mock FOGIS server
 2. Run all integration tests against the mock server
 3. Report the results and clean up the environment
+
+#### Using Local Mock Server (Recommended for Development)
+
+```bash
+# In terminal 1: Start the mock server
+python -m fogis_api_client.cli.mock_server
+
+# In terminal 2: Run the tests
+python -m pytest integration_tests
+```
 
 You can also run specific test files directly:
 
