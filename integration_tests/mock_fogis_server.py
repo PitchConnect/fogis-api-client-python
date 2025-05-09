@@ -189,7 +189,7 @@ class MockFogisServer:
                 "anvandare": None,
                 "anvandareforeningid": 0,
                 "anvandartyp": "Domare",
-                "matcher": matches_data["matcher"],
+                "matcher": matches_data["matchlista"],  # This is what the client expects
                 "success": True
             }
 
