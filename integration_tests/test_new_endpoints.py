@@ -30,9 +30,9 @@ def test_fetch_endpoints(
     # Get a random match ID
     matches = fogis_test_client.fetch_matches_list_json()
     assert matches is not None
-    assert "matcher" in matches
-    assert len(matches["matcher"]) > 0
-    match_id = matches["matcher"][0]["matchid"]
+    assert "matchlista" in matches
+    assert len(matches["matchlista"]) > 0
+    match_id = matches["matchlista"][0]["matchid"]
 
     # Call the endpoint method
     method = getattr(fogis_test_client, endpoint_method)
@@ -49,9 +49,9 @@ def test_delete_match_event(fogis_test_client: FogisApiClient, clear_request_his
     # Get a random match ID
     matches = fogis_test_client.fetch_matches_list_json()
     assert matches is not None
-    assert "matcher" in matches
-    assert len(matches["matcher"]) > 0
-    match_id = matches["matcher"][0]["matchid"]
+    assert "matchlista" in matches
+    assert len(matches["matchlista"]) > 0
+    match_id = matches["matchlista"][0]["matchid"]
 
     # Get events for the match
     events = fogis_test_client.fetch_match_events_json(match_id)
@@ -71,9 +71,9 @@ def test_team_official_action(fogis_test_client: FogisApiClient, clear_request_h
     # Get a random match ID
     matches = fogis_test_client.fetch_matches_list_json()
     assert matches is not None
-    assert "matcher" in matches
-    assert len(matches["matcher"]) > 0
-    match_id = matches["matcher"][0]["matchid"]
+    assert "matchlista" in matches
+    assert len(matches["matchlista"]) > 0
+    match_id = matches["matchlista"][0]["matchid"]
 
     # Get team IDs
     match_details = fogis_test_client.fetch_match_json(match_id)
