@@ -165,6 +165,23 @@ class MockFogisServer:
             # Return the response
             return jsonify(match_list_response)
 
+        # Match list endpoint (new API version)
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatcherAttRapportera", methods=["POST"])
+        def fetch_matches_list_new():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Parse filter from request
+            data = request.json or {}
+            filter_params = data.get("filter", {})
+
+            # Generate a fresh match list using the factory
+            match_list_response = MockDataFactory.generate_match_list()
+
+            # Return the response
+            return jsonify({"d": json.dumps(match_list_response["d"])})
+
         # Match details endpoint
         @self.app.route("/mdk/MatchWebMetoder.aspx/HamtaMatch", methods=["POST"])
         def fetch_match():
