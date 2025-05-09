@@ -183,13 +183,14 @@ class MockFogisServer:
             # The match_list["d"] is already a JSON string, so we need to parse it
             matches_data = json.loads(match_list["d"]) if isinstance(match_list["d"], str) else match_list["d"]
 
-            # Create a response in the format expected by the new API
+            # Create a response in the format expected by the client
+            # The client expects a response with a matchlista field
             response_data = {
                 "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatcherAttRapportera",
                 "anvandare": None,
                 "anvandareforeningid": 0,
                 "anvandartyp": "Domare",
-                "matcher": matches_data["matchlista"],  # This is what the client expects
+                "matchlista": matches_data["matchlista"],  # This is what the client expects
                 "success": True
             }
 
