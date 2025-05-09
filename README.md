@@ -184,11 +184,32 @@ This script will:
 
 ```bash
 # In terminal 1: Start the mock server
-python -m fogis_api_client.cli.mock_server
+python -m fogis_api_client.cli.mock_server start
 
 # In terminal 2: Run the tests
 python -m pytest integration_tests
 ```
+
+The mock server CLI provides many useful commands for development and testing:
+
+```bash
+# Show help
+python -m fogis_api_client.cli.mock_server --help
+
+# Check the status of the mock server
+python -m fogis_api_client.cli.mock_server status
+
+# View request history
+python -m fogis_api_client.cli.mock_server history view
+
+# Test an endpoint
+python -m fogis_api_client.cli.mock_server test /mdk/Login.aspx --method POST
+
+# Stop the mock server
+python -m fogis_api_client.cli.mock_server stop
+```
+
+See the [CLI README](fogis_api_client/cli/README.md) for more details on the available commands.
 
 You can also run specific test files directly:
 

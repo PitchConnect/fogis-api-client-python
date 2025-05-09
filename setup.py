@@ -42,6 +42,7 @@ setuptools.setup(
             "flask-swagger-ui",
             "apispec>=6.0.0",
             "marshmallow>=3.26.0",
+            "requests",
         ],
     },
     include_package_data=True,
