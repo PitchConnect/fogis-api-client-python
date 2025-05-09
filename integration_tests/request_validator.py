@@ -62,7 +62,7 @@ class RequestValidator:
         },
         # Team official endpoints
         "/MatchWebMetoder.aspx/SparaMatchlagledare": {
-            "required_fields": ["matchlagid", "personid", "roll"]
+            "required_fields": ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid"]
         },
         # Match participant endpoints
         "/MatchWebMetoder.aspx/SparaMatchdeltagare": {
