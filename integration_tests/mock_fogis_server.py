@@ -74,6 +74,12 @@ class MockFogisServer:
         # Register routes
         self._register_routes()
 
+        # Register before_request handler to track all requests
+        @self.app.before_request
+        def track_request():
+            """Track all requests to the server."""
+            self._track_request(request.path)
+
     def _register_routes(self):
         """Register the API routes."""
 
@@ -627,6 +633,9 @@ class MockFogisServer:
         """
         logger.info(f"Starting mock FOGIS server on {self.host}:{self.port}")
 
+        # Set the running flag before registering routes
+        self.is_running = True
+
         # Register CLI API routes
         try:
             self._register_cli_routes()
@@ -638,10 +647,8 @@ class MockFogisServer:
             self.server_thread = threading.Thread(target=self._run_server)
             self.server_thread.daemon = True
             self.server_thread.start()
-            self.is_running = True
             return self.server_thread
         else:
-            self.is_running = True
             self._run_server()
 
     def _run_server(self):
@@ -651,11 +658,41 @@ class MockFogisServer:
     def shutdown(self):
         """Shutdown the server."""
         self.is_running = False
-        # TODO: Implement proper Flask server shutdown
-        func = request.environ.get('werkzeug.server.shutdown')
-        if func is None:
-            raise RuntimeError('Not running with the Werkzeug Server')
-        func()
+
+        try:
+            # Try to use the Werkzeug shutdown function
+            func = request.environ.get('werkzeug.server.shutdown')
+            if func is not None:
+                func()
+                return
+        except Exception as e:
+            logger.warning(f"Error shutting down server: {e}")
+
+        # If we can't use the Werkzeug shutdown function, try to stop the thread
+        if self.server_thread is not None and self.server_thread.is_alive():
+            # We can't really stop the thread, but we can set the flag
+            # and let it exit gracefully
+            logger.info("Server thread is still running, setting shutdown flag")
+            self.is_running = False
+
+    def _track_request(self, endpoint: str):
+        """Track a request in the request history.
+
+        Args:
+            endpoint: The endpoint that was requested
+        """
+        request_data = {
+            "timestamp": datetime.now().isoformat(),
+            "method": request.method,
+            "endpoint": endpoint,
+            "path": request.path,
+            "args": dict(request.args),
+            "headers": dict(request.headers),
+            "data": request.get_data(as_text=True) if request.data else None,
+            "json": request.json if request.is_json else None,
+            "form": dict(request.form) if request.form else None,
+        }
+        self.request_history.append(request_data)
 
     def get_url(self) -> str:
         """Get the URL of the mock server."""
