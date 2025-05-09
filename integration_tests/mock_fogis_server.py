@@ -8,8 +8,10 @@ for integration testing without requiring real credentials or internet access.
 import json
 import logging
 import random
+import threading
+import time
 from datetime import datetime
-from typing import Dict, List, Any, Tuple, Optional
+from typing import Dict, List, Any, Tuple, Optional, Union
 
 from flask import Flask, Response, jsonify, request, session
 
@@ -48,6 +50,17 @@ class MockFogisServer:
 
         # Store session data
         self.sessions: Dict[str, Dict] = {}
+
+        # Store request history
+        self.request_history: List[Dict[str, Any]] = []
+
+        # Request validation flag
+        self.validation_enabled = True
+
+        # Server status
+        self.server_thread: Optional[threading.Thread] = None
+        self.is_running = False
+        self.shutdown_requested = False
 
         # Store reported events
         self.reported_events: List[Dict] = []
@@ -606,10 +619,43 @@ class MockFogisServer:
             logger.error(f"Request validation failed: {error_msg}")
             return False, error_msg
 
-    def run(self):
-        """Run the mock server."""
+    def run(self, threaded=False):
+        """Run the mock server.
+
+        Args:
+            threaded: If True, run the server in a separate thread
+        """
         logger.info(f"Starting mock FOGIS server on {self.host}:{self.port}")
-        self.app.run(host=self.host, port=self.port)
+
+        # Register CLI API routes
+        try:
+            self._register_cli_routes()
+        except AttributeError:
+            # The _register_cli_routes method might not exist in older versions
+            logger.warning("CLI API routes not registered")
+
+        if threaded:
+            self.server_thread = threading.Thread(target=self._run_server)
+            self.server_thread.daemon = True
+            self.server_thread.start()
+            self.is_running = True
+            return self.server_thread
+        else:
+            self.is_running = True
+            self._run_server()
+
+    def _run_server(self):
+        """Run the Flask server."""
+        self.app.run(host=self.host, port=self.port, threaded=True)
+
+    def shutdown(self):
+        """Shutdown the server."""
+        self.is_running = False
+        # TODO: Implement proper Flask server shutdown
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:
+            raise RuntimeError('Not running with the Werkzeug Server')
+        func()
 
     def get_url(self) -> str:
         """Get the URL of the mock server."""
@@ -626,6 +672,68 @@ class MockFogisServer:
     def clear_request_history(self) -> None:
         """Clear the request history."""
         self.request_history = []
+
+    def _register_cli_routes(self):
+        """Register routes for the CLI API."""
+
+        @self.app.route("/api/cli/status", methods=["GET"])
+        def get_status():
+            """Get the server status."""
+            return jsonify({
+                "status": "running" if self.is_running else "stopped",
+                "host": self.host,
+                "port": self.port,
+                "validation_enabled": self.validate_requests,
+                "request_count": len(self.request_history),
+            })
+
+        @self.app.route("/api/cli/history", methods=["GET"])
+        def get_history():
+            """Get the request history."""
+            return jsonify({
+                "history": self.request_history,
+            })
+
+        @self.app.route("/api/cli/history", methods=["DELETE"])
+        def clear_history():
+            """Clear the request history."""
+            self.clear_request_history()
+            return jsonify({
+                "status": "success",
+                "message": "Request history cleared",
+            })
+
+        @self.app.route("/api/cli/validation", methods=["GET"])
+        def get_validation():
+            """Get the validation status."""
+            return jsonify({
+                "validation_enabled": self.validate_requests,
+            })
+
+        @self.app.route("/api/cli/validation", methods=["POST"])
+        def set_validation():
+            """Set the validation status."""
+            data = request.json
+            if data and "enabled" in data:
+                self.validate_requests = data["enabled"]
+                return jsonify({
+                    "status": "success",
+                    "message": f"Validation {'enabled' if self.validate_requests else 'disabled'}",
+                    "validation_enabled": self.validate_requests,
+                })
+            return jsonify({
+                "status": "error",
+                "message": "Missing 'enabled' parameter",
+            }), 400
+
+        @self.app.route("/api/cli/shutdown", methods=["POST"])
+        def shutdown_server():
+            """Shutdown the server."""
+            self.shutdown()
+            return jsonify({
+                "status": "success",
+                "message": "Server shutting down",
+            })
 
 
 if __name__ == "__main__":
