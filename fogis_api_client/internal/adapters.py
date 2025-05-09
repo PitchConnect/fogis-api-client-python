@@ -189,6 +189,29 @@ def convert_event_to_internal(event_data: EventDict) -> InternalEventDict:
     # Create a copy to avoid modifying the original
     event_data_copy = dict(event_data)
 
+    # Apply default values for rarely used fields
+    if "sekund" not in event_data_copy or event_data_copy["sekund"] is None:
+        event_data_copy["sekund"] = 0
+
+    if "planpositionx" not in event_data_copy or event_data_copy["planpositionx"] is None:
+        event_data_copy["planpositionx"] = "-1"
+
+    if "planpositiony" not in event_data_copy or event_data_copy["planpositiony"] is None:
+        event_data_copy["planpositiony"] = "-1"
+
+    if "relateradTillMatchhandelseID" not in event_data_copy or event_data_copy["relateradTillMatchhandelseID"] is None:
+        event_data_copy["relateradTillMatchhandelseID"] = 0
+
+    # Only set default values for second player fields if not a substitution
+    is_substitution = event_data_copy.get("matchhandelsetypid") == 17
+
+    if not is_substitution:
+        if "spelareid2" not in event_data_copy or event_data_copy["spelareid2"] is None:
+            event_data_copy["spelareid2"] = -1
+
+        if "matchdeltagareid2" not in event_data_copy or event_data_copy["matchdeltagareid2"] is None:
+            event_data_copy["matchdeltagareid2"] = -1
+
     # Ensure numeric fields are integers
     for field in [
         "matchid",
@@ -200,6 +223,10 @@ def convert_event_to_internal(event_data: EventDict) -> InternalEventDict:
         "period",
         "hemmamal",
         "bortamal",
+        "sekund",
+        "relateradTillMatchhandelseID",
+        "spelareid2",
+        "matchdeltagareid2",
     ]:
         if field in event_data_copy and event_data_copy[field] is not None:
             value = event_data_copy[field]

@@ -70,7 +70,10 @@ class InternalOfficialDict(TypedDict, total=False):
 
 
 class InternalEventDict(TypedDict, total=False):
-    """Internal type definition for an event object returned by the API."""
+    """Internal type definition for an event object returned by the API.
+
+    This class uses the original field names expected by the FOGIS server.
+    """
     matchhandelseid: int
     matchid: int
     matchhandelsetypid: int
@@ -89,6 +92,13 @@ class InternalEventDict(TypedDict, total=False):
     strafflage: Optional[str]
     straffriktning: Optional[str]
     straffresultat: Optional[str]
+    # Default values for rarely used fields
+    sekund: Optional[int]  # Default: 0
+    planpositionx: Optional[str]  # Default: '-1'
+    planpositiony: Optional[str]  # Default: '-1'
+    relateradTillMatchhandelseID: Optional[int]  # Default: 0
+    spelareid2: Optional[int]  # Default: -1 (except for substitutions)
+    matchdeltagareid2: Optional[int]  # Default: -1 (except for substitutions)
 
 
 class InternalMatchResultItem(TypedDict):

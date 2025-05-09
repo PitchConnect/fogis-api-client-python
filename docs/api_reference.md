@@ -506,26 +506,34 @@ Reports a match event to FOGIS.
 **Parameters:**
 - `event_data` (EventDict): Data for the event to report. Must include at minimum:
   - `matchid`: The ID of the match (integer)
-  - `handelsekod`: The event type code (see EVENT_TYPES)
-  - `minut`: The minute when the event occurred
-  - `lagid`: The ID of the team associated with the event
+  - `matchhandelsetypid`: The event type code (see EVENT_TYPES)
+  - `matchminut`: The minute when the event occurred
+  - `matchlagid`: The ID of the team associated with the event
   - `period`: The period number (1 for first half, 2 for second half)
 
-  **For Goals (handelsekod 6, 39, 28, 29, 15, 14):**
+  **For Goals (matchhandelsetypid 6, 39, 28, 29, 15, 14):**
   - All base fields above
-  - `personid`: The ID of the player who scored
-  - `resultatHemma`: Updated score for the home team
-  - `resultatBorta`: Updated score for the away team
+  - `spelareid`: The ID of the player who scored
+  - `hemmamal`: Updated score for the home team
+  - `bortamal`: Updated score for the away team
   - `assisterandeid`: The ID of the assisting player (optional)
 
-  **For Cards (handelsekod 20, 8, 9):**
+  **For Cards (matchhandelsetypid 20, 8, 9):**
   - All base fields above
-  - `personid`: The ID of the player who received the card
+  - `spelareid`: The ID of the player who received the card
 
-  **For Substitutions (handelsekod 17):**
+  **For Substitutions (matchhandelsetypid 17):**
   - All base fields above
-  - `personid`: The ID of the player coming on
+  - `spelareid`: The ID of the player coming on
   - `assisterandeid`: The ID of the player going off
+
+  **Default values for rarely used fields:**
+  - `sekund`: 0 (default)
+  - `planpositionx`: '-1' (default)
+  - `planpositiony`: '-1' (default)
+  - `relateradTillMatchhandelseID`: 0 (default)
+  - `spelareid2`: -1 (default, except for substitutions)
+  - `matchdeltagareid2`: -1 (default, except for substitutions)
 
 **Returns:**
 - `Dict[str, Any]`: Response from the API, typically containing success status and the ID of the created event
@@ -541,13 +549,13 @@ client = FogisApiClient(username="your_username", password="your_password")
 # Report a goal
 event = {
     "matchid": 123456,
-    "handelsekod": 6,  # Regular goal
-    "minut": 35,
-    "lagid": 78910,  # Team ID
-    "personid": 12345,  # Player ID
+    "matchhandelsetypid": 6,  # Regular goal
+    "matchminut": 35,
+    "matchlagid": 78910,  # Team ID
+    "spelareid": 12345,  # Player ID
     "period": 1,
-    "resultatHemma": 1,
-    "resultatBorta": 0
+    "hemmamal": 1,
+    "bortamal": 0
 }
 response = client.report_match_event(event)
 print(f"Event reported successfully: {response.get('success', False)}")
@@ -559,10 +567,10 @@ client = FogisApiClient(username="your_username", password="your_password")
 # Report a yellow card
 event = {
     "matchid": 123456,
-    "handelsekod": 20,  # Yellow card
-    "minut": 42,
-    "lagid": 78910,  # Team ID
-    "personid": 12345,  # Player ID
+    "matchhandelsetypid": 20,  # Yellow card
+    "matchminut": 42,
+    "matchlagid": 78910,  # Team ID
+    "spelareid": 12345,  # Player ID
     "period": 1
 }
 response = client.report_match_event(event)
@@ -575,10 +583,10 @@ client = FogisApiClient(username="your_username", password="your_password")
 # Report a substitution
 event = {
     "matchid": 123456,
-    "handelsekod": 17,  # Substitution
-    "minut": 65,
-    "lagid": 78910,  # Team ID
-    "personid": 12345,  # Player coming on
+    "matchhandelsetypid": 17,  # Substitution
+    "matchminut": 65,
+    "matchlagid": 78910,  # Team ID
+    "spelareid": 12345,  # Player coming on
     "assisterandeid": 67890,  # Player going off
     "period": 2
 }
@@ -715,12 +723,12 @@ Reports team official disciplinary action to the FOGIS API.
 **Parameters:**
 - `action_data` (Dict[str, Any]): Data containing team official action details. Must include:
   - `matchid`: The ID of the match
-  - `lagid`: The ID of the team
-  - `personid`: The ID of the team official
+  - `matchlagid`: The ID of the team
+  - `matchlagledareid`: The ID of the team official
   - `matchlagledaretypid`: The type ID of the disciplinary action
 
   Optional fields:
-  - `minut`: The minute when the action occurred
+  - `matchminut`: The minute when the action occurred
 
 **Returns:**
 - `Dict[str, Any]`: Response from the API, typically containing success status and the ID of the created action
@@ -737,10 +745,10 @@ client = FogisApiClient(username="your_username", password="your_password")
 # Report a yellow card for a team official
 action = {
     "matchid": 123456,
-    "lagid": 78910,  # Team ID
-    "personid": 12345,  # Official ID
+    "matchlagid": 78910,  # Team ID
+    "matchlagledareid": 12345,  # Official ID
     "matchlagledaretypid": 1,  # Yellow card
-    "minut": 35
+    "matchminut": 35
 }
 response = client.report_team_official_action(action)
 print(f"Action reported successfully: {response.get('success', False)}")

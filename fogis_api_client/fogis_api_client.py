@@ -618,15 +618,15 @@ class FogisApiClient:
         Args:
             event_data: Data for the event to report. Must include at minimum:
                 - matchid: The ID of the match
-                - handelsekod: The event type code (see EVENT_TYPES)
-                - minut: The minute when the event occurred
-                - lagid: The ID of the team associated with the event
+                - matchhandelsetypid: The event type code (see EVENT_TYPES)
+                - matchminut: The minute when the event occurred
+                - matchlagid: The ID of the team associated with the event
 
                 Depending on the event type, additional fields may be required:
-                - personid: The ID of the player (for player-related events)
+                - spelareid: The ID of the player (for player-related events)
                 - assisterandeid: The ID of the assisting player (for goals)
                 - period: The period number
-                - resultatHemma/resultatBorta: Updated score (for goals)
+                - hemmamal/bortamal: Updated score (for goals)
 
         Returns:
             Dict[str, Any]: Response from the API, typically containing success status
@@ -642,13 +642,13 @@ class FogisApiClient:
             >>> # Report a goal
             >>> event = {
             ...     "matchid": 123456,
-            ...     "handelsekod": 6,  # Regular goal
-            ...     "minut": 35,
-            ...     "lagid": 78910,  # Team ID
-            ...     "personid": 12345,  # Player ID
+            ...     "matchhandelsetypid": 6,  # Regular goal
+            ...     "matchminut": 35,
+            ...     "matchlagid": 78910,  # Team ID
+            ...     "spelareid": 12345,  # Player ID
             ...     "period": 1,
-            ...     "resultatHemma": 1,
-            ...     "resultatBorta": 0
+            ...     "hemmamal": 1,
+            ...     "bortamal": 0
             ... }
             >>> response = client.report_match_event(event)
             >>> print(f"Event reported successfully: {response.get('success', False)}")
@@ -664,18 +664,45 @@ class FogisApiClient:
         # Create a copy to avoid modifying the original
         event_data_copy = dict(event_data)
 
+        # Apply default values for rarely used fields
+        if "sekund" not in event_data_copy or event_data_copy["sekund"] is None:
+            event_data_copy["sekund"] = 0
+
+        if "planpositionx" not in event_data_copy or event_data_copy["planpositionx"] is None:
+            event_data_copy["planpositionx"] = "-1"
+
+        if "planpositiony" not in event_data_copy or event_data_copy["planpositiony"] is None:
+            event_data_copy["planpositiony"] = "-1"
+
+        if "relateradTillMatchhandelseID" not in event_data_copy or event_data_copy["relateradTillMatchhandelseID"] is None:
+            event_data_copy["relateradTillMatchhandelseID"] = 0
+
+        # Only set default values for second player fields if not a substitution
+        is_substitution = event_data_copy.get("matchhandelsetypid") == 17
+
+        if not is_substitution:
+            if "spelareid2" not in event_data_copy or event_data_copy["spelareid2"] is None:
+                event_data_copy["spelareid2"] = -1
+
+            if "matchdeltagareid2" not in event_data_copy or event_data_copy["matchdeltagareid2"] is None:
+                event_data_copy["matchdeltagareid2"] = -1
+
         # Ensure numeric fields are integers
         # This is critical - the FOGIS API requires these fields to be integers, not strings
         for field in [
             "matchid",
-            "handelsekod",
-            "minut",
-            "lagid",
-            "personid",
+            "matchhandelsetypid",
+            "matchminut",
+            "matchlagid",
+            "spelareid",
             "assisterandeid",
             "period",
-            "resultatHemma",
-            "resultatBorta",
+            "hemmamal",
+            "bortamal",
+            "sekund",
+            "relateradTillMatchhandelseID",
+            "spelareid2",
+            "matchdeltagareid2",
         ]:
             if field in event_data_copy and event_data_copy[field] is not None:
                 value = event_data_copy[field]
