@@ -402,23 +402,6 @@ class MockFogisServer:
             # Return the response
             return jsonify({"d": json.dumps(officials_data)})
 
-        # Match officials endpoint
-        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchfunktionarerLista", methods=["POST"])
-        def fetch_match_officials_endpoint():
-            auth_result = self._check_auth()
-            if auth_result is not True:
-                return auth_result
-
-            # Get match ID from request
-            data = request.json or {}
-            match_id = data.get("matchid")
-
-            # Generate match officials data using the factory
-            officials_data = MockDataFactory.generate_match_officials(match_id)
-
-            # Return the response
-            return jsonify({"d": json.dumps(officials_data)})
-
         # Match events endpoint
         @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchhandelselista", methods=["POST"])
         def fetch_match_events_endpoint():
