@@ -1,11 +1,23 @@
 # Changelog
 
-## [0.4.5] - 2025-05-21
+## [0.4.6] - 2025-05-22
 
 ### Changed
 - Standardized on original field names (matchhandelsetypid, matchminut, matchlagid, spelareid, hemmamal, bortamal)
 - Removed support for alternative field names (handelsekod, minut, lagid, personid, resultatHemma, resultatBorta) to reduce complexity
 - Updated validation to only accept the standard field names
+- Added default values for rarely used fields (sekund, planpositionx, planpositiony, relateradTillMatchhandelseID, spelareid2, matchdeltagareid2)
+
+## [0.4.5] - 2025-05-21
+
+### Changed
+- Version skipped due to versioning conflict
+
+## [0.4.4] - 2025-05-20
+
+### Fixed
+- Fixed package name capitalization in setup.py (correct to timmyBird)
+- Updated publish-to-pypi.yml workflow to explicitly set version from release tag
 
 ## [0.4.3] - 2025-05-20
 

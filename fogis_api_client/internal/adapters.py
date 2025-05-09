@@ -307,6 +307,7 @@ def convert_official_action_to_internal(
     # Create a copy to avoid modifying the original
     action_data_copy = dict(action_data)
 
+
     # Ensure IDs are integers
     for key in ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid", "matchminut"]:
         if key in action_data_copy and action_data_copy[key] is not None:
