@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Match Event Schema",
+  "description": "Schema for FOGIS API match event data",
+  "type": "object",
+  "properties": {
+    "matchhandelseid": {
+      "type": "integer",
+      "description": "Unique identifier for the match event",
+      "example": 12345678
+    },
+    "matchid": {
+      "type": "integer",
+      "description": "ID of the match this event belongs to",
+      "example": 6186203
+    },
+    "period": {
+      "type": "integer",
+      "description": "Period in which the event occurred (1 = first half, 2 = second half, etc.)",
+      "example": 1
+    },
+    "matchminut": {
+      "type": "integer",
+      "description": "Minute in the match when the event occurred",
+      "example": 23
+    },
+    "sekund": {
+      "type": "integer",
+      "description": "Second in the minute when the event occurred",
+      "example": 0
+    },
+    "matchhandelsetypid": {
+      "type": "integer",
+      "description": "Type ID of the event (1 = goal, 2 = yellow card, etc.)",
+      "example": 1
+    },
+    "matchlagid": {
+      "type": "integer",
+      "description": "ID of the team involved in the event",
+      "example": 12347073
+    },
+    "spelareid": {
+      "type": "integer",
+      "description": "ID of the player involved in the event",
+      "example": 1234567
+    },
+    "spelareid2": {
+      "type": "integer",
+      "description": "ID of the second player involved in the event (e.g., for substitutions)",
+      "example": -1
+    },
+    "matchdeltagareid": {
+      "type": "integer",
+      "description": "ID of the match participant",
+      "example": 12345678
+    },
+    "matchdeltagareid2": {
+      "type": "integer",
+      "description": "ID of the second match participant (e.g., for substitutions)",
+      "example": -1
+    },
+    "hemmamal": {
+      "type": "integer",
+      "description": "Goals for the home team after this event",
+      "example": 1
+    },
+    "bortamal": {
+      "type": "integer",
+      "description": "Goals for the away team after this event",
+      "example": 0
+    },
+    "planpositionx": {
+      "type": "string",
+      "description": "X position on the pitch where the event occurred",
+      "example": "-1"
+    },
+    "planpositiony": {
+      "type": "string",
+      "description": "Y position on the pitch where the event occurred",
+      "example": "-1"
+    },
+    "relateradTillMatchhandelseID": {
+      "type": "integer",
+      "description": "ID of a related match event (e.g., second yellow card related to red card)",
+      "example": 0
+    },
+    "handelsekod": {
+      "type": "integer",
+      "description": "Alternative field for matchhandelsetypid",
+      "example": 1
+    },
+    "minut": {
+      "type": "integer",
+      "description": "Alternative field for matchminut",
+      "example": 23
+    },
+    "lagid": {
+      "type": "integer",
+      "description": "Alternative field for matchlagid",
+      "example": 12347073
+    },
+    "personid": {
+      "type": "integer",
+      "description": "Alternative field for spelareid",
+      "example": 1234567
+    },
+    "resultatHemma": {
+      "type": "integer",
+      "description": "Alternative field for hemmamal",
+      "example": 1
+    },
+    "resultatBorta": {
+      "type": "integer",
+      "description": "Alternative field for bortamal",
+      "example": 0
+    }
+  },
+  "required": [
+    "matchhandelseid",
+    "matchid",
+    "period",
+    "matchminut",
+    "matchhandelsetypid",
+    "matchlagid",
+    "spelareid",
+    "hemmamal",
+    "bortamal"
+  ]
+}

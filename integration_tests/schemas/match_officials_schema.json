@@ -1,0 +1,104 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Match Officials Schema",
+  "description": "Schema for FOGIS API match officials data",
+  "type": "object",
+  "properties": {
+    "hemmalag": {
+      "type": "array",
+      "description": "Officials for the home team",
+      "items": {
+        "type": "object",
+        "properties": {
+          "personid": {
+            "type": "integer",
+            "description": "Person ID of the official",
+            "example": 1234567
+          },
+          "fornamn": {
+            "type": "string",
+            "description": "First name of the official",
+            "example": "John"
+          },
+          "efternamn": {
+            "type": "string",
+            "description": "Last name of the official",
+            "example": "Doe"
+          },
+          "roll": {
+            "type": "string",
+            "description": "Role of the official",
+            "example": "Tränare"
+          },
+          "rollid": {
+            "type": "integer",
+            "description": "Role ID of the official",
+            "example": 1
+          },
+          "matchlagid": {
+            "type": "integer",
+            "description": "Match team ID",
+            "example": 12347073
+          }
+        },
+        "required": [
+          "personid",
+          "fornamn",
+          "efternamn",
+          "roll",
+          "matchlagid"
+        ]
+      }
+    },
+    "bortalag": {
+      "type": "array",
+      "description": "Officials for the away team",
+      "items": {
+        "type": "object",
+        "properties": {
+          "personid": {
+            "type": "integer",
+            "description": "Person ID of the official",
+            "example": 7654321
+          },
+          "fornamn": {
+            "type": "string",
+            "description": "First name of the official",
+            "example": "Jane"
+          },
+          "efternamn": {
+            "type": "string",
+            "description": "Last name of the official",
+            "example": "Smith"
+          },
+          "roll": {
+            "type": "string",
+            "description": "Role of the official",
+            "example": "Assisterande tränare"
+          },
+          "rollid": {
+            "type": "integer",
+            "description": "Role ID of the official",
+            "example": 2
+          },
+          "matchlagid": {
+            "type": "integer",
+            "description": "Match team ID",
+            "example": 12347074
+          }
+        },
+        "required": [
+          "personid",
+          "fornamn",
+          "efternamn",
+          "roll",
+          "matchlagid"
+        ]
+      }
+    }
+  },
+  "required": [
+    "hemmalag",
+    "bortalag"
+  ]
+}

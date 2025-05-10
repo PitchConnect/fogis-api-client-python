@@ -1,0 +1,134 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Match Participants Schema",
+  "description": "Schema for FOGIS API match participants (players) data",
+  "type": "object",
+  "properties": {
+    "matchdeltagarlista": {
+      "type": "array",
+      "description": "List of match participants",
+      "items": {
+        "type": "object",
+        "properties": {
+          "matchdeltagarid": {
+            "type": "integer",
+            "description": "Unique identifier for the match participant",
+            "example": 12345678
+          },
+          "matchid": {
+            "type": "integer",
+            "description": "ID of the match",
+            "example": 6186203
+          },
+          "matchlagid": {
+            "type": "integer",
+            "description": "ID of the team in the match",
+            "example": 12347073
+          },
+          "spelareid": {
+            "type": "integer",
+            "description": "ID of the player",
+            "example": 1234567
+          },
+          "personid": {
+            "type": "integer",
+            "description": "Person ID of the player",
+            "example": 1234567
+          },
+          "fornamn": {
+            "type": "string",
+            "description": "First name of the player",
+            "example": "John"
+          },
+          "efternamn": {
+            "type": "string",
+            "description": "Last name of the player",
+            "example": "Doe"
+          },
+          "trojnummer": {
+            "type": "string",
+            "description": "Jersey number of the player",
+            "example": "10"
+          },
+          "position": {
+            "type": "string",
+            "description": "Position of the player",
+            "example": "MF"
+          },
+          "positionid": {
+            "type": "integer",
+            "description": "Position ID of the player",
+            "example": 3
+          },
+          "startspelare": {
+            "type": "boolean",
+            "description": "Whether the player is a starting player",
+            "example": true
+          },
+          "kapten": {
+            "type": "boolean",
+            "description": "Whether the player is the captain",
+            "example": false
+          },
+          "malvakt": {
+            "type": "boolean",
+            "description": "Whether the player is a goalkeeper",
+            "example": false
+          },
+          "bytesordning": {
+            "type": "integer",
+            "description": "Substitution order",
+            "example": 0
+          },
+          "bytesminut": {
+            "type": "integer",
+            "description": "Minute of substitution",
+            "example": 0
+          },
+          "bytesperiod": {
+            "type": "integer",
+            "description": "Period of substitution",
+            "example": 0
+          },
+          "bytestyp": {
+            "type": "integer",
+            "description": "Type of substitution",
+            "example": 0
+          },
+          "bytestypsnamn": {
+            "type": "string",
+            "description": "Name of substitution type",
+            "example": ""
+          },
+          "bytesriktning": {
+            "type": "integer",
+            "description": "Direction of substitution (1 = in, 2 = out)",
+            "example": 0
+          },
+          "bytesriktningsnamn": {
+            "type": "string",
+            "description": "Name of substitution direction",
+            "example": ""
+          },
+          "bytesdeltagarid": {
+            "type": "integer",
+            "description": "ID of the participant being substituted",
+            "example": 0
+          }
+        },
+        "required": [
+          "matchdeltagarid",
+          "matchid",
+          "matchlagid",
+          "spelareid",
+          "fornamn",
+          "efternamn",
+          "startspelare"
+        ]
+      }
+    }
+  },
+  "required": [
+    "matchdeltagarlista"
+  ]
+}
