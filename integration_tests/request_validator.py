@@ -25,6 +25,7 @@ class RequestValidator:
 
     # Define expected request schemas for different endpoints
     SCHEMAS = {
+        # Match result endpoints
         "/MatchWebMetoder.aspx/SparaMatchresultatLista": {
             "required_fields": ["matchresultatListaJSON"],
             "nested_fields": {
@@ -43,6 +44,10 @@ class RequestValidator:
                 ]
             },
         },
+        "/MatchWebMetoder.aspx/GetMatchresultatlista": {
+            "required_fields": ["matchid"],
+        },
+        # Match event endpoints
         "/MatchWebMetoder.aspx/SparaMatchhandelse": {
             "required_fields": [
                 "matchhandelseid",
@@ -52,9 +57,34 @@ class RequestValidator:
                 "matchlagid",
             ]
         },
-        "/MatchWebMetoder.aspx/SparaMatchlagledare": {"required_fields": ["matchlagid", "personid", "roll"]},
-        "/MatchWebMetoder.aspx/SparaMatchdeltagare": {"required_fields": ["matchdeltagareid", "trojnummer"]},
-        "/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport": {"required_fields": ["matchid"]},
+        "/MatchWebMetoder.aspx/RaderaMatchhandelse": {
+            "required_fields": ["matchhandelseid"],
+        },
+        # Team official endpoints
+        "/MatchWebMetoder.aspx/SparaMatchlagledare": {
+            "required_fields": ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid"]
+        },
+        # Match participant endpoints
+        "/MatchWebMetoder.aspx/SparaMatchdeltagare": {
+            "required_fields": ["matchdeltagareid", "trojnummer"]
+        },
+        # Match reporting endpoints
+        "/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport": {
+            "required_fields": ["matchid"]
+        },
+        # Match fetch endpoints
+        "/MatchWebMetoder.aspx/GetMatch": {
+            "required_fields": ["matchid"],
+        },
+        "/MatchWebMetoder.aspx/GetMatchdeltagareLista": {
+            "required_fields": ["matchid"],
+        },
+        "/MatchWebMetoder.aspx/GetMatchfunktionarerLista": {
+            "required_fields": ["matchid"],
+        },
+        "/MatchWebMetoder.aspx/GetMatchhandelselista": {
+            "required_fields": ["matchid"],
+        },
     }
 
     @staticmethod

@@ -7,6 +7,7 @@ This directory contains integration tests for the FOGIS API client using a mock 
 - [Overview](#overview)
 - [Testing Architecture](#testing-architecture)
 - [Components](#components)
+- [Supported API Endpoints](#supported-api-endpoints)
 - [Running the Tests](#running-the-tests)
 - [Request Validation](#request-validation)
 - [Adding New Tests](#adding-new-tests)
@@ -62,6 +63,27 @@ Here's a diagram of how these components interact:
 - `test_with_mock_server.py`: General integration tests for the FOGIS API client
 - `test_match_result_reporting.py`: Specific tests for match result reporting functionality
 
+## Supported API Endpoints
+
+The mock server currently supports the following API endpoints:
+
+### Match Data Endpoints
+- `/MatchWebMetoder.aspx/GetMatch`: Get match details
+- `/MatchWebMetoder.aspx/GetMatchdeltagareLista`: Get match players list
+- `/MatchWebMetoder.aspx/GetMatchfunktionarerLista`: Get match officials list
+- `/MatchWebMetoder.aspx/GetMatchhandelselista`: Get match events list
+- `/MatchWebMetoder.aspx/GetMatchresultat`: Get match result
+- `/MatchWebMetoder.aspx/GetMatchresultatlista`: Get match result list
+- `/MatchWebMetoder.aspx/GetMatcherAttRapportera`: Get matches to report
+
+### Match Reporting Endpoints
+- `/MatchWebMetoder.aspx/SparaMatchhandelse`: Save match event
+- `/MatchWebMetoder.aspx/RaderaMatchhandelse`: Delete match event
+- `/MatchWebMetoder.aspx/SparaMatchresultatLista`: Save match result list
+- `/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport`: Mark match reporting as finished
+- `/MatchWebMetoder.aspx/SparaMatchdeltagare`: Save match participant
+- `/MatchWebMetoder.aspx/SparaMatchlagledare`: Save team official action
+
 ## Running the Tests
 
 ### Prerequisites
@@ -99,50 +121,33 @@ python -m pytest integration_tests/test_match_result_reporting.py -v
 
 This approach uses the `mock_fogis_server` fixture in `conftest.py` to start the mock server in a separate thread during test execution.
 
-#### Using the Standalone Mock Server (Recommended for Development)
+#### Using the CLI Tool (Manual Mock Server)
 
-For development and debugging, it's often better to run the mock server separately:
+Alternatively, you can start the mock server manually using the CLI tool:
 
-1. Install the mock server dependencies:
-   ```bash
-   pip install -e ".[dev,mock-server]"
-   ```
+```bash
+# Start the mock server
+python -m fogis_api_client.cli.mock_server start
 
-2. Start the mock server in a separate terminal:
-   ```bash
-   python scripts/run_mock_server.py
-   ```
+# Run the tests
+python -m pytest integration_tests/test_with_mock_server.py -v
 
-3. Run the integration tests:
-   ```bash
-   python -m pytest integration_tests
-   ```
+# Stop the mock server
+python -m fogis_api_client.cli.mock_server stop
+```
 
-Running the mock server separately allows you to:
-- Inspect the server logs in real-time
-- Keep the server running between test runs
-- Test individual API endpoints manually using tools like curl or Postman
+This approach is useful for debugging, as you can inspect the server logs and request history.
 
 ## Request Validation
 
-The request validator (`request_validator.py`) validates the structure of requests sent to the mock server. It ensures that requests contain all required fields and that the fields have the correct types and values.
+The mock server validates requests to ensure they match the expected structure. This helps catch issues with the client's request formatting early.
 
-### Validation Process
+Request validation is controlled by the `RequestValidator` class in `request_validator.py`. It defines schemas for each endpoint and validates requests against these schemas.
 
-1. The mock server receives a request
-2. The request is passed to the request validator
-3. The validator checks the request against the expected schema
-4. If the request is valid, the mock server processes it
-5. If the request is invalid, the mock server returns an error response
-
-### Schema Definition
-
-The request validator uses a schema-based approach to validation. Schemas are defined for each endpoint and specify the required fields and their expected types and values.
-
-Example schema for match result reporting:
+Example schema:
 
 ```python
-{
+SCHEMAS = {
     "/MatchWebMetoder.aspx/SparaMatchresultatLista": {
         "required_fields": ["matchresultatListaJSON"],
         "nested_fields": {
@@ -198,56 +203,9 @@ def test_some_functionality(self, mock_fogis_server, test_credentials, mock_api_
 
 The `mock_api_urls` fixture handles:
 1. Storing the original base URLs
-2. Overriding the base URLs to use the mock server
-3. Clearing request history for better test isolation
-4. Restoring the original URLs after the test completes, even if the test fails
-
-
-Integration tests should follow this structure:
-
-1. **Setup**: Configure the client to use the mock server
-2. **Exercise**: Call the client's methods to interact with the API
-3. **Verify**: Check that the client behaves as expected and sends correct requests
-4. **Teardown**: Clean up any resources used by the test
-
-### Example Test
-
-```python
-def test_report_match_result(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
-    """Test reporting match results."""
-    # Setup: Configure the client to use the mock server
-    FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-    client = FogisApiClient(
-        username=test_credentials["username"],
-        password=test_credentials["password"],
-    )
-
-    # Exercise: Call the client's method to report a match result
-    match_id = 12345
-    result_data = cast(
-        MatchResultDict,
-        {
-            "matchid": match_id,
-            "hemmamal": 2,
-            "bortamal": 1,
-            "halvtidHemmamal": 1,
-            "halvtidBortamal": 0,
-        },
-    )
-    response = client.report_match_result(result_data)
-
-    # Verify: Check that the response is as expected
-    assert isinstance(response, dict)
-    assert "success" in response
-    assert response["success"] is True
-
-    # Verify the request structure (optional)
-    history_response = requests.get(f"{mock_fogis_server['base_url']}/request-history")
-    history_data = history_response.json()
-    match_result_requests = [req for req in history_data["history"]
-                           if req["endpoint"] == "/MatchWebMetoder.aspx/SparaMatchresultatLista"]
-    assert len(match_result_requests) > 0
-```
+2. Setting the base URLs to point to the mock server
+3. Clearing the request history
+4. Restoring the original base URLs after the test
 
 ## Extending the Mock Server
 
@@ -295,16 +253,7 @@ def new_endpoint():
 
 ## Troubleshooting
 
-If you encounter issues with the mock server or integration tests:
-
-1. **Check the logs**: Look for error messages in the console output and server logs
-2. **Verify server status**: Ensure the mock server is running on the expected port
-3. **Check request validation**: Verify that your requests match the expected schema
-4. **Inspect request history**: Use the `/request-history` endpoint to see what requests were sent
-5. **Check route paths**: Ensure that the route paths in the mock server match those used by the client
-6. **Verify sample data**: Make sure the sample data matches the structure expected by the client
-
-### Common Issues
+Common issues and their solutions:
 
 - **Authentication failures**: Check that the mock server is correctly handling authentication
 - **Schema validation errors**: Ensure your requests match the expected schema

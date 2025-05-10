@@ -165,6 +165,38 @@ class MockFogisServer:
             # Return the response
             return jsonify(match_list_response)
 
+        # Match list endpoint (new API version)
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatcherAttRapportera", methods=["POST"])
+        def fetch_matches_list_new():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Parse filter from request
+            data = request.json or {}
+            filter_params = data.get("filter", {})
+
+            # Generate a fresh match list using the factory
+            match_list = MockDataFactory.generate_match_list()
+
+            # Extract the match list from the response and format it for the new API
+            # The match_list["d"] is already a JSON string, so we need to parse it
+            matches_data = json.loads(match_list["d"]) if isinstance(match_list["d"], str) else match_list["d"]
+
+            # Create a response in the format expected by the client
+            # The client expects a response with a matchlista field
+            response_data = {
+                "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatcherAttRapportera",
+                "anvandare": None,
+                "anvandareforeningid": 0,
+                "anvandartyp": "Domare",
+                "matchlista": matches_data["matchlista"],  # This is what the client expects
+                "success": True
+            }
+
+            # Return the response
+            return jsonify({"d": json.dumps(response_data)})
+
         # Match details endpoint
         @self.app.route("/mdk/MatchWebMetoder.aspx/HamtaMatch", methods=["POST"])
         def fetch_match():
@@ -367,6 +399,12 @@ class MockFogisServer:
             data = request.json or {}
             match_id = data.get("matchid")
 
+            # Validate and log the request
+            endpoint = "/MatchWebMetoder.aspx/GetMatchdeltagareLista"
+            is_valid, error_msg = self._validate_and_log_request(endpoint, data)
+            if not is_valid:
+                return jsonify({"d": json.dumps({"success": False, "error": error_msg})}), 400
+
             # Generate match players data using the factory
             players_data = MockDataFactory.generate_match_players(match_id)
 
@@ -384,8 +422,37 @@ class MockFogisServer:
             data = request.json or {}
             match_id = data.get("matchid")
 
+            # Validate and log the request
+            endpoint = "/MatchWebMetoder.aspx/GetMatchfunktionarerLista"
+            is_valid, error_msg = self._validate_and_log_request(endpoint, data)
+            if not is_valid:
+                return jsonify({"d": json.dumps({"success": False, "error": error_msg})}), 400
+
             # Generate match officials data using the factory
-            officials_data = MockDataFactory.generate_match_officials(match_id)
+            # The client expects a dictionary with keys 'hemmalag' and 'bortalag',
+            # each containing a list of officials
+            officials_data = {
+                "hemmalag": [
+                    {
+                        "personid": 11111,
+                        "fornamn": "John",
+                        "efternamn": "Doe",
+                        "roll": "Tränare",
+                        "rollid": 1,
+                        "matchlagid": 12345
+                    }
+                ],
+                "bortalag": [
+                    {
+                        "personid": 22222,
+                        "fornamn": "Jane",
+                        "efternamn": "Smith",
+                        "roll": "Assisterande tränare",
+                        "rollid": 2,
+                        "matchlagid": 67890
+                    }
+                ]
+            }
 
             # Return the response
             return jsonify({"d": json.dumps(officials_data)})
@@ -424,6 +491,29 @@ class MockFogisServer:
             # Return the response
             return jsonify({"d": json.dumps(result_data)})
 
+        # Match result list endpoint
+        @self.app.route("/mdk/MatchWebMetoder.aspx/GetMatchresultatlista", methods=["POST"])
+        def fetch_match_result_list_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get match ID from request
+            data = request.json or {}
+            match_id = data.get("matchid")
+
+            # Validate and log the request
+            endpoint = "/MatchWebMetoder.aspx/GetMatchresultatlista"
+            is_valid, error_msg = self._validate_and_log_request(endpoint, data)
+            if not is_valid:
+                return jsonify({"d": json.dumps({"success": False, "error": error_msg})}), 400
+
+            # Generate match result list data using the factory
+            result_list_data = MockDataFactory.generate_match_result_list(match_id)
+
+            # Return the response
+            return jsonify({"d": json.dumps(result_list_data)})
+
         # Clear match events endpoint
         @self.app.route("/mdk/MatchWebMetoder.aspx/ClearMatchEvents", methods=["POST"])
         def clear_match_events_endpoint():
@@ -440,6 +530,29 @@ class MockFogisServer:
             auth_result = self._check_auth()
             if auth_result is not True:
                 return auth_result
+
+            # Return success response
+            return jsonify({"d": json.dumps({"success": True})})
+
+        # Delete match event endpoint
+        @self.app.route("/mdk/MatchWebMetoder.aspx/RaderaMatchhandelse", methods=["POST"])
+        def delete_match_event_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get event ID from request
+            data = request.json or {}
+            event_id = data.get("matchhandelseid")
+
+            # Validate and log the request
+            endpoint = "/MatchWebMetoder.aspx/RaderaMatchhandelse"
+            is_valid, error_msg = self._validate_and_log_request(endpoint, data)
+            if not is_valid:
+                return jsonify({"d": json.dumps({"success": False, "error": error_msg})}), 400
+
+            # In a real implementation, we would delete the event with the given ID
+            # For the mock server, we just return success
 
             # Return success response
             return jsonify({"d": json.dumps({"success": True})})
@@ -527,6 +640,28 @@ class MockFogisServer:
                 roster["spelare"].append(new_player)
 
             return jsonify({"d": json.dumps(roster)})
+
+        # Save team official action endpoint
+        @self.app.route("/mdk/MatchWebMetoder.aspx/SparaMatchlagledare", methods=["POST"])
+        def save_team_official_action_endpoint():
+            auth_result = self._check_auth()
+            if auth_result is not True:
+                return auth_result
+
+            # Get team official data from request
+            data = request.json or {}
+
+            # Validate and log the request
+            endpoint = "/MatchWebMetoder.aspx/SparaMatchlagledare"
+            is_valid, error_msg = self._validate_and_log_request(endpoint, data)
+            if not is_valid:
+                return jsonify({"d": json.dumps({"success": False, "error": error_msg})}), 400
+
+            # In a real implementation, we would save the team official action
+            # For the mock server, we just return success
+
+            # Return success response
+            return jsonify({"d": json.dumps({"success": True})})
 
         # Main dashboard route after login
         @self.app.route("/mdk/", methods=["GET"])
