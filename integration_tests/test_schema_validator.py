@@ -98,18 +98,30 @@ class TestSchemaValidator:
 
     def test_validate_match_result_valid(self):
         """Test validating valid match result data."""
-        # Create a minimal valid result
-        result_data = {
-            "matchresultatid": 12345,
-            "matchid": 67890,
-            "matchresultattypid": 1,
-            "matchlag1mal": 2,
-            "matchlag2mal": 1,
-            "wo": False,
-            "ow": False,
-            "ww": False
-        }
-        assert SchemaValidator.validate_match_result(result_data)
+        # Load a sample result from a file
+        sample_path = os.path.join(os.path.dirname(__file__), "sample_data", "match_results.json")
+        if os.path.exists(sample_path):
+            with open(sample_path, "r", encoding="utf-8") as f:
+                results_data = json.load(f)
+            # Validate the first result
+            assert SchemaValidator.validate_match_result(results_data[0])
+            # Validate the second result
+            assert SchemaValidator.validate_match_result(results_data[1])
+        else:
+            # Create a minimal valid result based on real data
+            result_data = {
+                "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchresultatJSON",
+                "matchresultatid": 4694381,
+                "matchid": 6169946,
+                "matchresultattypid": 1,
+                "matchresultattypnamn": "Slutresultat",
+                "matchlag1mal": 3,
+                "matchlag2mal": 1,
+                "wo": False,
+                "ow": False,
+                "ww": False
+            }
+            assert SchemaValidator.validate_match_result(result_data)
 
     def test_validate_match_officials_valid(self):
         """Test validating valid match officials data."""

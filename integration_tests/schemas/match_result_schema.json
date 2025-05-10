@@ -4,25 +4,35 @@
   "description": "Schema for FOGIS API match result data",
   "type": "object",
   "properties": {
+    "__type": {
+      "type": "string",
+      "description": "Type identifier for the match result object",
+      "example": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchresultatJSON"
+    },
     "matchresultatid": {
       "type": "integer",
       "description": "Unique identifier for the match result",
-      "example": 12345678
+      "example": 4694381
     },
     "matchid": {
       "type": "integer",
       "description": "ID of the match this result belongs to",
-      "example": 6186203
+      "example": 6169946
     },
     "matchresultattypid": {
       "type": "integer",
       "description": "Type ID of the result (1 = full time, 2 = half time, etc.)",
       "example": 1
     },
+    "matchresultattypnamn": {
+      "type": "string",
+      "description": "Human-readable name of the result type",
+      "example": "Slutresultat"
+    },
     "matchlag1mal": {
       "type": "integer",
       "description": "Goals for the home team",
-      "example": 2
+      "example": 3
     },
     "matchlag2mal": {
       "type": "integer",
@@ -46,6 +56,7 @@
     }
   },
   "required": [
+    "__type",
     "matchresultatid",
     "matchid",
     "matchresultattypid",
