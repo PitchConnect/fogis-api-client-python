@@ -429,7 +429,31 @@ class MockFogisServer:
                 return jsonify({"d": json.dumps({"success": False, "error": error_msg})}), 400
 
             # Generate match officials data using the factory
-            officials_data = MockDataFactory.generate_match_officials(match_id)
+            # There are two generate_match_officials methods in MockDataFactory
+            # We need to use the one that returns a dictionary with hemmalag, bortalag, and funktionarer fields
+            officials_data = {
+                "hemmalag": "Home Team",
+                "bortalag": "Away Team",
+                "hemmalagid": 12345,
+                "bortalagid": 67890,
+                "matchid": match_id,
+                "funktionarer": [
+                    {
+                        "personid": 11111,
+                        "fornamn": "John",
+                        "efternamn": "Doe",
+                        "roll": "Tränare",
+                        "matchlagid": 12345
+                    },
+                    {
+                        "personid": 22222,
+                        "fornamn": "Jane",
+                        "efternamn": "Smith",
+                        "roll": "Assisterande tränare",
+                        "matchlagid": 67890
+                    }
+                ]
+            }
 
             # Return the response
             return jsonify({"d": json.dumps(officials_data)})
