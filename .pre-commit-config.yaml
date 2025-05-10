@@ -68,6 +68,17 @@ repos:
         always_run: true
         stages: [manual]
 
+# Integration tests with mock server (optional, disabled by default to speed up commits)
+-   repo: local
+    hooks:
+    -   id: integration-tests
+        name: integration-tests
+        entry: python scripts/run_integration_tests_with_mock.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
+
 # Documentation freshness checker
 -   repo: local
     hooks:

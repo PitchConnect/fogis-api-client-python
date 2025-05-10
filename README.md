@@ -182,7 +182,22 @@ This script will:
 2. Run all integration tests against the mock server
 3. Report the results and clean up the environment
 
-#### Using Local Mock Server (Recommended for Development)
+#### Using the Integration Test Script (Recommended for Development)
+
+```bash
+# Run integration tests with automatic mock server management
+python scripts/run_integration_tests_with_mock.py
+
+# Run with verbose output
+python scripts/run_integration_tests_with_mock.py --verbose
+
+# Run a specific test file
+python scripts/run_integration_tests_with_mock.py --test-file test_with_mock_server.py
+```
+
+This script will automatically start the mock server if needed, run the tests, and provide a clean output.
+
+#### Using Local Mock Server (Manual Approach)
 
 ```bash
 # In terminal 1: Start the mock server
@@ -218,6 +233,22 @@ You can also run specific test files directly:
 ```bash
 python -m pytest integration_tests/test_match_result_reporting.py -v
 ```
+
+#### Using IDE Integration
+
+The project now includes configuration files for VSCode and PyCharm that make it easy to run integration tests from your IDE:
+
+**VSCode**:
+1. Open the project in VSCode
+2. Go to the Run and Debug panel
+3. Select "Python: Run Integration Tests" from the dropdown
+4. Click the Run button
+
+**PyCharm**:
+1. Open the project in PyCharm
+2. Go to the Run configurations dropdown
+3. Select "Run Integration Tests"
+4. Click the Run button
 
 ### Adding New Tests
 

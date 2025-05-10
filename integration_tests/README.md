@@ -60,6 +60,7 @@ Here's a diagram of how these components interact:
 - `request_validator.py`: Validates the structure of requests sent to the mock server
 - `sample_data_factory.py`: Generates sample data for use in tests
 - `conftest.py`: Pytest fixtures for setting up the mock server and test environment
+- `pytest_plugin.py`: Pytest plugin for automatically managing the mock server lifecycle
 - `test_with_mock_server.py`: General integration tests for the FOGIS API client
 - `test_match_result_reporting.py`: Specific tests for match result reporting functionality
 
@@ -108,18 +109,44 @@ This script will:
 
 ### Running Tests Locally
 
-There are two ways to run the integration tests locally:
+There are several ways to run the integration tests locally:
 
-#### Using the Pytest Fixture (Automatic Mock Server)
+#### Using the Improved Integration Test Script (Recommended)
 
-The simplest way is to let the pytest fixture start the mock server automatically:
+The easiest way is to use the new integration test script that automatically manages the mock server:
+
+```bash
+python scripts/run_integration_tests_with_mock.py
+```
+
+This script will:
+1. Start the mock server if it's not already running
+2. Run all integration tests
+3. Provide a clean output
+
+You can also run specific tests:
+
+```bash
+# Run a specific test file
+python scripts/run_integration_tests_with_mock.py --test-file test_with_mock_server.py
+
+# Run a specific test
+python scripts/run_integration_tests_with_mock.py --test-name test_login
+
+# Enable verbose output
+python scripts/run_integration_tests_with_mock.py --verbose
+```
+
+#### Using the Pytest Plugin (Automatic Mock Server)
+
+You can also use the new pytest plugin that automatically manages the mock server:
 
 ```bash
 python -m pytest integration_tests/test_with_mock_server.py -v
 python -m pytest integration_tests/test_match_result_reporting.py -v
 ```
 
-This approach uses the `mock_fogis_server` fixture in `conftest.py` to start the mock server in a separate thread during test execution.
+This approach uses the `mock_server_auto` fixture in the pytest plugin to start the mock server in a separate thread during test execution.
 
 #### Using the CLI Tool (Manual Mock Server)
 
@@ -137,6 +164,59 @@ python -m fogis_api_client.cli.mock_server stop
 ```
 
 This approach is useful for debugging, as you can inspect the server logs and request history.
+
+#### Using IDE Integration
+
+The project now includes configuration files for VSCode and PyCharm that make it easy to run integration tests from your IDE:
+
+**VSCode**:
+1. Open the project in VSCode
+2. Go to the Run and Debug panel
+3. Select "Python: Run Integration Tests" from the dropdown
+4. Click the Run button
+
+**PyCharm**:
+1. Open the project in PyCharm
+2. Go to the Run configurations dropdown
+3. Select "Run Integration Tests"
+4. Click the Run button
+
+## Pytest Plugin
+
+The project includes a pytest plugin (`pytest_plugin.py`) that makes it easy to use the mock server in tests. The plugin provides the following fixtures:
+
+- `mock_server_auto`: Automatically starts and stops the mock server
+- `mock_api_urls_auto`: Temporarily overrides API URLs to point to the mock server
+- `clear_request_history_auto`: Clears the request history before and after each test
+- `fogis_test_client_auto`: Provides a configured FogisApiClient for testing
+
+To use these fixtures in your tests, simply include them as parameters:
+
+```python
+def test_some_functionality(mock_server_auto, mock_api_urls_auto, clear_request_history_auto):
+    # Create a client
+    client = FogisApiClient(
+        username="test_user",
+        password="test_password",
+    )
+
+    # Test the functionality
+    result = client.some_method()
+
+    # Verify the result
+    assert result is not None
+```
+
+Or use the combined fixture for simplicity:
+
+```python
+def test_some_functionality(fogis_test_client_auto):
+    # Test the functionality
+    result = fogis_test_client_auto.some_method()
+
+    # Verify the result
+    assert result is not None
+```
 
 ## Request Validation
 
