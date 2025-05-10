@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.5.0] - 2025-05-23
+
+### Added
+- Enhanced mock server with additional features and improvements:
+  - Added mock server as a development dependency for easier local testing without Docker
+  - Created a standalone script in scripts/run_mock_server.py for quick startup
+  - Added a CLI tool in fogis_api_client/cli/mock_server.py with commands for managing the mock server
+  - Enhanced mock server with support for more API endpoints
+  - Added REST API to the mock server for CLI commands
+  - Added commands for checking server status, stopping the server, viewing request history, managing validation, and testing endpoints
+  - Improved documentation with detailed usage examples
+
+### Changed
+- Updated README.md with instructions for using the mock server
+- Improved integration tests to work with the local mock server
+
 ## [0.4.6] - 2025-05-22
 
 ### Changed
