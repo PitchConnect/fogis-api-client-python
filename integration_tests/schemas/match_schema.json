@@ -1,0 +1,645 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Match Schema",
+  "description": "Schema for FOGIS API match data",
+  "type": "object",
+  "properties": {
+    "__type": {
+      "type": "string",
+      "description": "Type identifier for the match object",
+      "example": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchJSON"
+    },
+    "value": {
+      "type": "string",
+      "description": "Match number value",
+      "example": "000402010"
+    },
+    "label": {
+      "type": "string",
+      "description": "Human-readable match label",
+      "example": "000402010: IFK Göteborg - Falkenbergs FF (Ligacupen Elit Västra), 2025-05-06 17:00"
+    },
+    "matchid": {
+      "type": "integer",
+      "description": "Unique identifier for the match",
+      "example": 6186203
+    },
+    "matchnr": {
+      "type": "string",
+      "description": "Match number",
+      "example": "000402010"
+    },
+    "fotbollstypid": {
+      "type": "integer",
+      "description": "Football type ID",
+      "example": 1
+    },
+    "matchlag1id": {
+      "type": "integer",
+      "description": "ID for the home team in this match",
+      "example": 12347073
+    },
+    "lag1lagengagemangid": {
+      "type": "integer",
+      "description": "Team engagement ID for home team",
+      "example": 1290077
+    },
+    "lag1lagid": {
+      "type": "integer",
+      "description": "Team ID for home team",
+      "example": 307779
+    },
+    "lag1foreningid": {
+      "type": "integer",
+      "description": "Association ID for home team",
+      "example": 11012
+    },
+    "lag1forbundid": {
+      "type": "integer",
+      "description": "Federation ID for home team",
+      "example": 0
+    },
+    "lag1namn": {
+      "type": "string",
+      "description": "Name of the home team",
+      "example": "IFK Göteborg"
+    },
+    "lag1spelsystem": {
+      "type": "string",
+      "description": "Playing system for home team",
+      "example": ""
+    },
+    "matchlag2id": {
+      "type": "integer",
+      "description": "ID for the away team in this match",
+      "example": 12347074
+    },
+    "lag2lagengagemangid": {
+      "type": "integer",
+      "description": "Team engagement ID for away team",
+      "example": 1290079
+    },
+    "lag2lagid": {
+      "type": "integer",
+      "description": "Team ID for away team",
+      "example": 99217
+    },
+    "lag2foreningid": {
+      "type": "integer",
+      "description": "Association ID for away team",
+      "example": 9525
+    },
+    "lag2forbundid": {
+      "type": "integer",
+      "description": "Federation ID for away team",
+      "example": 0
+    },
+    "lag2namn": {
+      "type": "string",
+      "description": "Name of the away team",
+      "example": "Falkenbergs FF"
+    },
+    "lag2spelsystem": {
+      "type": "string",
+      "description": "Playing system for away team",
+      "example": ""
+    },
+    "anlaggningid": {
+      "type": "integer",
+      "description": "ID of the venue",
+      "example": 22217
+    },
+    "anlaggningnamn": {
+      "type": "string",
+      "description": "Name of the venue",
+      "example": "Kamratgården 2 hybrid"
+    },
+    "anlaggningLatitud": {
+      "type": "number",
+      "description": "Latitude of the venue",
+      "example": 57.697617
+    },
+    "anlaggningLongitud": {
+      "type": "number",
+      "description": "Longitude of the venue",
+      "example": 12.028288
+    },
+    "tid": {
+      "type": "string",
+      "description": "Match time in .NET date format",
+      "example": "/Date(1746543600000)/"
+    },
+    "speldatum": {
+      "type": "string",
+      "description": "Match date",
+      "example": "2025-05-06"
+    },
+    "avsparkstid": {
+      "type": "string",
+      "description": "Kick-off time",
+      "example": "17:00"
+    },
+    "tidsangivelse": {
+      "type": "string",
+      "description": "Time specification",
+      "example": "2025-05-06, 17:00"
+    },
+    "tavlingid": {
+      "type": "integer",
+      "description": "Competition ID",
+      "example": 125200
+    },
+    "tavlingnr": {
+      "type": "string",
+      "description": "Competition number",
+      "example": "000402"
+    },
+    "tavlingnamn": {
+      "type": "string",
+      "description": "Competition name",
+      "example": "Ligacupen Elit Västra"
+    },
+    "tavlingskategoriid": {
+      "type": "integer",
+      "description": "Competition category ID",
+      "example": 730
+    },
+    "tavlingskategorinamn": {
+      "type": "string",
+      "description": "Competition category name",
+      "example": "Ligacupen Elit"
+    },
+    "tavlingagsavforbundid": {
+      "type": "integer",
+      "description": "Competition federation ID",
+      "example": 1
+    },
+    "matchlag1mal": {
+      "type": "integer",
+      "description": "Goals scored by home team",
+      "example": 5
+    },
+    "matchlag2mal": {
+      "type": "integer",
+      "description": "Goals scored by away team",
+      "example": 2
+    },
+    "arslutresultat": {
+      "type": "boolean",
+      "description": "Whether this is the final result",
+      "example": true
+    },
+    "wo": {
+      "type": "boolean",
+      "description": "Walk-over flag",
+      "example": false
+    },
+    "ow": {
+      "type": "boolean",
+      "description": "Opposite walk-over flag",
+      "example": false
+    },
+    "ww": {
+      "type": "boolean",
+      "description": "Double walk-over flag",
+      "example": false
+    },
+    "antalaskadare": {
+      "type": "integer",
+      "description": "Number of spectators",
+      "example": 0
+    },
+    "uppskjuten": {
+      "type": "boolean",
+      "description": "Whether the match is postponed",
+      "example": false
+    },
+    "avbruten": {
+      "type": "boolean",
+      "description": "Whether the match was abandoned",
+      "example": false
+    },
+    "installd": {
+      "type": "boolean",
+      "description": "Whether the match was cancelled",
+      "example": false
+    },
+    "matchrapportgodkandavdomare": {
+      "type": "boolean",
+      "description": "Whether the match report is approved by the referee",
+      "example": true
+    },
+    "matchrapportgodkandavdomaredatum": {
+      "type": "string",
+      "description": "Date when the match report was approved by the referee in .NET date format",
+      "example": "/Date(1746717287217)/"
+    },
+    "matchrapportgodkandavdomaredatumformaterad": {
+      "type": "string",
+      "description": "Formatted date when the match report was approved by the referee",
+      "example": "2025-05-08 17:14:47"
+    },
+    "tavlinganvanderhogupplosttid": {
+      "type": "boolean",
+      "description": "Whether the competition uses high-resolution time",
+      "example": false
+    },
+    "tavlingantalstartadespelareigodkanddomarrapport": {
+      "type": "integer",
+      "description": "Number of starting players in approved referee report",
+      "example": 0
+    },
+    "tavlingmaxantalspelareimatchtruppigodkanddomarrapport": {
+      "type": "integer",
+      "description": "Maximum number of players in match squad in approved referee report",
+      "example": 0
+    },
+    "tavlingantalledareimatchtrupp": {
+      "type": "integer",
+      "description": "Number of leaders in match squad",
+      "example": 7
+    },
+    "tavlingantalspelareimatchtrupp": {
+      "type": "integer",
+      "description": "Number of players in match squad",
+      "example": 20
+    },
+    "antalhalvlekar": {
+      "type": "integer",
+      "description": "Number of halves",
+      "example": 2
+    },
+    "tidperhalvlek": {
+      "type": "integer",
+      "description": "Time per half in minutes",
+      "example": 45
+    },
+    "antalforlangningsperioder": {
+      "type": "integer",
+      "description": "Number of extra time periods",
+      "example": 0
+    },
+    "tidperforlangningsperiod": {
+      "type": "integer",
+      "description": "Time per extra time period in minutes",
+      "example": 0
+    },
+    "liverapporteringTillaten": {
+      "type": "boolean",
+      "description": "Whether live reporting is allowed",
+      "example": false
+    },
+    "liverapporteringPaborjad": {
+      "type": "boolean",
+      "description": "Whether live reporting has started",
+      "example": false
+    },
+    "liverapporteringAvslutad": {
+      "type": "boolean",
+      "description": "Whether live reporting has ended",
+      "example": false
+    },
+    "liverapporteringsAktorTypId": {
+      "type": "integer",
+      "description": "Live reporting actor type ID",
+      "example": 0
+    },
+    "anvanderspelarleg": {
+      "type": "boolean",
+      "description": "Whether player legitimation is used",
+      "example": false
+    },
+    "foreningsanvandarefarredigeramotstandartrupp": {
+      "type": "boolean",
+      "description": "Whether association users can edit opponent squad",
+      "example": false
+    },
+    "foreningsanvandarefarregistreramatchhandelser": {
+      "type": "boolean",
+      "description": "Whether association users can register match events",
+      "example": false
+    },
+    "foreningsanvandarefarregistreramatchresultat": {
+      "type": "boolean",
+      "description": "Whether association users can register match results",
+      "example": false
+    },
+    "domaruppdraglista": {
+      "type": "array",
+      "description": "List of referee assignments",
+      "items": {
+        "type": "object",
+        "properties": {
+          "domaruppdragid": {
+            "type": "integer",
+            "description": "Referee assignment ID",
+            "example": 6893469
+          },
+          "matchid": {
+            "type": "integer",
+            "description": "Match ID",
+            "example": 6186203
+          },
+          "matchnr": {
+            "type": "string",
+            "description": "Match number",
+            "example": "000402010"
+          },
+          "domarrollid": {
+            "type": "integer",
+            "description": "Referee role ID",
+            "example": 1
+          },
+          "domarrollnamn": {
+            "type": "string",
+            "description": "Referee role name",
+            "example": "Huvuddomare"
+          },
+          "domarrollkortnamn": {
+            "type": "string",
+            "description": "Referee role short name",
+            "example": "Dom"
+          },
+          "domareid": {
+            "type": "integer",
+            "description": "Referee ID",
+            "example": 6600
+          },
+          "domarnr": {
+            "type": "string",
+            "description": "Referee number",
+            "example": "61318"
+          },
+          "personid": {
+            "type": "integer",
+            "description": "Person ID",
+            "example": 1082017
+          },
+          "domaruppdragstatusid": {
+            "type": "integer",
+            "description": "Referee assignment status ID",
+            "example": 5
+          },
+          "domaruppdragstatusnamn": {
+            "type": "string",
+            "description": "Referee assignment status name",
+            "example": "Tilldelat"
+          },
+          "personnamn": {
+            "type": "string",
+            "description": "Person name",
+            "example": "Bartek Svaberg"
+          },
+          "telefon": {
+            "type": "string",
+            "description": "Phone number",
+            "example": ""
+          },
+          "mobiltelefon": {
+            "type": "string",
+            "description": "Mobile phone number",
+            "example": "0709423055"
+          },
+          "telefonarbete": {
+            "type": "string",
+            "description": "Work phone number",
+            "example": ""
+          },
+          "adress": {
+            "type": "string",
+            "description": "Address",
+            "example": "Lilla Tulteredsvägen 50 "
+          },
+          "coadress": {
+            "type": "string",
+            "description": "Co-address",
+            "example": ""
+          },
+          "epostadress": {
+            "type": "string",
+            "description": "Email address",
+            "example": "bartek.svaberg@gmail.com"
+          },
+          "land": {
+            "type": "string",
+            "description": "Country",
+            "example": "Sverige"
+          },
+          "namn": {
+            "type": "string",
+            "description": "Name",
+            "example": "Bartek Svaberg"
+          },
+          "postnr": {
+            "type": "string",
+            "description": "Postal code",
+            "example": "43331"
+          },
+          "postort": {
+            "type": "string",
+            "description": "Postal city",
+            "example": "Partille"
+          }
+        }
+      }
+    },
+    "domarefargodkannarapport": {
+      "type": "boolean",
+      "description": "Whether the referee can approve the report",
+      "example": false
+    },
+    "domarrapporteringTillaten": {
+      "type": "boolean",
+      "description": "Whether referee reporting is allowed",
+      "example": false
+    },
+    "noteringfranlag1": {
+      "type": "string",
+      "description": "Notes from home team",
+      "example": ""
+    },
+    "noteringfranlag2": {
+      "type": "string",
+      "description": "Notes from away team",
+      "example": ""
+    },
+    "noteringfrandomare": {
+      "type": "string",
+      "description": "Notes from referee",
+      "example": ""
+    },
+    "tavlingFriaByten": {
+      "type": "boolean",
+      "description": "Whether the competition allows free substitutions",
+      "example": true
+    },
+    "tavlingDomareMojliggorHamtningAvFrammandeSpelareTillMatchtrupp": {
+      "type": "boolean",
+      "description": "Whether the referee can fetch foreign players to match squad",
+      "example": true
+    },
+    "tavlingAntalTimmarInnanMatchForTruppAdministration": {
+      "type": "integer",
+      "description": "Number of hours before match for squad administration",
+      "example": 0
+    },
+    "tavlingDomareKravForekomstAvAnsvarigLagledareIGodkandDomarrapport": {
+      "type": "boolean",
+      "description": "Whether the referee requires presence of responsible team leader in approved referee report",
+      "example": false
+    },
+    "tavlingAntalDagarEfterMatchForAdministrationAvDomarrapport": {
+      "type": "integer",
+      "description": "Number of days after match for administration of referee report",
+      "example": 3
+    },
+    "tavlingKonId": {
+      "type": "integer",
+      "description": "Competition gender ID",
+      "example": 2
+    },
+    "tavlingAlderskategori": {
+      "type": "integer",
+      "description": "Competition age category",
+      "example": 4
+    },
+    "kontaktpersoner": {
+      "type": "array",
+      "description": "List of contact persons",
+      "items": {
+        "type": "object",
+        "properties": {
+          "lagid": {
+            "type": "integer",
+            "description": "Team ID",
+            "example": 307779
+          },
+          "lagnamn": {
+            "type": "string",
+            "description": "Team name",
+            "example": "IFK Göteborg"
+          },
+          "personid": {
+            "type": "integer",
+            "description": "Person ID",
+            "example": 1403481
+          },
+          "personnamn": {
+            "type": "string",
+            "description": "Person name",
+            "example": "Liam Wohlén"
+          },
+          "telefon": {
+            "type": "string",
+            "description": "Phone number",
+            "example": ""
+          },
+          "mobiltelefon": {
+            "type": "string",
+            "description": "Mobile phone number",
+            "example": "0721808260"
+          },
+          "telefonarbete": {
+            "type": "string",
+            "description": "Work phone number",
+            "example": ""
+          },
+          "adress": {
+            "type": "string",
+            "description": "Address",
+            "example": "Bangårdsgatan 17 lgh 1209"
+          },
+          "coadress": {
+            "type": "string",
+            "description": "Co-address",
+            "example": ""
+          },
+          "epostadress": {
+            "type": "string",
+            "description": "Email address",
+            "example": "liamwohlen@gmail.com"
+          },
+          "land": {
+            "type": "string",
+            "description": "Country",
+            "example": "Sverige"
+          },
+          "postnr": {
+            "type": "string",
+            "description": "Postal code",
+            "example": "41112"
+          },
+          "postort": {
+            "type": "string",
+            "description": "Postal city",
+            "example": "Göteborg"
+          },
+          "reserv": {
+            "type": "boolean",
+            "description": "Whether this is a reserve contact",
+            "example": false
+          },
+          "foreningId": {
+            "type": "integer",
+            "description": "Association ID",
+            "example": 11012
+          }
+        }
+      }
+    },
+    "matchlag1OffentliggorMatchtruppDatumTid": {
+      "type": "string",
+      "description": "Date and time when home team publishes match squad in .NET date format",
+      "example": "/Date(1746540000000)/"
+    },
+    "matchlag2OffentliggorMatchtruppDatumTid": {
+      "type": "string",
+      "description": "Date and time when away team publishes match squad in .NET date format",
+      "example": "/Date(1746540000000)/"
+    },
+    "tavlingDomareAntalMinuterForeMatchSomTrupperOffentliggors": {
+      "type": "integer",
+      "description": "Number of minutes before match when squads are published",
+      "example": 60
+    },
+    "domareArHuvuddomare": {
+      "type": "boolean",
+      "description": "Whether the referee is the main referee",
+      "example": true
+    },
+    "tavlingMatchklimatDomareKanLamnaOmdome": {
+      "type": "boolean",
+      "description": "Whether the referee can leave opinion about match climate",
+      "example": false
+    },
+    "tavlingDomareVisaVarningsOchAvstangningsAckumulering": {
+      "type": "boolean",
+      "description": "Whether to show warning and suspension accumulation to referee",
+      "example": true
+    },
+    "TavlingTrojnummerKravsIForeningensLaguppstallning": {
+      "type": "boolean",
+      "description": "Whether jersey numbers are required in association's team lineup",
+      "example": false
+    }
+  },
+  "required": [
+    "__type",
+    "value",
+    "label",
+    "matchid",
+    "matchnr",
+    "fotbollstypid",
+    "matchlag1id",
+    "lag1lagid",
+    "lag1namn",
+    "matchlag2id",
+    "lag2lagid",
+    "lag2namn",
+    "tid",
+    "speldatum",
+    "avsparkstid",
+    "tavlingid",
+    "tavlingnamn"
+  ]
+}

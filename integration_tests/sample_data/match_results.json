@@ -1,0 +1,26 @@
+[
+  {
+    "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchresultatJSON",
+    "matchresultatid": 4694381,
+    "matchid": 6169946,
+    "matchresultattypid": 1,
+    "matchresultattypnamn": "Slutresultat",
+    "wo": false,
+    "ow": false,
+    "ww": false,
+    "matchlag1mal": 3,
+    "matchlag2mal": 1
+  },
+  {
+    "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchresultatJSON",
+    "matchresultatid": 4694604,
+    "matchid": 6169946,
+    "matchresultattypid": 2,
+    "matchresultattypnamn": "Resultat efter period 1",
+    "wo": false,
+    "ow": false,
+    "ww": false,
+    "matchlag1mal": 1,
+    "matchlag2mal": 0
+  }
+]

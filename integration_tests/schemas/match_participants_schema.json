@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Match Participant Schema",
+  "description": "Schema for FOGIS API match participant (player or team official) data",
+  "type": "object",
+  "properties": {
+    "__type": {
+      "type": "string",
+      "description": "Type identifier for the match participant object",
+      "example": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchdeltagareJSON"
+    },
+    "matchdeltagareid": {
+      "type": "integer",
+      "description": "Unique identifier for the match participant",
+      "example": 46489933
+    },
+    "matchid": {
+      "type": "integer",
+      "description": "ID of the match",
+      "example": 6169946
+    },
+    "matchlagid": {
+      "type": "integer",
+      "description": "ID of the team in the match",
+      "example": 12316432
+    },
+    "spelareid": {
+      "type": "integer",
+      "description": "ID of the player",
+      "example": 986655
+    },
+    "trojnummer": {
+      "type": "integer",
+      "description": "Jersey number of the player",
+      "example": 4
+    },
+    "fornamn": {
+      "type": "string",
+      "description": "First name of the player",
+      "example": "Kevin"
+    },
+    "efternamn": {
+      "type": "string",
+      "description": "Last name of the player",
+      "example": "Abika"
+    },
+    "personnr": {
+      "type": "string",
+      "description": "Personal identification number",
+      "example": "200501283592"
+    },
+    "agerestriction": {
+      "type": "string",
+      "description": "Age restriction information",
+      "example": ""
+    },
+    "matchlagnamn": {
+      "type": "string",
+      "description": "Name of the team in the match",
+      "example": "Lindome GIF"
+    },
+    "lagdelid": {
+      "type": "integer",
+      "description": "Team part ID",
+      "example": 0
+    },
+    "lagkapten": {
+      "type": "boolean",
+      "description": "Whether the player is the team captain",
+      "example": false
+    },
+    "ersattare": {
+      "type": "boolean",
+      "description": "Whether the player is a substitute",
+      "example": true
+    },
+    "ejlicensieradibeslaktadforening": {
+      "type": "boolean",
+      "description": "Whether the player is not licensed in a related association",
+      "example": false
+    },
+    "foreningid": {
+      "type": "integer",
+      "description": "ID of the association",
+      "example": 10741
+    },
+    "positionsnummerhv": {
+      "type": "integer",
+      "description": "Position number",
+      "example": 0
+    },
+    "byte1": {
+      "type": "integer",
+      "description": "First substitution minute",
+      "example": 0
+    },
+    "byte2": {
+      "type": "integer",
+      "description": "Second substitution minute",
+      "example": 0
+    },
+    "utvisning": {
+      "type": "string",
+      "description": "Expulsion information",
+      "example": ""
+    },
+    "arSpelandeLedare": {
+      "type": "boolean",
+      "description": "Whether the participant is a playing leader",
+      "example": false
+    },
+    "ansvarig": {
+      "type": "boolean",
+      "description": "Whether the participant is responsible",
+      "example": false
+    },
+    "spelarregistreringsstrang": {
+      "type": "string",
+      "description": "Player registration string",
+      "example": ""
+    },
+    "spelareAntalAckumuleradeVarningar": {
+      "type": "integer",
+      "description": "Number of accumulated warnings for the player",
+      "example": 0
+    },
+    "spelareAvstangningBeskrivning": {
+      "type": "string",
+      "description": "Description of player suspension",
+      "example": ""
+    }
+  },
+  "required": [
+    "__type",
+    "matchdeltagareid",
+    "matchid",
+    "matchlagid",
+    "spelareid",
+    "fornamn",
+    "efternamn"
+  ]
+}
