@@ -37,17 +37,17 @@
     "fornamn": {
       "type": "string",
       "description": "First name of the player",
-      "example": "Kevin"
+      "example": "Player"
     },
     "efternamn": {
       "type": "string",
       "description": "Last name of the player",
-      "example": "Abika"
+      "example": "One"
     },
     "personnr": {
       "type": "string",
       "description": "Personal identification number",
-      "example": "200501283592"
+      "example": "200000000000"
     },
     "agerestriction": {
       "type": "string",

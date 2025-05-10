@@ -388,7 +388,7 @@
           "personnamn": {
             "type": "string",
             "description": "Person name",
-            "example": "Bartek Svaberg"
+            "example": "John Doe"
           },
           "telefon": {
             "type": "string",
@@ -398,7 +398,7 @@
           "mobiltelefon": {
             "type": "string",
             "description": "Mobile phone number",
-            "example": "0709423055"
+            "example": "0700000000"
           },
           "telefonarbete": {
             "type": "string",
@@ -408,7 +408,7 @@
           "adress": {
             "type": "string",
             "description": "Address",
-            "example": "Lilla Tulteredsvägen 50 "
+            "example": "Example Street 1"
           },
           "coadress": {
             "type": "string",
@@ -418,7 +418,7 @@
           "epostadress": {
             "type": "string",
             "description": "Email address",
-            "example": "bartek.svaberg@gmail.com"
+            "example": "john.doe@example.com"
           },
           "land": {
             "type": "string",
@@ -428,17 +428,17 @@
           "namn": {
             "type": "string",
             "description": "Name",
-            "example": "Bartek Svaberg"
+            "example": "John Doe"
           },
           "postnr": {
             "type": "string",
             "description": "Postal code",
-            "example": "43331"
+            "example": "12345"
           },
           "postort": {
             "type": "string",
             "description": "Postal city",
-            "example": "Partille"
+            "example": "Example City"
           }
         }
       }
@@ -517,7 +517,7 @@
           "lagnamn": {
             "type": "string",
             "description": "Team name",
-            "example": "IFK Göteborg"
+            "example": "Team A"
           },
           "personid": {
             "type": "integer",
@@ -527,7 +527,7 @@
           "personnamn": {
             "type": "string",
             "description": "Person name",
-            "example": "Liam Wohlén"
+            "example": "Team Contact 1"
           },
           "telefon": {
             "type": "string",
@@ -537,7 +537,7 @@
           "mobiltelefon": {
             "type": "string",
             "description": "Mobile phone number",
-            "example": "0721808260"
+            "example": "0700000000"
           },
           "telefonarbete": {
             "type": "string",
@@ -547,7 +547,7 @@
           "adress": {
             "type": "string",
             "description": "Address",
-            "example": "Bangårdsgatan 17 lgh 1209"
+            "example": "Example Street 3"
           },
           "coadress": {
             "type": "string",
@@ -557,7 +557,7 @@
           "epostadress": {
             "type": "string",
             "description": "Email address",
-            "example": "liamwohlen@gmail.com"
+            "example": "contact1@example.com"
           },
           "land": {
             "type": "string",
