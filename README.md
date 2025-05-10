@@ -5,7 +5,7 @@
 
 A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
 
-This is a test change for workflow automation testing.
+This is a test change for workflow automation testing after permission fixes.
 
 ## Features
 
