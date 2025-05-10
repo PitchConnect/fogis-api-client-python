@@ -1,0 +1,186 @@
+name: Issue Updater
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  update-issues:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Update issues when PR is closed
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const prBody = context.payload.pull_request.body || '';
+            const isMerged = context.payload.pull_request.merged;
+            const targetBranch = context.payload.pull_request.base.ref;
+
+            console.log(`Processing ${isMerged ? 'merged' : 'closed'} PR #${prNumber} to ${targetBranch}`);
+            console.log(`PR body: ${prBody}`);
+
+            // Extract issue numbers from PR body using multiple patterns
+            let issueNumbers = [];
+
+            // Pattern 1: Fixes #X, Closes #X, etc.
+            const fixPattern = /(?:fix(?:e[sd])?|close[sd]?|resolve[sd]?)\s*:?\s*#(\d+)/gi;
+            let match;
+            while ((match = fixPattern.exec(prBody)) !== null) {
+              issueNumbers.push(parseInt(match[1], 10));
+            }
+
+            // Pattern 2: Simple #X references (only if no matches from pattern 1)
+            if (issueNumbers.length === 0) {
+              const simplePattern = /#(\d+)/g;
+              while ((match = simplePattern.exec(prBody)) !== null) {
+                // Avoid matching PR numbers like "#123"
+                if (!prBody.includes(`#${match[1]}`) || !prBody.includes(`PR #${match[1]}`)) {
+                  issueNumbers.push(parseInt(match[1], 10));
+                }
+              }
+            }
+
+            // Remove duplicates
+            issueNumbers = [...new Set(issueNumbers)];
+
+            console.log(`Found issue references: ${issueNumbers.join(', ')}`);
+
+            // Process each issue
+            for (const issueNumber of issueNumbers) {
+              try {
+                // Get current issue data
+                const { data: issue } = await github.rest.issues.get({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber
+                });
+
+                console.log(`Processing issue #${issueNumber} (current state: ${issue.state})`);
+
+                if (isMerged) {
+                  // For merged PRs
+
+                  // Remove review-ready label if it exists
+                  try {
+                    await github.rest.issues.removeLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issueNumber,
+                      name: 'review-ready'
+                    });
+                    console.log(`Removed review-ready label from issue #${issueNumber}`);
+                  } catch (error) {
+                    console.log(`Note: review-ready label not found on issue #${issueNumber}`);
+                  }
+
+                  // Remove in-progress label if it exists
+                  try {
+                    await github.rest.issues.removeLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issueNumber,
+                      name: 'in-progress'
+                    });
+                    console.log(`Removed in-progress label from issue #${issueNumber}`);
+                  } catch (error) {
+                    console.log(`Note: in-progress label not found on issue #${issueNumber}`);
+                  }
+
+                  // Add appropriate label based on target branch
+                  let newLabel = 'merged-to-develop';
+                  if (targetBranch === 'main') {
+                    newLabel = 'released';
+                  }
+
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    labels: [newLabel]
+                  });
+                  console.log(`Added ${newLabel} label to issue #${issueNumber}`);
+
+                  // Add done label
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    labels: ['done']
+                  });
+                  console.log(`Added done label to issue #${issueNumber}`);
+
+                  // Close the issue
+                  await github.rest.issues.update({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    state: 'closed',
+                    state_reason: 'completed'
+                  });
+                  console.log(`Closed issue #${issueNumber}`);
+
+                  // Add comment
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    body: `This issue has been resolved and merged to the \`${targetBranch}\` branch in PR #${prNumber}.`
+                  });
+                  console.log(`Added comment to issue #${issueNumber}`);
+                } else {
+                  // For closed but not merged PRs
+
+                  // Remove in-progress label if it exists
+                  try {
+                    await github.rest.issues.removeLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issueNumber,
+                      name: 'in-progress'
+                    });
+                    console.log(`Removed in-progress label from issue #${issueNumber}`);
+                  } catch (error) {
+                    console.log(`Note: in-progress label not found on issue #${issueNumber}`);
+                  }
+
+                  // Remove review-ready label if it exists
+                  try {
+                    await github.rest.issues.removeLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      issue_number: issueNumber,
+                      name: 'review-ready'
+                    });
+                    console.log(`Removed review-ready label from issue #${issueNumber}`);
+                  } catch (error) {
+                    console.log(`Note: review-ready label not found on issue #${issueNumber}`);
+                  }
+
+                  // Add ready-for-development label
+                  await github.rest.issues.addLabels({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    labels: ['ready-for-development']
+                  });
+                  console.log(`Added ready-for-development label to issue #${issueNumber}`);
+
+                  // Add comment
+                  await github.rest.issues.createComment({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    body: `PR #${prNumber} related to this issue was closed without merging. The issue is now available for development again.`
+                  });
+                  console.log(`Added comment to issue #${issueNumber}`);
+                }
+              } catch (error) {
+                console.log(`Error processing issue #${issueNumber}: ${error.message}`);
+              }
+            }
