@@ -29,6 +29,11 @@ The FOGIS API Client is designed with a clean architecture that separates the pu
 
 The public API is what users of the library interact with. It provides a simple, intuitive interface for common operations like fetching match lists, reporting events, and managing match results. The public API is designed to be stable and backward-compatible.
 
+Key components:
+- `FogisApiClient` class in `public_api_client.py` - The main entry point for users
+- Public type definitions in `types.py` - User-friendly data structures
+- Exception classes for clear error handling
+
 ### Internal API
 
 The internal API handles the low-level communication with the FOGIS API server. It's responsible for:
@@ -38,7 +43,22 @@ The internal API handles the low-level communication with the FOGIS API server. 
 3. Implementing the low-level API contracts
 4. Validating request and response data
 
-This separation allows the public API to focus on usability and type safety, while the internal API ensures compatibility with the server requirements.
+Key components:
+- `InternalApiClient` class in `internal/api_client.py` - Handles server communication
+- Adapter functions in `internal/adapters.py` - Convert between data formats
+- API contracts in `internal/api_contracts.py` - Define and validate data structures
+- Internal type definitions in `internal/types.py` - Match server requirements
+
+### Adapter Pattern
+
+The adapter pattern is used to convert between the user-friendly public API formats and the server-specific internal API formats. This allows us to:
+
+1. Present a clean, consistent interface to users
+2. Handle complex server requirements internally
+3. Adapt to server changes without breaking the public API
+4. Apply default values and transformations automatically
+
+For detailed information about the API architecture, including diagrams, examples, and best practices, see the [API Architecture Documentation](docs/api_architecture.md).
 
 ## Installation
 
