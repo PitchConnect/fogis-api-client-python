@@ -6,14 +6,6 @@
 echo "Creating Docker network..."
 docker network create fogis-network || true
 
-# Build the test image
-echo "Building test image..."
-docker build -t fogis-api-client-test -f Dockerfile.test .
-
-# Run the unit tests
-echo "Running unit tests..."
-docker run --rm fogis-api-client-test pytest tests -v
-
 # Run the integration tests
 echo "Running integration tests..."
 

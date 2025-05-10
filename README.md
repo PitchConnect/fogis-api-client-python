@@ -2,6 +2,8 @@
 
 [![PyPI version](https://badge.fury.io/py/fogis-api-client-timmyBird.svg)](https://badge.fury.io/py/fogis-api-client-timmyBird)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Unit Tests](https://github.com/PitchConnect/fogis-api-client-python/actions/workflows/test.yml/badge.svg?event=push&branch=develop)](https://github.com/PitchConnect/fogis-api-client-python/actions/workflows/test.yml)
+[![Integration Tests](https://github.com/PitchConnect/fogis-api-client-python/actions/workflows/test.yml/badge.svg?event=push&branch=develop)](https://github.com/PitchConnect/fogis-api-client-python/actions/workflows/test.yml)
 
 A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
 

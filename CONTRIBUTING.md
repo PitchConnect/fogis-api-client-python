@@ -157,7 +157,16 @@ When using AI tools (GitHub Copilot, Claude, ChatGPT, etc.):
 
 ### Testing in fogis_api_client
 
-#### Running Tests
+#### CI/CD Pipeline Structure
+
+Our CI/CD pipeline separates unit tests from integration tests:
+
+- **Unit tests** are required to pass for PR merges
+- **Integration tests** run after unit tests but are optional for PR merges
+
+This separation allows us to maintain development velocity even when integration tests are flaky, while ensuring code quality through unit tests.
+
+#### Running Tests Locally
 
 Before submitting a pull request, please ensure all tests pass:
 
@@ -175,6 +184,15 @@ Before submitting a pull request, please ensure all tests pass:
    - Add or update unit tests in the `tests/` directory
    - Add or update integration tests in the `integration_tests/` directory
    - Ensure test coverage for both success and error cases
+
+#### Manual Integration Test Runs
+
+If you need to run integration tests on a specific branch without creating a PR, you can use the manual integration test workflow in GitHub Actions:
+
+1. Go to the "Actions" tab in the repository
+2. Select "Manual Integration Tests" from the workflows list
+3. Click "Run workflow"
+4. Enter the branch name and click "Run workflow"
 
 ### Dynamic Pre-commit Hook Generator
 
