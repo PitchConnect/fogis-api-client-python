@@ -2,6 +2,8 @@
 
 This document provides detailed information about the FOGIS API Client classes, methods, and data types.
 
+> **Note:** For a comprehensive understanding of the API architecture, including the separation between public and internal APIs, adapter patterns, and best practices, see the [API Architecture Documentation](api_architecture.md).
+
 ## Table of Contents
 
 - [FogisApiClient Class](#fogisapiclient-class)

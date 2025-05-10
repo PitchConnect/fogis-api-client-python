@@ -1,0 +1,71 @@
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        User Application                          │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                        Public API Layer                          │
+│                      (FogisApiClient class)                      │
+│                                                                  │
+│  • Provides user-friendly methods                                │
+│  • Uses simple, consistent data structures                       │
+│  • Handles high-level error reporting                            │
+│  • Manages authentication automatically                          │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         Adapter Layer                            │
+│                                                                  │
+│  • Converts between public and internal data formats             │
+│  • Transforms flat structures to nested when needed              │
+│  • Applies default values for optional fields                    │
+│  • Ensures type consistency                                      │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                       Internal API Layer                         │
+│                    (InternalApiClient class)                     │
+│                                                                  │
+│  • Handles low-level communication with FOGIS server             │
+│  • Implements exact API contracts required by server             │
+│  • Validates requests and responses                              │
+│  • Manages session details                                       │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                          FOGIS Server                            │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+This diagram illustrates the layered architecture of the FOGIS API Client:
+
+1. **User Application**: The application that uses the FOGIS API Client library.
+
+2. **Public API Layer**: The user-facing interface that provides a clean, consistent API.
+   - Implemented in `fogis_api_client/public_api_client.py`
+   - Uses public type definitions from `fogis_api_client/types.py`
+   - Provides high-level error handling with custom exception classes
+
+3. **Adapter Layer**: Converts between public and internal data formats.
+   - Implemented in `fogis_api_client/internal/adapters.py`
+   - Handles complex transformations like flat-to-nested conversions
+   - Applies default values and ensures type consistency
+
+4. **Internal API Layer**: Handles low-level communication with the FOGIS server.
+   - Implemented in `fogis_api_client/internal/api_client.py`
+   - Uses internal type definitions from `fogis_api_client/internal/types.py`
+   - Validates requests and responses against JSON schemas
+   - Manages session details and authentication
+
+5. **FOGIS Server**: The external API server that the client communicates with.
+
+This architecture provides several benefits:
+- Separation of concerns
+- Ability to adapt to server changes without breaking the public API
+- Consistent error handling
+- Type safety
+- Validation at appropriate layers

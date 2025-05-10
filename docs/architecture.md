@@ -2,6 +2,8 @@
 
 This document provides an overview of the FOGIS API Client architecture, including system components, data flow, and integration points.
 
+> **Note:** For detailed information about the API architecture, including the separation between public and internal APIs, adapter patterns, and best practices, see the [API Architecture Documentation](api_architecture.md).
+
 ## System Components
 
 The FOGIS API Client consists of several key components that work together to provide a seamless interface to the FOGIS API:

@@ -6,9 +6,31 @@ on:
 
 jobs:
   label-issue:
-    uses: PitchConnect/.github/.github/workflows/issue-labeler.yml@main
+    runs-on: ubuntu-latest
     permissions:
       issues: write
-      contents: read
-    with:
-      label_name: 'triage'
+      contents: write
+    steps:
+      - name: Add triage label
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.addLabels({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['triage']
+            })
+            console.log(`Added triage label to issue #${context.issue.number}`)
+
+            // Also add ready-for-development label if it's not a draft
+            if (!context.payload.issue.draft) {
+              github.rest.issues.addLabels({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                labels: ['ready-for-development']
+              })
+              console.log(`Added ready-for-development label to issue #${context.issue.number}`)
+            }
