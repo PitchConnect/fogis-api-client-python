@@ -175,7 +175,7 @@ class TestSchemaValidator:
                 "matchid": 6169946,
                 "matchlagid": 12316432,
                 "spelareid": 986655,
-                "fornamn": "Kevin",
-                "efternamn": "Abika"
+                "fornamn": "Player",
+                "efternamn": "One"
             }
             assert SchemaValidator.validate_match_participant(participant_data)
