@@ -5,6 +5,8 @@
 
 A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
 
+This is a test change for workflow automation testing.
+
 ## Features
 
 * **Authentication Options**: Login with credentials or session cookies
