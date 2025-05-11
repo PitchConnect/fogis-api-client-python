@@ -1,0 +1,125 @@
+name: Integration Tests
+
+on:
+  workflow_dispatch:  # Allow manual triggering
+    inputs:
+      mock_server_type:
+        description: 'Type of mock server to use'
+        required: true
+        default: 'docker'
+        type: choice
+        options:
+          - docker
+          - local
+      test_files:
+        description: 'Specific test files to run (comma-separated, leave empty for all)'
+        required: false
+        type: string
+
+jobs:
+  integration-tests-docker:
+    name: Integration Tests with Docker Mock Server
+    runs-on: ubuntu-latest
+    if: github.event.inputs.mock_server_type == 'docker'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Check Docker setup
+        run: |
+          # Verify Docker is running
+          docker info
+
+          # Show Docker version
+          docker --version
+
+          # Show Docker Compose version
+          docker compose version
+
+      - name: Build development Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.dev
+          push: false
+          load: true
+          tags: fogis-api-client:dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build mock server Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.mock
+          push: false
+          load: true
+          tags: fogis-mock-server:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create test environment
+        run: |
+          mkdir -p data logs test-results
+          # Create both .env and .env.dev files for compatibility
+          echo "FOGIS_USERNAME=test_user" > .env
+          echo "FOGIS_PASSWORD=test_password" >> .env
+          echo "FLASK_ENV=development" >> .env
+          echo "FLASK_DEBUG=1" >> .env
+
+          # Copy to .env.dev as well
+          cp .env .env.dev
+
+          # Create the Docker network
+          docker network create fogis-network || true
+
+      - name: Run integration tests
+        run: |
+          # Make the CI test script executable
+          chmod +x ./run_ci_tests.sh
+
+          # Run the integration tests
+          ./run_ci_tests.sh ${{ github.event.inputs.test_files }}
+        
+      - name: Upload integration test logs
+        if: always()  # Upload logs even if tests fail
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-test-logs-docker
+          path: logs/
+          retention-days: 5
+
+  integration-tests-local:
+    name: Integration Tests with Local Mock Server
+    runs-on: ubuntu-latest
+    if: github.event.inputs.mock_server_type == 'local'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev,mock-server]"
+
+      - name: Run integration tests with local mock server
+        run: |
+          # Make the script executable
+          chmod +x ./scripts/run_integration_tests_with_mock.py
+
+          # Run the integration tests with the local mock server
+          python ./scripts/run_integration_tests_with_mock.py ${{ github.event.inputs.test_files }}
+        
+      - name: Upload integration test logs
+        if: always()  # Upload logs even if tests fail
+        uses: actions/upload-artifact@v3
+        with:
+          name: integration-test-logs-local
+          path: logs/
+          retention-days: 5
