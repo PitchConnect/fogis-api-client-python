@@ -176,6 +176,41 @@ Before submitting a pull request, please ensure all tests pass:
    - Add or update integration tests in the `integration_tests/` directory
    - Ensure test coverage for both success and error cases
 
+#### Using the Mock Server for Testing
+
+The mock server provides a simulated FOGIS API environment for development and testing without requiring real credentials:
+
+1. **Install the mock server dependencies**:
+   ```bash
+   pip install -e ".[dev,mock-server]"
+   ```
+
+2. **Start the mock server**:
+   ```bash
+   python -m fogis_api_client.cli.mock_server start
+   ```
+
+3. **Run integration tests against the mock server**:
+   ```bash
+   python -m pytest integration_tests
+   ```
+
+4. **Stop the mock server when you're done**:
+   ```bash
+   python -m fogis_api_client.cli.mock_server stop
+   ```
+
+5. **When adding new API endpoints**:
+   - Add the endpoint to the mock server in `integration_tests/mock_fogis_server.py`
+   - Add a request schema in `integration_tests/schemas/` for validation
+   - Add integration tests that use the mock server
+   - See the [Mock Server Documentation](docs/mock_server.md) for details
+
+6. **Using the mock server in CI/CD**:
+   - The GitHub Actions workflows are configured to use the mock server
+   - Integration tests automatically start and stop the mock server
+   - Use the `mock_api_urls` fixture in your tests to handle URL configuration
+
 ### Dynamic Pre-commit Hook Generator
 
 This project uses a dynamic pre-commit hook generator powered by Google's Gemini LLM:
