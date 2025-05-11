@@ -10,8 +10,9 @@ This guide provides solutions for common issues you might encounter when using t
 4. [Match Reporting Issues](#match-reporting-issues)
 5. [Performance Issues](#performance-issues)
 6. [Docker Issues](#docker-issues)
-7. [Common Error Messages](#common-error-messages)
-8. [Frequently Asked Questions](#frequently-asked-questions)
+7. [Mock Server Issues](#mock-server-issues)
+8. [Common Error Messages](#common-error-messages)
+9. [Frequently Asked Questions](#frequently-asked-questions)
 
 ## Authentication Issues
 
@@ -593,6 +594,220 @@ docker run --rm -v "$(pwd):/app" \
   python /app/your_script.py
 ```
 
+## Mock Server Issues
+
+### Issue: Mock Server Won't Start
+
+**Symptoms:**
+- `OSError: [Errno 98] Address already in use`
+- `ConnectionRefusedError: [Errno 111] Connection refused`
+- Error when trying to start the mock server
+
+**Possible Causes:**
+- Port already in use by another process
+- Missing dependencies
+- Python path issues
+
+**Solutions:**
+1. Try a different port:
+   ```bash
+   python -m fogis_api_client.cli.mock_server start --port 5002
+   ```
+
+2. Check if the port is already in use:
+   ```bash
+   # On Linux/macOS
+   lsof -i :5001
+
+   # On Windows
+   netstat -ano | findstr :5001
+   ```
+
+3. Ensure you've installed the package with mock server dependencies:
+   ```bash
+   pip install -e ".[dev,mock-server]"
+   ```
+
+4. Make sure you're running the command from the project root directory
+
+**Example:**
+```python
+# Try a different port programmatically
+from integration_tests.mock_fogis_server import MockFogisServer
+
+try:
+    server = MockFogisServer(port=5001)
+    server.run(threaded=True)
+except OSError:
+    print("Port 5001 is already in use, trying port 5002...")
+    server = MockFogisServer(port=5002)
+    server.run(threaded=True)
+```
+
+### Issue: Authentication Failures with Mock Server
+
+**Symptoms:**
+- Tests fail with authentication errors
+- `AuthenticationError: Failed to login` when using the mock server
+
+**Possible Causes:**
+- Using incorrect test credentials
+- Cookie handling issues
+- Session management problems
+
+**Solutions:**
+1. Use the default test credentials:
+   ```python
+   client = FogisApiClient(
+       username="test_user",
+       password="test_password",
+       base_url="http://localhost:5001/mdk"
+   )
+   ```
+
+2. Ensure your client is properly handling the authentication cookies
+
+3. Check that the mock server is running and accessible:
+   ```bash
+   python -m fogis_api_client.cli.mock_server status
+   ```
+
+**Example:**
+```python
+# Verify the mock server is running before testing
+import requests
+
+def is_mock_server_running(host="localhost", port=5001):
+    try:
+        response = requests.get(f"http://{host}:{port}/mdk/Login.aspx")
+        return response.status_code == 200
+    except requests.exceptions.ConnectionError:
+        return False
+
+# Check if the server is running
+if not is_mock_server_running():
+    print("Mock server is not running. Starting it...")
+    # Start the server
+```
+
+### Issue: Request Validation Errors
+
+**Symptoms:**
+- Requests fail with validation errors
+- `{"d": {"success": false, "error": "Invalid request structure"}}`
+- Integration tests fail with validation errors
+
+**Possible Causes:**
+- Request doesn't match the expected schema
+- Missing required fields
+- Incorrect data types
+- Schema validation is too strict
+
+**Solutions:**
+1. Check the request structure against the schema in `integration_tests/schemas/`
+
+2. View the request history to see what's being sent:
+   ```bash
+   python -m fogis_api_client.cli.mock_server history
+   ```
+
+3. Temporarily disable validation for debugging:
+   ```bash
+   python -m fogis_api_client.cli.mock_server validation --disable
+   ```
+
+4. Update the schema if the API has changed
+
+**Example:**
+```python
+# Disable validation programmatically for debugging
+from integration_tests.mock_fogis_server import MockFogisServer
+
+server = MockFogisServer()
+server.validate_requests = False  # Disable validation
+server.run(threaded=True)
+
+# Now you can send requests without validation
+# This is useful for debugging
+```
+
+### Issue: Integration Tests Failing with Mock Server
+
+**Symptoms:**
+- Integration tests fail when run against the mock server
+- `ConnectionRefusedError: [Errno 111] Connection refused`
+- Tests pass locally but fail in CI/CD
+
+**Possible Causes:**
+- Mock server not running
+- Wrong URL configuration
+- Request validation failures
+- Response handling issues
+
+**Solutions:**
+1. Use the `mock_api_urls` fixture to automatically start and stop the server:
+   ```python
+   def test_fetch_matches(mock_api_urls):
+       client = FogisApiClient(username="test_user", password="test_password")
+       matches = client.get_matches()
+       assert len(matches) > 0
+   ```
+
+2. Check URL configuration:
+   ```python
+   # Make sure the base URL is correct
+   client = FogisApiClient(
+       username="test_user",
+       password="test_password",
+       base_url="http://localhost:5001/mdk"  # Correct URL for mock server
+   )
+   ```
+
+3. Disable validation for debugging:
+   ```bash
+   python -m fogis_api_client.cli.mock_server validation --disable
+   ```
+
+4. Check Docker networking in CI/CD:
+   ```yaml
+   # In GitHub Actions workflow
+   services:
+     mock-server:
+       image: fogis-mock-server:latest
+       ports:
+         - 5001:5001
+   ```
+
+**Example:**
+```python
+# Helper function to ensure mock server is running
+def ensure_mock_server_running():
+    import subprocess
+    import time
+
+    # Check if server is running
+    try:
+        result = subprocess.run(
+            ["python", "-m", "fogis_api_client.cli.mock_server", "status"],
+            capture_output=True,
+            text=True
+        )
+        if "Mock server is running" in result.stdout:
+            return True
+    except Exception:
+        pass
+
+    # Start the server if not running
+    subprocess.run(
+        ["python", "-m", "fogis_api_client.cli.mock_server", "start", "--threaded"],
+        capture_output=True
+    )
+
+    # Wait for server to start
+    time.sleep(2)
+    return True
+```
+
 ## Common Error Messages
 
 ### "Login failed: Invalid credentials or session issue"
@@ -726,3 +941,117 @@ if event_code in EVENT_TYPES:
 else:
     print(f"Invalid event type code: {event_code}")
 ```
+
+### How do I use the mock server for development?
+
+**Answer:** The mock server provides a simulated FOGIS API environment for development without requiring real credentials:
+
+1. **Install the dependencies**:
+   ```bash
+   pip install -e ".[dev,mock-server]"
+   ```
+
+2. **Start the mock server**:
+   ```bash
+   python -m fogis_api_client.cli.mock_server start
+   ```
+
+3. **Configure your client to use the mock server**:
+   ```python
+   client = FogisApiClient(
+       username="test_user",
+       password="test_password",
+       base_url="http://localhost:5001/mdk"
+   )
+   ```
+
+4. **Develop and test your code against the mock server**
+
+5. **Stop the mock server when you're done**:
+   ```bash
+   python -m fogis_api_client.cli.mock_server stop
+   ```
+
+### How do I add a new endpoint to the mock server?
+
+**Answer:** To add a new endpoint to the mock server:
+
+1. **Identify the endpoint details** (URL path, HTTP method, request/response structure)
+
+2. **Add the endpoint to `mock_fogis_server.py`**:
+   ```python
+   @self.app.route("/mdk/MatchWebMetoder.aspx/NewEndpoint", methods=["POST"])
+   def new_endpoint():
+       auth_result = self._check_auth()
+       if auth_result is not True:
+           return auth_result
+
+       # Get data from request
+       data = request.json or {}
+
+       # Generate response data
+       response_data = {"success": True, "data": {"field1": "value1"}}
+
+       # Return the response
+       return jsonify({"d": json.dumps(response_data)})
+   ```
+
+3. **Add a data generator method to `sample_data_factory.py`** if needed
+
+4. **Add a request schema in `integration_tests/schemas/`** for validation
+
+5. **Update the request validator** to use the new schema
+
+6. **Add integration tests** for the new endpoint
+
+For more details, see the [Mock Server Documentation](docs/mock_server.md#extending-the-mock-server).
+
+### How do I run integration tests with the mock server in CI/CD?
+
+**Answer:** To run integration tests with the mock server in CI/CD:
+
+1. **Add the mock server to your GitHub Actions workflow**:
+   ```yaml
+   jobs:
+     integration-tests:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v2
+
+         - name: Set up Python
+           uses: actions/setup-python@v2
+           with:
+             python-version: '3.9'
+
+         - name: Install dependencies
+           run: |
+             python -m pip install --upgrade pip
+             pip install -e ".[dev,mock-server]"
+
+         - name: Start mock server
+           run: |
+             python -m fogis_api_client.cli.mock_server start --threaded
+
+         - name: Run integration tests
+           run: |
+             pytest integration_tests/
+   ```
+
+2. **Use the `mock_api_urls` fixture in your tests**:
+   ```python
+   def test_fetch_matches(mock_api_urls):
+       client = FogisApiClient(username="test_user", password="test_password")
+       matches = client.get_matches()
+       assert len(matches) > 0
+   ```
+
+3. **Or use Docker Compose**:
+   ```yaml
+   services:
+     mock-server:
+       build:
+         context: .
+         dockerfile: Dockerfile.mock
+       ports:
+         - "5001:5001"
+   ```
