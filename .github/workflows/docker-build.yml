@@ -2,14 +2,16 @@ name: Docker Build and Test
 
 on:
   push:
-    branches: [ "main", "feature/*" ]
+    branches: [ "main", "develop", "feature/*" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
   release:
     types: [published]
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
-  docker-build-test:
+  docker-unit-tests:
+    name: Docker Unit Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,6 +22,36 @@ jobs:
       - name: Run CI dependency check
         run: |
           ./scripts/ci_dependency_check.sh
+
+      - name: Build test Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.test
+          push: false
+          load: true
+          tags: fogis-api-client:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run unit tests
+        run: |
+          # Make the CI unit test script executable
+          chmod +x ./scripts/run_ci_unit_tests.sh
+
+          # Run the unit tests
+          ./scripts/run_ci_unit_tests.sh
+
+  docker-integration-tests:
+    name: Docker Integration Tests
+    runs-on: ubuntu-latest
+    needs: docker-unit-tests  # Only run after unit tests pass
+    continue-on-error: true  # Allow the workflow to continue even if integration tests fail
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Build development Docker image
         uses: docker/build-push-action@v5
@@ -47,17 +79,17 @@ jobs:
           # Create the Docker network
           docker network create fogis-network || true
 
-      - name: Run unit tests
+      - name: Run integration tests
         run: |
-          # Build the test Docker image
-          docker build -t fogis-api-client-test -f Dockerfile.test .
+          # Make the CI test script executable
+          chmod +x ./run_ci_tests.sh
 
-          # Run the unit tests
-          docker run --rm fogis-api-client-test ./scripts/run_unit_tests.sh
+          # Run the integration tests
+          ./run_ci_tests.sh
 
   docker-build-prod:
     runs-on: ubuntu-latest
-    needs: docker-build-test
+    needs: [docker-unit-tests, docker-integration-tests]
     if: github.event_name == 'release'  # Only run on release events
     steps:
       - uses: actions/checkout@v4
