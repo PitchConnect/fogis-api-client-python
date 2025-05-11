@@ -36,11 +36,11 @@ jobs:
 
       - name: Run unit tests
         run: |
-          # Make the unit test script executable
-          chmod +x ./scripts/run_unit_tests.sh
+          # Build the test Docker image
+          docker build -t fogis-api-client-test -f Dockerfile.test .
 
-          # Run the unit tests
-          ./scripts/run_unit_tests.sh
+          # Run the unit tests inside the Docker container
+          docker run --rm fogis-api-client-test ./scripts/run_unit_tests.sh
 
   docker-integration-tests:
     name: Docker Integration Tests
