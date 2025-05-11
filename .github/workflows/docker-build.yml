@@ -36,11 +36,11 @@ jobs:
 
       - name: Run unit tests
         run: |
-          # Make the CI unit test script executable
-          chmod +x ./scripts/run_ci_unit_tests.sh
+          # Make the unit test script executable
+          chmod +x ./scripts/run_unit_tests.sh
 
           # Run the unit tests
-          ./scripts/run_ci_unit_tests.sh
+          ./scripts/run_unit_tests.sh
 
   docker-integration-tests:
     name: Docker Integration Tests
