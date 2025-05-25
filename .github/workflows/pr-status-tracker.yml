@@ -1,0 +1,160 @@
+name: PR Status Tracker
+
+on:
+  pull_request:
+    types: [opened, converted_to_draft, ready_for_review, closed]
+
+jobs:
+  track-pr-status:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+      contents: write
+    steps:
+      - name: Process PR status
+        run: |
+          # Debug output
+          echo "Event action: ${{ github.event.action }}"
+          echo "PR draft status: ${{ github.event.pull_request.draft }}"
+          echo "PR merged status: ${{ github.event.pull_request.merged }}"
+          echo "PR base branch: ${{ github.event.pull_request.base.ref }}"
+          echo "PR body: ${{ github.event.pull_request.body }}"
+
+          # For draft PRs
+          if [[ "${{ github.event.action }}" == "converted_to_draft" || ("${{ github.event.action }}" == "opened" && "${{ github.event.pull_request.draft }}" == "true") ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_BODY="${{ github.event.pull_request.body }}"
+            echo "Processing draft PR #$PR_NUMBER"
+            echo "PR body: $PR_BODY"
+
+            # Extract issue numbers from PR body
+            ISSUE_REFS=$(echo "$PR_BODY" | grep -o -E "(close[sd]?|fix(es|ed)?|resolve[sd]?)\s*:?\s*#[0-9]+" || echo "")
+            ISSUE_NUMBERS=$(echo "$ISSUE_REFS" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
+            echo "Issue references: $ISSUE_REFS"
+            echo "Issue numbers: $ISSUE_NUMBERS"
+
+            # Process each issue
+            for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+              echo "Processing issue #$ISSUE_NUMBER for draft PR"
+
+              # Remove ready-for-development label if it exists
+              echo "Removing ready-for-development label from issue #$ISSUE_NUMBER"
+              curl -X DELETE \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/ready-for-development" || true
+
+              # Add in-progress label
+              echo "Adding in-progress label to issue #$ISSUE_NUMBER"
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels" \
+                -d '{"labels":["in-progress"]}'
+
+              # Add comment
+              echo "Adding comment to issue #$ISSUE_NUMBER"
+              COMMENT_BODY="This issue is being worked on in draft PR #${PR_NUMBER}"
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" \
+                -d "{\"body\":\"${COMMENT_BODY}\"}"
+            done
+
+          # For PRs marked ready for review
+          elif [[ "${{ github.event.action }}" == "ready_for_review" ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_BODY="${{ github.event.pull_request.body }}"
+            echo "Processing PR #$PR_NUMBER marked as ready for review"
+            echo "PR body: $PR_BODY"
+
+            # Extract issue numbers from PR body
+            ISSUE_REFS=$(echo "$PR_BODY" | grep -o -E "(close[sd]?|fix(es|ed)?|resolve[sd]?)\s*:?\s*#[0-9]+" || echo "")
+            ISSUE_NUMBERS=$(echo "$ISSUE_REFS" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
+            echo "Issue references: $ISSUE_REFS"
+            echo "Issue numbers: $ISSUE_NUMBERS"
+
+            # Process each issue
+            for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+              echo "Processing issue #$ISSUE_NUMBER for ready PR"
+
+              # Remove in-progress label
+              echo "Removing in-progress label from issue #$ISSUE_NUMBER"
+              curl -X DELETE \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/in-progress" || true
+
+              # Add review-ready label
+              echo "Adding review-ready label to issue #$ISSUE_NUMBER"
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels" \
+                -d '{"labels":["review-ready"]}'
+
+              # Add comment
+              echo "Adding comment to issue #$ISSUE_NUMBER"
+              COMMENT_BODY="Work on this issue is ready for review in PR #${PR_NUMBER}"
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" \
+                -d "{\"body\":\"${COMMENT_BODY}\"}"
+            done
+
+          # For merged PRs
+          elif [[ "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            PR_BODY="${{ github.event.pull_request.body }}"
+            TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
+            echo "Processing merged PR #$PR_NUMBER to $TARGET_BRANCH"
+            echo "PR body: $PR_BODY"
+
+            # Extract issue numbers from PR body using a different approach
+            ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -o -E "([Ff]ix(es|ed)?|[Cc]lose[sd]?|[Rr]esolve[sd]?)\s*:?\s*#[0-9]+" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
+            if [[ -z "$ISSUE_NUMBERS" ]]; then
+              ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
+            fi
+            echo "Issue numbers: $ISSUE_NUMBERS"
+
+            # Process each issue
+            for ISSUE_NUMBER in $ISSUE_NUMBERS; do
+              echo "Processing issue #$ISSUE_NUMBER for merged PR to $TARGET_BRANCH"
+
+              # Remove review-ready label
+              echo "Removing review-ready label from issue #$ISSUE_NUMBER"
+              curl -X DELETE \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/review-ready" || true
+
+              # Remove ready-for-development label (in case it wasn't removed earlier)
+              echo "Removing ready-for-development label from issue #$ISSUE_NUMBER"
+              curl -X DELETE \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels/ready-for-development" || true
+
+              # Add merged-to-develop label
+              echo "Adding merged-to-develop label to issue #$ISSUE_NUMBER"
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/labels" \
+                -d '{"labels":["merged-to-develop"]}'
+
+              # Add comment
+              echo "Adding comment to issue #$ISSUE_NUMBER"
+              COMMENT_BODY="Implementation for this issue has been merged to the $TARGET_BRANCH branch in PR #${PR_NUMBER}"
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/issues/${ISSUE_NUMBER}/comments" \
+                -d "{\"body\":\"${COMMENT_BODY}\"}"
+            done
+          else
+            echo "No action taken for event: ${{ github.event.action }}"
+          fi

@@ -762,6 +762,115 @@ class MockDataFactory:
         return events
 
     @staticmethod
+    def generate_match_officials(match_id: Optional[int] = None) -> Dict[str, Any]:
+        """Generate sample match officials data."""
+        if match_id is None:
+            match_id = MockDataFactory.generate_id()
+
+        # Generate home and away team IDs
+        home_team_id = MockDataFactory.generate_id()
+        away_team_id = MockDataFactory.generate_id()
+
+        # Generate team names
+        home_team_name = MockDataFactory.generate_team_name()
+        away_team_name = MockDataFactory.generate_team_name()
+
+        # Generate officials for both teams
+        home_officials = []
+        away_officials = []
+
+        # Roles for officials
+        roles = ["Tränare", "Assisterande tränare", "Lagledare", "Fysioterapeut", "Läkare"]
+
+        # Generate 2-3 officials for each team
+        for i in range(random.randint(2, 3)):
+            # Home team official
+            home_official = {
+                "personid": MockDataFactory.generate_id(),
+                "fornamn": MockDataFactory.generate_name(True),
+                "efternamn": MockDataFactory.generate_name(False),
+                "roll": roles[i % len(roles)],
+                "matchlagid": home_team_id,
+            }
+            home_officials.append(home_official)
+
+            # Away team official
+            away_official = {
+                "personid": MockDataFactory.generate_id(),
+                "fornamn": MockDataFactory.generate_name(True),
+                "efternamn": MockDataFactory.generate_name(False),
+                "roll": roles[i % len(roles)],
+                "matchlagid": away_team_id,
+            }
+            away_officials.append(away_official)
+
+        # Combine all officials
+        all_officials = home_officials + away_officials
+
+        # Create the response structure
+        response = {
+            "hemmalag": home_team_name,
+            "bortalag": away_team_name,
+            "hemmalagid": home_team_id,
+            "bortalagid": away_team_id,
+            "matchid": match_id,
+            "funktionarer": all_officials,
+        }
+
+        return response
+
+    @staticmethod
+    def generate_match_result_list(match_id: Optional[int] = None) -> Dict[str, Any]:
+        """Generate sample match result list data."""
+        if match_id is None:
+            match_id = MockDataFactory.generate_id()
+
+        # Generate home and away team IDs
+        home_team_id = MockDataFactory.generate_id()
+        away_team_id = MockDataFactory.generate_id()
+
+        # Generate team names
+        home_team_name = MockDataFactory.generate_team_name()
+        away_team_name = MockDataFactory.generate_team_name()
+
+        # Generate result types
+        result_types = [
+            {"id": 1, "namn": "Ordinarie tid"},
+            {"id": 2, "namn": "Efter förlängning"},
+            {"id": 3, "namn": "Efter straffar"},
+        ]
+
+        # Generate random scores
+        home_score = random.randint(0, 5)
+        away_score = random.randint(0, 5)
+
+        # Create result list
+        results = [
+            {
+                "matchid": match_id,
+                "matchresultattypid": 1,  # Ordinarie tid
+                "matchlag1mal": home_score,
+                "matchlag2mal": away_score,
+                "wo": False,
+                "ow": False,
+                "ww": False,
+            }
+        ]
+
+        # Create the response structure
+        response = {
+            "hemmalag": home_team_name,
+            "bortalag": away_team_name,
+            "hemmalagid": home_team_id,
+            "bortalagid": away_team_id,
+            "matchid": match_id,
+            "matchresultattyper": result_types,
+            "matchresultat": results,
+        }
+
+        return response
+
+    @staticmethod
     def generate_match_result(match_id: Optional[int] = None) -> List[Dict[str, Any]]:
         """Generate sample match result based on real FOGIS API data structure."""
         if match_id is None:

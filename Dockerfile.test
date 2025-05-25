@@ -7,13 +7,15 @@ WORKDIR /app
 # Install test dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    iputils-ping \
+    dnsutils \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the package files
 COPY . .
 
 # Install dependencies
-RUN pip install --no-cache-dir marshmallow>=3.26.0
+RUN pip install --no-cache-dir marshmallow>=3.26.0 jsonschema
 RUN pip install --no-cache-dir -e .
 RUN pip install --no-cache-dir pytest pytest-cov requests flask-swagger-ui apispec>=6.0.0 docker
 

@@ -1,0 +1,11 @@
+name: CI Failure Reminder
+
+on:
+  workflow_run:
+    workflows: ["CI", "Build", "Test"]
+    types:
+      - completed
+
+jobs:
+  remind-on-failure:
+    uses: PitchConnect/.github/.github/workflows/ci-failure-reminder.yml@main

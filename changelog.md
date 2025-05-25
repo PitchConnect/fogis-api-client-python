@@ -1,5 +1,69 @@
 # Changelog
 
+## [0.4.6] - 2025-05-22
+
+### Changed
+- Standardized on original field names (matchhandelsetypid, matchminut, matchlagid, spelareid, hemmamal, bortamal)
+- Removed support for alternative field names (handelsekod, minut, lagid, personid, resultatHemma, resultatBorta) to reduce complexity
+- Updated validation to only accept the standard field names
+- Added default values for rarely used fields (sekund, planpositionx, planpositiony, relateradTillMatchhandelseID, spelareid2, matchdeltagareid2)
+
+## [0.4.5] - 2025-05-21
+
+### Changed
+- Version skipped due to versioning conflict
+
+## [0.4.4] - 2025-05-20
+
+### Fixed
+- Fixed package name capitalization in setup.py (correct to timmyBird)
+- Updated publish-to-pypi.yml workflow to explicitly set version from release tag
+
+## [0.4.3] - 2025-05-20
+
+### Fixed
+- Reverted property name changes to maintain backward compatibility (Issue #187)
+- Restored original property names in API client: matchhandelsetypid, matchminut, matchlagid, spelareid, hemmamal, bortamal
+- Updated validation schemas to accept both original and new property names
+- Fixed adapters to properly handle original property names
+
+## [0.4.2] - 2025-05-15
+
+### Fixed
+- Fixed PyPI publishing workflow by adding a build step (Issue #146)
+
+## [0.4.1] - 2025-05-15
+
+### Fixed
+- Fixed match result reporting functionality to handle both flat and nested data structures (Issue #141)
+- Added backward compatibility for the `report_match_result` method
+- Improved documentation for API data structures
+- Added tests to verify correct API communication
+
+## [0.3.1] - 2025-04-25
+
+### Fixed
+- Fixed incorrect endpoint used for cookie validation (Issue #127)
+
+## [0.3.0] - 2025-04-25
+
+### Added
+- Added more endpoints to the HTTP wrapper (Issue #118)
+
+### Changed
+- Optimized cookie validation to use a more lightweight approach (Issue #119)
+- Organized tools into dedicated directories and improved documentation (Issue #122)
+- Integrated dynamic pre-commit hook generator to keep local checks in sync with CI/CD (Issue #114)
+- Improved setup experience with aligned pre-commit hooks (Issue #117)
+
+### Removed
+- Removed session management tools (moved to dedicated repository)
+
+## [0.2.4] - 2025-04-17
+
+### Fixed
+- Corrected parameter names in team endpoints from "lagid" to "matchlagid" (Issue #101)
+
 ## [0.2.3] - 2025-04-17
 
 ### Fixed

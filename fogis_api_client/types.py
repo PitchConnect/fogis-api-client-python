@@ -74,26 +74,38 @@ class OfficialDict(TypedDict, total=False):
 
 
 class EventDict(TypedDict, total=False):
-    """Type definition for an event object returned by the API."""
+    """Type definition for an event object returned by the API.
+
+    Note: This class uses the original field names expected by the FOGIS server.
+    Alternative field names (handelsekod, minut, lagid, personid, resultatHemma, resultatBorta)
+    are no longer supported as of v0.4.5.
+    """
 
     matchhandelseid: int
     matchid: int
-    handelsekod: int
-    handelsetyp: str
-    minut: int
-    lagid: int
-    lag: str
-    personid: Optional[int]
-    spelare: Optional[str]
+    matchhandelsetypid: int  # Original field name (was handelsekod)
+    matchhandelsetypnamn: str  # Original field name (was handelsetyp)
+    matchminut: int  # Original field name (was minut)
+    matchlagid: int  # Original field name (was lagid)
+    matchlagnamn: str  # Original field name (was lag)
+    spelareid: Optional[int]  # Original field name (was personid)
+    spelarenamn: Optional[str]  # Original field name (was spelare)
     assisterande: Optional[str]
     assisterandeid: Optional[int]
     period: Optional[int]
     mal: Optional[bool]
-    resultatHemma: Optional[int]
-    resultatBorta: Optional[int]
+    hemmamal: Optional[int]  # Original field name (was resultatHemma)
+    bortamal: Optional[int]  # Original field name (was resultatBorta)
     strafflage: Optional[str]
     straffriktning: Optional[str]
     straffresultat: Optional[str]
+    # Default values for rarely used fields
+    sekund: Optional[int]  # Default: 0
+    planpositionx: Optional[str]  # Default: '-1'
+    planpositiony: Optional[str]  # Default: '-1'
+    relateradTillMatchhandelseID: Optional[int]  # Default: 0
+    spelareid2: Optional[int]  # Default: -1 (except for substitutions)
+    matchdeltagareid2: Optional[int]  # Default: -1 (except for substitutions)
 
 
 class MatchResultDict(TypedDict, total=False):
@@ -107,13 +119,16 @@ class MatchResultDict(TypedDict, total=False):
 
 
 class OfficialActionDict(TypedDict, total=False):
-    """Type definition for a team official action used in reporting."""
+    """Type definition for a team official action used in reporting.
+
+    Note: This class uses the original field names expected by the FOGIS server.
+    """
 
     matchid: int
-    lagid: int
-    personid: int
+    matchlagid: int  # Original field name (was lagid)
+    matchlagledareid: int  # Original field name (was personid)
     matchlagledaretypid: int
-    minut: Optional[int]
+    matchminut: Optional[int]  # Original field name (was minut)
 
 
 class CookieDict(TypedDict, total=False):
@@ -121,3 +136,16 @@ class CookieDict(TypedDict, total=False):
 
     FogisMobilDomarKlient_ASPXAUTH: str
     ASP_NET_SessionId: str
+
+
+class MatchParticipantDict(TypedDict, total=False):
+    """Type definition for a match participant update used in reporting."""
+
+    matchdeltagareid: int
+    trojnummer: int
+    lagdelid: int
+    lagkapten: bool
+    ersattare: bool
+    positionsnummerhv: int
+    arSpelandeLedare: bool
+    ansvarig: bool

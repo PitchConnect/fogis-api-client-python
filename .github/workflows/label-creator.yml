@@ -1,0 +1,66 @@
+name: Label Creator
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+    steps:
+      - name: Create standard labels
+        run: |
+          # Define labels as JSON array
+          LABELS='[
+            {"name":"triage","color":"fbca04","description":"Needs triage by maintainers"},
+            {"name":"ready-for-development","color":"0e8a16","description":"Triaged and ready for someone to work on"},
+            {"name":"in-progress","color":"0052cc","description":"Issue is being worked on in a draft PR"},
+            {"name":"review-ready","color":"5319e7","description":"Work is complete and ready for review"},
+            {"name":"merged-to-develop","color":"0e8a16","description":"Implementation has been merged to develop"},
+            {"name":"released","color":"1d76db","description":"Feature has been released to production"},
+            {"name":"bug","color":"d73a4a","description":"Something is not working as expected"},
+            {"name":"enhancement","color":"a2eeef","description":"New feature or improvement"},
+            {"name":"documentation","color":"0075ca","description":"Documentation changes"},
+            {"name":"refactor","color":"cfd3d7","description":"Code changes that neither fix a bug nor add a feature"},
+            {"name":"test","color":"c5def5","description":"Adding or improving tests"},
+            {"name":"priority:high","color":"d93f0b","description":"Urgent, needs immediate attention"},
+            {"name":"priority:medium","color":"fbca04","description":"Important but not urgent"},
+            {"name":"priority:low","color":"0e8a16","description":"Nice to have, can wait"},
+            {"name":"complexity:easy","color":"0e8a16","description":"Good for beginners, small scope"},
+            {"name":"complexity:medium","color":"fbca04","description":"Moderate difficulty, average scope"},
+            {"name":"complexity:hard","color":"d93f0b","description":"Complex changes, large scope"},
+            {"name":"good-first-issue","color":"7057ff","description":"Good for newcomers to the project"},
+            {"name":"help-wanted","color":"008672","description":"Extra attention needed, looking for contributors"},
+            {"name":"blocked","color":"d93f0b","description":"Blocked by another issue or external factor"},
+            {"name":"discussion","color":"d4c5f9","description":"Needs further discussion before work begins"},
+            {"name":"wontfix","color":"ffffff","description":"This will not be worked on"},
+            {"name":"done","color":"0e8a16","description":"Issue has been completed and closed"}
+          ]'
+
+          # Create each label
+          echo "$LABELS" | jq -c '.[]' | while read -r label; do
+            NAME=$(echo "$label" | jq -r '.name')
+            COLOR=$(echo "$label" | jq -r '.color')
+            DESC=$(echo "$label" | jq -r '.description')
+            echo "Processing label: $NAME"
+
+            # Check if label exists
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/labels/$NAME")
+
+            # Create label if it doesn't exist
+            if [[ $STATUS -eq 404 ]]; then
+              curl -X POST \
+                -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github.v3+json" \
+                "https://api.github.com/repos/${{ github.repository }}/labels" \
+                -d "{\"name\":\"$NAME\",\"color\":\"$COLOR\",\"description\":\"$DESC\"}"
+              echo "Created label $NAME"
+            else
+              echo "Label $NAME already exists"
+            fi
+          done

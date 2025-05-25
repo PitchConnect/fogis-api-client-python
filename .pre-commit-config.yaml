@@ -68,12 +68,33 @@ repos:
         always_run: true
         stages: [manual]
 
+# Integration tests with mock server (optional, disabled by default to speed up commits)
+-   repo: local
+    hooks:
+    -   id: integration-tests
+        name: integration-tests
+        entry: python scripts/run_integration_tests_with_mock.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
+
 # Documentation freshness checker
 -   repo: local
     hooks:
     -   id: check-docs-freshness
         name: check-docs-freshness
         entry: .pre-commit-hooks/check_docs_freshness.py
+        language: script
+        pass_filenames: false
+        always_run: true
+
+# Dependency checker
+-   repo: local
+    hooks:
+    -   id: check-dependencies
+        name: check-dependencies
+        entry: .pre-commit-hooks/check_dependencies.py
         language: script
         pass_filenames: false
         always_run: true

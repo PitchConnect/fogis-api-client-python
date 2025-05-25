@@ -35,6 +35,7 @@ https://fogis.svenskfotboll.se/mdk
 |----------|--------|-------------|------------|
 | `/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag` | POST | Fetches the list of players for a team | `matchlagid`: Integer |
 | `/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag` | POST | Fetches the list of officials for a team | `matchlagid`: Integer |
+| `/MatchWebMetoder.aspx/SparaMatchdeltagare` | POST | Updates specific fields for a match participant | Participant data object with fields to update |
 
 ## Event Endpoints
 
@@ -73,6 +74,26 @@ https://fogis.svenskfotboll.se/mdk
   }
 }
 ```
+
+### Match Participant Update Data
+
+```json
+{
+  "matchdeltagareid": 46123762,  // ID of the match participant (match-specific, NOT the permanent spelareid)
+  "trojnummer": 92,            // Jersey number to update
+  "lagdelid": 0,               // Team part ID (typically 0)
+  "lagkapten": false,          // Boolean indicating if the player is team captain
+  "ersattare": false,          // Boolean indicating if the player is a substitute
+  "positionsnummerhv": 0,      // Position number (typically 0)
+  "arSpelandeLedare": false,   // Boolean indicating if the player is a playing leader
+  "ansvarig": false            // Boolean indicating if the player is responsible
+}
+```
+
+**Important Notes:**
+- The `matchdeltagareid` is a match-specific ID for a player, different from the permanent `spelareid`. When updating player information for a specific match, you must use the `matchdeltagareid`.
+- This endpoint updates only the fields you provide while preserving other player information. You must include the `matchdeltagareid` to identify which player to update, and then include only the fields you want to change.
+- All fields shown above are required by the API, but you can keep their current values if you don't want to change them.
 
 ## Common Issues and Solutions
 

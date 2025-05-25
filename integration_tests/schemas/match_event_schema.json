@@ -1,0 +1,173 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Match Event Schema",
+  "description": "Schema for FOGIS API match event data",
+  "type": "object",
+  "properties": {
+    "__type": {
+      "type": "string",
+      "description": "Type identifier for the match event object",
+      "example": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchhandelseJSON"
+    },
+    "matchhandelseid": {
+      "type": "integer",
+      "description": "Unique identifier for the match event",
+      "example": 10816546
+    },
+    "matchid": {
+      "type": "integer",
+      "description": "ID of the match this event belongs to",
+      "example": 6169946
+    },
+    "matchdeltagareid": {
+      "type": "integer",
+      "description": "ID of the match participant",
+      "example": 46466251
+    },
+    "matchhandelsetypid": {
+      "type": "integer",
+      "description": "Type ID of the event (6 = goal, 20 = yellow card, 31 = period start, etc.)",
+      "example": 6
+    },
+    "matchhandelsetypnamn": {
+      "type": "string",
+      "description": "Human-readable name of the event type",
+      "example": "Spelmål"
+    },
+    "matchlagid": {
+      "type": "integer",
+      "description": "ID of the team involved in the event",
+      "example": 12316432
+    },
+    "matchlagnamn": {
+      "type": "string",
+      "description": "Name of the team involved in the event",
+      "example": "Lindome GIF"
+    },
+    "trojnummer": {
+      "type": "integer",
+      "description": "Jersey number of the player involved in the event",
+      "example": 9
+    },
+    "spelareid": {
+      "type": "integer",
+      "description": "ID of the player involved in the event",
+      "example": 716149
+    },
+    "spelarenamn": {
+      "type": "string",
+      "description": "Name of the player involved in the event",
+      "example": "Socras Lutonda Luzayadio"
+    },
+    "matchminut": {
+      "type": "integer",
+      "description": "Minute in the match when the event occurred",
+      "example": 13
+    },
+    "kommentar": {
+      "type": "string",
+      "description": "Comment for the event",
+      "example": ""
+    },
+    "hemmamal": {
+      "type": "integer",
+      "description": "Goals for the home team after this event",
+      "example": 1
+    },
+    "bortamal": {
+      "type": "integer",
+      "description": "Goals for the away team after this event",
+      "example": 0
+    },
+    "period": {
+      "type": "integer",
+      "description": "Period in which the event occurred (1 = first half, 2 = second half, etc.)",
+      "example": 1
+    },
+    "matchhandelsetypmedforstallningsandring": {
+      "type": "boolean",
+      "description": "Whether the event type changes the score",
+      "example": true
+    },
+    "matchhandelsetypanvanderannonseradtid": {
+      "type": "boolean",
+      "description": "Whether the event type uses announced time",
+      "example": false
+    },
+    "tidsangivelse": {
+      "type": "string",
+      "description": "Time specification for the event",
+      "example": "13"
+    },
+    "planpositionx": {
+      "type": "integer",
+      "description": "X position on the pitch where the event occurred",
+      "example": -1
+    },
+    "planpositiony": {
+      "type": "integer",
+      "description": "Y position on the pitch where the event occurred",
+      "example": -1
+    },
+    "relateradTillMatchhandelseID": {
+      "type": "integer",
+      "description": "ID of a related match event (e.g., second yellow card related to red card)",
+      "example": 0
+    },
+    "sekund": {
+      "type": "integer",
+      "description": "Second in the minute when the event occurred",
+      "example": 0
+    },
+    "spelareid2": {
+      "type": "integer",
+      "description": "ID of the second player involved in the event (e.g., for substitutions)",
+      "example": -1
+    },
+    "matchdeltagareid2": {
+      "type": "integer",
+      "description": "ID of the second match participant (e.g., for substitutions)",
+      "example": -1
+    },
+    "handelsekod": {
+      "type": "integer",
+      "description": "Alternative field for matchhandelsetypid",
+      "example": 6
+    },
+    "minut": {
+      "type": "integer",
+      "description": "Alternative field for matchminut",
+      "example": 13
+    },
+    "lagid": {
+      "type": "integer",
+      "description": "Alternative field for matchlagid",
+      "example": 12316432
+    },
+    "personid": {
+      "type": "integer",
+      "description": "Alternative field for spelareid",
+      "example": 716149
+    },
+    "resultatHemma": {
+      "type": "integer",
+      "description": "Alternative field for hemmamal",
+      "example": 1
+    },
+    "resultatBorta": {
+      "type": "integer",
+      "description": "Alternative field for bortamal",
+      "example": 0
+    }
+  },
+  "required": [
+    "__type",
+    "matchhandelseid",
+    "matchid",
+    "matchhandelsetypid",
+    "matchminut",
+    "period",
+    "hemmamal",
+    "bortamal"
+  ]
+}

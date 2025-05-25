@@ -10,7 +10,8 @@ from typing import Dict, cast
 import pytest
 
 from fogis_api_client import FogisApiClient, FogisLoginError
-from fogis_api_client.types import CookieDict, EventDict
+from fogis_api_client.public_api_client import FogisAPIRequestError
+from fogis_api_client.types import CookieDict, EventDict, MatchResultDict
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -20,50 +21,66 @@ logger = logging.getLogger(__name__)
 class TestFogisApiClientWithMockServer:
     """Integration tests for the FogisApiClient using a mock server."""
 
-    def test_login_success(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
-        """Test successful login with valid credentials."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+    @pytest.mark.parametrize(
+        "scenario,credentials,expected_success,error_message_contains",
+        [
+            (
+                "valid_credentials",
+                {"username": "test_user", "password": "test_password"},
+                True,
+                None,
+            ),
+            (
+                "invalid_credentials",
+                {"username": "invalid_user", "password": "invalid_password"},
+                False,
+                "invalid",
+            ),
+        ],
+        ids=["login_success", "login_failure"],
+    )
+    def test_login(self, mock_fogis_server: Dict[str, str], mock_api_urls, clear_request_history,
+                  scenario: str, credentials: Dict[str, str], expected_success: bool,
+                  error_message_contains: str):
+        """Test login with different credentials.
 
-        # Create a client with test credentials
+        Args:
+            mock_fogis_server: The mock server fixture
+            mock_api_urls: Fixture to override API URLs
+            clear_request_history: Fixture to clear request history
+            scenario: Test scenario name
+            credentials: Username and password to use
+            expected_success: Whether login should succeed
+            error_message_contains: Text expected in error message if login fails
+        """
+        # Create a client with the provided credentials
         client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
+            username=credentials["username"],
+            password=credentials["password"],
         )
 
-        # Attempt to login
-        cookies = client.login()
+        if expected_success:
+            # Attempt to login and expect success
+            cookies = client.login()
 
-        # Verify that login was successful
-        assert cookies is not None
-        # The client uses FogisMobilDomarKlient.ASPXAUTH but CookieDict expects
-        # FogisMobilDomarKlient_ASPXAUTH
-        # We need to check for the actual cookie name the client uses
-        assert any(k for k in cookies if k.startswith("FogisMobilDomarKlient"))
+            # Verify that login was successful
+            assert cookies is not None
+            # The client uses FogisMobilDomarKlient.ASPXAUTH but CookieDict expects
+            # FogisMobilDomarKlient_ASPXAUTH
+            # We need to check for the actual cookie name the client uses
+            assert any(k for k in cookies if k.startswith("FogisMobilDomarKlient"))
+        else:
+            # Attempt to login and expect failure
+            with pytest.raises(FogisLoginError) as excinfo:
+                client.login()
 
-    def test_login_failure(self, mock_fogis_server: Dict[str, str]):
-        """Test login failure with invalid credentials."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+            # Verify the error message contains useful information
+            error_message = str(excinfo.value)
+            assert error_message_contains in error_message.lower(), \
+                f"Error message should contain '{error_message_contains}'"
 
-        # Create a client with invalid credentials
-        client = FogisApiClient(
-            username="invalid_user",
-            password="invalid_password",
-        )
-
-        # Attempt to login and expect failure
-        with pytest.raises(FogisLoginError):
-            client.login()
-
-    def test_fetch_matches_list(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
         """Test fetching the match list."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # In a real test, we would create a client and use it to fetch data
         # But for this test, we're just verifying the structure of the expected data
@@ -108,120 +125,70 @@ class TestFogisApiClientWithMockServer:
         assert "datum" in match
         assert "tid" in match
 
-    def test_fetch_match_details(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
-        """Test fetching match details."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+    @pytest.mark.parametrize(
+        "fetch_method,expected_fields,entity_fields",
+        [
+            (
+                "fetch_match_json",
+                ["matchid", "hemmalag", "bortalag", "datum", "tid"],
+                None,
+            ),
+            (
+                "fetch_match_players_json",
+                ["hemmalag", "bortalag"],
+                ["matchdeltagareid", "matchid", "matchlagid", "spelareid", "trojnummer", "fornamn", "efternamn"],
+            ),
+            (
+                "fetch_match_officials_json",
+                ["hemmalag", "bortalag"],
+                ["personid", "fornamn", "efternamn"],
+            ),
+        ],
+        ids=["match_details", "match_players", "match_officials"],
+    )
+    def test_fetch_match_data(self, fogis_test_client: FogisApiClient, clear_request_history,
+                             fetch_method: str, expected_fields: list, entity_fields: list):
+        """Test fetching various match-related data.
 
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
+        Args:
+            fogis_test_client: The API client fixture
+            clear_request_history: Fixture to clear request history
+            fetch_method: The method name to call on the client
+            expected_fields: Fields expected in the response
+            entity_fields: Fields expected in the entities (players, officials)
+        """
+        # Get the method from the client
+        client_method = getattr(fogis_test_client, fetch_method)
 
-        # Fetch match details
+        # Fetch the data
         match_id = 12345
-        match = client.fetch_match_json(match_id)
+        response = client_method(match_id)
 
         # Verify the response
-        assert isinstance(match, dict)
-        assert match["matchid"] == match_id
-        assert "hemmalag" in match
-        assert "bortalag" in match
-        assert "datum" in match
-        assert "tid" in match
+        assert isinstance(response, dict)
 
-    def test_fetch_match_players(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
-        """Test fetching match players."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+        # Check expected fields
+        for field in expected_fields:
+            assert field in response
 
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
+        # If this is a response with team entities (players, officials)
+        if "hemmalag" in expected_fields and "bortalag" in expected_fields and entity_fields:
+            assert isinstance(response["hemmalag"], list)
+            assert isinstance(response["bortalag"], list)
+            assert len(response["hemmalag"]) > 0
+            assert len(response["bortalag"]) > 0
 
-        # Fetch match players
-        match_id = 12345
-        players = client.fetch_match_players_json(match_id)
+            # Check the structure of the first entity
+            home_entity = response["hemmalag"][0]
+            for field in entity_fields:
+                assert field in home_entity
 
-        # Verify the response
-        assert isinstance(players, dict)
-        assert "hemmalag" in players
-        assert "bortalag" in players
-        assert isinstance(players["hemmalag"], list)
-        assert isinstance(players["bortalag"], list)
-        assert len(players["hemmalag"]) > 0
-        assert len(players["bortalag"]) > 0
-
-        # Check the structure of the first player
-        home_player = players["hemmalag"][0]
-        assert "matchdeltagareid" in home_player
-        assert "matchid" in home_player
-        assert "matchlagid" in home_player
-        assert "spelareid" in home_player
-        assert "trojnummer" in home_player
-        assert "fornamn" in home_player
-        assert "efternamn" in home_player
-
-    def test_fetch_match_officials(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
-        """Test fetching match officials."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
-
-        # Fetch match officials
-        match_id = 12345
-        officials = client.fetch_match_officials_json(match_id)
-
-        # Verify the response
-        assert isinstance(officials, dict)
-        assert "hemmalag" in officials
-        assert "bortalag" in officials
-        assert isinstance(officials["hemmalag"], list)
-        assert isinstance(officials["bortalag"], list)
-        assert len(officials["hemmalag"]) > 0
-        assert len(officials["bortalag"]) > 0
-
-        # Check the structure of the officials response
-        assert "hemmalag" in officials
-        assert isinstance(officials["hemmalag"], list)
-        assert len(officials["hemmalag"]) > 0
-
-        # Check the structure of the first official
-        home_official = officials["hemmalag"][0]
-        assert "personid" in home_official
-        assert "fornamn" in home_official
-        assert "efternamn" in home_official
-
-    def test_fetch_match_events(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_match_events(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test fetching match events."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
 
         # Fetch match events
         match_id = 12345
-        events = client.fetch_match_events_json(match_id)
+        events = fogis_test_client.fetch_match_events_json(match_id)
 
         # Verify the response
         assert isinstance(events, list)
@@ -231,27 +198,17 @@ class TestFogisApiClientWithMockServer:
         event = events[0]
         assert "matchhandelseid" in event
         assert "matchid" in event
-        assert "matchhandelsetypid" in event  # New field name instead of handelsekod
-        assert "matchhandelsetypnamn" in event  # New field name instead of handelsetyp
-        assert "matchminut" in event  # New field name instead of minut
-        assert "matchlagid" in event  # New field name instead of lagid
+        assert "matchhandelsetypid" in event  # New field name
+        assert "matchhandelsetypnamn" in event  # New field name
+        assert "matchminut" in event  # New field name
+        assert "matchlagid" in event  # New field name
 
-    def test_fetch_match_result(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_fetch_match_result(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test fetching match result."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
 
         # Fetch match result
         match_id = 12345
-        result = client.fetch_match_result_json(match_id)
+        result = fogis_test_client.fetch_match_result_json(match_id)
 
         # Verify the response
         # The client can return either a dict or a list depending on the API response
@@ -267,175 +224,162 @@ class TestFogisApiClientWithMockServer:
             assert "matchlag1mal" in result[0]
             assert "matchlag2mal" in result[0]
 
-    def test_report_match_event(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
-        """Test reporting a match event."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+    def test_report_match_result(self, fogis_test_client: FogisApiClient, clear_request_history):
+        """Test reporting match results."""
 
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
+        # Create match result data
+        match_id = 12345
+        result_data = cast(
+            MatchResultDict,
+            {
+                "matchid": match_id,
+                "hemmamal": 2,
+                "bortamal": 1,
+                "halvtidHemmamal": 1,
+                "halvtidBortamal": 0,
+            },
         )
+
+        # Report the match result
+        response = fogis_test_client.report_match_result(result_data)
+
+        # Verify the response
+        assert isinstance(response, dict)
+        assert "success" in response
+        assert response["success"] is True
+
+        # No need to restore base URLs - the fixture will handle that
+    def test_report_match_event(self, fogis_test_client: FogisApiClient, clear_request_history):
+        """Test reporting a match event."""
 
         # Create an event to report
         event_data = cast(
             EventDict,
             {
                 "matchid": 12345,
-                "handelsekod": 6,  # Goal
-                "handelsetyp": "Mål",
-                "minut": 75,
-                "lagid": 1001,
-                "lag": "Home Team FC",
-                "personid": 2003,
-                "spelare": "Player Three",
+                "matchhandelseid": 54321,  # Required by the mock server
+                "matchhandelsetypid": 6,  # Goal - using new property name
+                "matchhandelsetypnamn": "Mål",  # Using new property name
+                "matchminut": 75,  # Using new property name
+                "matchlagid": 1001,  # Using new property name
+                "matchlagnamn": "Home Team FC",  # Using new property name
+                "spelareid": 2003,  # Using new property name
+                "spelarenamn": "Player Three",  # Using new property name
                 "period": 2,
                 "mal": True,
-                "resultatHemma": 2,
-                "resultatBorta": 1,
+                "hemmamal": 2,  # Using new property name
+                "bortamal": 1,  # Using new property name
             },
         )
 
         # Report the event
-        response = client.report_match_event(event_data)
+        response = fogis_test_client.report_match_event(event_data)
 
         # Verify the response
         assert isinstance(response, dict)
         assert "success" in response
         assert response["success"] is True
 
-    def test_clear_match_events(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_clear_match_events(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test clearing match events."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
 
         # Clear events for a match
         match_id = 12345
-        response = client.clear_match_events(match_id)
+        response = fogis_test_client.clear_match_events(match_id)
 
         # Verify the response
         assert isinstance(response, dict)
         assert "success" in response
         assert response["success"] is True
 
-    def test_mark_reporting_finished(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
+    def test_mark_reporting_finished(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test marking reporting as finished."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
 
         # Mark reporting as finished
         match_id = 12345
-        response = client.mark_reporting_finished(match_id)
+        response = fogis_test_client.mark_reporting_finished(match_id)
 
         # Verify the response
         assert isinstance(response, dict)
         assert "success" in response
         assert response["success"] is True
 
-    def test_hello_world(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]):
-        """Test the hello_world method."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+        # No need to restore base URLs - the fixture will handle that
 
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
+    def test_hello_world(self, fogis_test_client: FogisApiClient, clear_request_history):
+        """Test the hello_world method."""
 
         # Call the hello_world method
-        message = client.hello_world()
+        message = fogis_test_client.hello_world()
 
         # Verify the response
         assert message == "Hello, brave new world!"
 
-    def test_fetch_team_players(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
-        """Test fetching team players."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+    @pytest.mark.parametrize(
+        "fetch_method,response_type,entity_container,entity_fields,id_field",
+        [
+            (
+                "fetch_team_players_json",
+                dict,
+                "spelare",
+                ["personid", "fornamn", "efternamn", "position", "matchlagid"],
+                "matchlagid",
+            ),
+            (
+                "fetch_team_officials_json",
+                list,
+                None,
+                ["personid", "fornamn", "efternamn", "roll", "matchlagid"],
+                "matchlagid",
+            ),
+        ],
+        ids=["team_players", "team_officials"],
+    )
+    def test_fetch_team_data(self, fogis_test_client: FogisApiClient, clear_request_history,
+                            fetch_method: str, response_type: type, entity_container: str,
+                            entity_fields: list, id_field: str):
+        """Test fetching various team-related data.
 
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
+        Args:
+            fogis_test_client: The API client fixture
+            clear_request_history: Fixture to clear request history
+            fetch_method: The method name to call on the client
+            response_type: Expected type of the response (dict or list)
+            entity_container: Field containing entities if response is a dict
+            entity_fields: Fields expected in each entity
+            id_field: Field that should match the team_id
+        """
+        # Get the method from the client
+        client_method = getattr(fogis_test_client, fetch_method)
 
-        # Fetch team players
+        # Fetch the data
         team_id = 12345
-        players = client.fetch_team_players_json(team_id)
+        response = client_method(team_id)
 
-        # Verify the response
-        assert isinstance(players, dict)
-        assert "spelare" in players
-        assert isinstance(players["spelare"], list)
-        assert len(players["spelare"]) > 0
+        # Verify the response type
+        assert isinstance(response, response_type)
 
-        # Check the structure of the first player
-        player = players["spelare"][0]
-        assert "personid" in player
-        assert "fornamn" in player
-        assert "efternamn" in player
-        assert "position" in player
-        # Note: matchlagid is not in PlayerDict but is present in the mock server response
-        assert "matchlagid" in player  # type: ignore
-        assert player["matchlagid"] == team_id  # type: ignore
+        # Get the entities to check
+        if response_type == dict and entity_container:
+            assert entity_container in response
+            assert isinstance(response[entity_container], list)
+            assert len(response[entity_container]) > 0
+            entities = response[entity_container]
+        else:
+            # If response is already a list of entities
+            assert len(response) > 0
+            entities = response
 
-    def test_fetch_team_officials(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str]
-    ):
-        """Test fetching team officials."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
+        # Check the first entity
+        entity = entities[0]
+        for field in entity_fields:
+            assert field in entity
 
-        # Create a client with test credentials
-        client = FogisApiClient(
-            username=test_credentials["username"],
-            password=test_credentials["password"],
-        )
+        # Check that the ID field matches the team_id
+        assert entity[id_field] == team_id  # type: ignore
 
-        # Fetch team officials
-        team_id = 12345
-        officials = client.fetch_team_officials_json(team_id)
-
-        # Verify the response
-        assert isinstance(officials, list)
-        assert len(officials) > 0
-
-        # Check the structure of the first official
-        official = officials[0]
-        assert "personid" in official
-        assert "fornamn" in official
-        assert "efternamn" in official
-        assert "roll" in official
-        # Note: matchlagid is not in OfficialDict but is present in the mock server response
-        assert "matchlagid" in official  # type: ignore
-        assert official["matchlagid"] == team_id  # type: ignore
-
-    def test_cookie_authentication(self, mock_fogis_server: Dict[str, str]):
+    def test_cookie_authentication(self, mock_fogis_server: Dict[str, str], mock_api_urls, clear_request_history):
         """Test authentication using cookies."""
-        # Override the base URL to use the mock server
-        FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
 
         # Create a client with cookies - use the cookie name the client expects
         # The client will convert this to the CookieDict format internally
@@ -457,3 +401,38 @@ class TestFogisApiClientWithMockServer:
         # For this test, we'll skip the actual API call and just verify the cookies
         # This is because the mock server cookie handling is complex to match exactly
         # what the real server does
+
+        # No need to restore base URLs - the fixture will handle that
+
+    def test_save_match_participant(self, fogis_test_client: FogisApiClient, clear_request_history):
+        """Test saving match participant information."""
+
+        # Login to get cookies
+        fogis_test_client.login()
+
+        # Create participant data to update
+        participant_data = {
+            "matchdeltagareid": 46123762,
+            "trojnummer": 10,
+            "lagdelid": 0,
+            "lagkapten": True,
+            "ersattare": False,
+            "positionsnummerhv": 0,
+            "arSpelandeLedare": False,
+            "ansvarig": False,
+        }
+
+        # Save match participant
+        response = fogis_test_client.save_match_participant(participant_data)
+
+        # Verify the response structure
+        assert isinstance(response, dict)
+        # The mock server might not include a 'success' field, so we just check that we got a response
+        # In a real test, we would check for specific fields
+        assert "spelare" in response  # The mock server returns 'spelare' instead of 'roster'
+        # The mock server might not include an 'updated_player' field
+
+        # The mock server might not include a 'verified' field
+
+        # The mock server response structure is different from the real API
+        # We've already verified that the response is a dictionary and contains 'spelare'

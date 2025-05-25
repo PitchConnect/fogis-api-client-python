@@ -52,10 +52,24 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
+      - name: Check Docker setup
+        run: |
+          # Verify Docker is running
+          docker info
+
+          # Show Docker version
+          docker --version
+
+          # Show Docker Compose version
+          docker compose version
+
       - name: Run integration tests
         run: |
-          docker network create fogis-network || true
-          ./run_integration_tests.sh
+          # Make the CI test script executable
+          chmod +x ./run_ci_tests.sh
+
+          # Run the integration tests
+          ./run_ci_tests.sh
 
   publish:
     needs: build  # Only run after the 'build' job is successful
@@ -83,4 +97,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
-          distributions: dist/*

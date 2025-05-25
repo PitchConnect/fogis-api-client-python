@@ -5,6 +5,8 @@
 
 A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
 
+This is a test change for workflow automation testing after permission fixes.
+
 ## Features
 
 * **Authentication Options**: Login with credentials or session cookies
@@ -16,7 +18,27 @@ A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
 * **Error Handling**: Detailed error messages and exception handling
 * **Logging**: Built-in logging for debugging and monitoring
 * **Docker Support**: Easy deployment and development with Docker
-* **Utility Tools**: Session management and testing utilities
+* **Utility Tools**: Testing utilities and development tools
+* **Clean Architecture**: Separation of public and internal APIs for better maintainability
+
+## Architecture
+
+The FOGIS API Client is designed with a clean architecture that separates the public API from the internal implementation details. This separation allows for better maintainability and makes it easier to adapt to changes in the FOGIS API without breaking the public interface.
+
+### Public API
+
+The public API is what users of the library interact with. It provides a simple, intuitive interface for common operations like fetching match lists, reporting events, and managing match results. The public API is designed to be stable and backward-compatible.
+
+### Internal API
+
+The internal API handles the low-level communication with the FOGIS API server. It's responsible for:
+
+1. Converting between public and internal data formats
+2. Handling authentication and session management
+3. Implementing the low-level API contracts
+4. Validating request and response data
+
+This separation allows the public API to focus on usability and type safety, while the internal API ensures compatibility with the server requirements.
 
 ## Installation
 
@@ -102,6 +124,135 @@ Comprehensive documentation is available in the [docs](docs/) directory:
 * [User Guides](docs/user_guides/)
 * [Architecture Overview](docs/architecture.md)
 * [Troubleshooting](docs/troubleshooting.md)
+
+## Integration Testing
+
+This project includes comprehensive integration tests to verify that the client correctly interacts with the FOGIS API. These tests use a mock server to simulate the FOGIS API, allowing for reliable testing without requiring real credentials or internet access.
+
+### Benefits of Integration Tests
+
+- **Verify API Contracts**: Ensure the client adheres to the expected API contracts
+- **Catch Regressions**: Detect breaking changes before they affect users
+- **Test Edge Cases**: Validate behavior with various input combinations
+- **No Real Credentials**: Test without needing actual FOGIS credentials
+- **Fast and Reliable**: Tests run quickly and consistently in any environment
+
+### Mock Server
+
+The mock server simulates the FOGIS API for testing and development. You can use it in two ways:
+
+#### Using the CLI Tool
+
+```bash
+# Install the mock server dependencies
+pip install -e ".[mock-server]"
+
+# Start the mock server
+python -m fogis_api_client.cli.mock_server
+
+# With custom host and port
+python -m fogis_api_client.cli.mock_server --host 0.0.0.0 --port 5001
+```
+
+#### Using the Standalone Script
+
+```bash
+# Start the mock server
+python scripts/run_mock_server.py
+```
+
+The mock server provides a simulated FOGIS API environment that you can use for:
+- Running integration tests without Docker
+- Developing and testing new features
+- Debugging API interactions
+- Testing client applications without real credentials
+
+### Running Integration Tests
+
+There are multiple ways to run integration tests:
+
+#### Using Docker (Recommended for CI/CD)
+
+```bash
+./run_integration_tests.sh
+```
+
+This script will:
+1. Start a Docker environment with the mock FOGIS server
+2. Run all integration tests against the mock server
+3. Report the results and clean up the environment
+
+#### Using the Integration Test Script (Recommended for Development)
+
+```bash
+# Run integration tests with automatic mock server management
+python scripts/run_integration_tests_with_mock.py
+
+# Run with verbose output
+python scripts/run_integration_tests_with_mock.py --verbose
+
+# Run a specific test file
+python scripts/run_integration_tests_with_mock.py --test-file test_with_mock_server.py
+```
+
+This script will automatically start the mock server if needed, run the tests, and provide a clean output.
+
+#### Using Local Mock Server (Manual Approach)
+
+```bash
+# In terminal 1: Start the mock server
+python -m fogis_api_client.cli.mock_server start
+
+# In terminal 2: Run the tests
+python -m pytest integration_tests
+```
+
+The mock server CLI provides many useful commands for development and testing:
+
+```bash
+# Show help
+python -m fogis_api_client.cli.mock_server --help
+
+# Check the status of the mock server
+python -m fogis_api_client.cli.mock_server status
+
+# View request history
+python -m fogis_api_client.cli.mock_server history view
+
+# Test an endpoint
+python -m fogis_api_client.cli.mock_server test /mdk/Login.aspx --method POST
+
+# Stop the mock server
+python -m fogis_api_client.cli.mock_server stop
+```
+
+See the [CLI README](fogis_api_client/cli/README.md) for more details on the available commands.
+
+You can also run specific test files directly:
+
+```bash
+python -m pytest integration_tests/test_match_result_reporting.py -v
+```
+
+#### Using IDE Integration
+
+The project now includes configuration files for VSCode and PyCharm that make it easy to run integration tests from your IDE:
+
+**VSCode**:
+1. Open the project in VSCode
+2. Go to the Run and Debug panel
+3. Select "Python: Run Integration Tests" from the dropdown
+4. Click the Run button
+
+**PyCharm**:
+1. Open the project in PyCharm
+2. Go to the Run configurations dropdown
+3. Select "Run Integration Tests"
+4. Click the Run button
+
+### Adding New Tests
+
+When implementing new features, it's recommended to add corresponding integration tests. See the [integration tests README](integration_tests/README.md) for detailed instructions on adding new tests and extending the mock server.
 
 #### Usage
 
@@ -461,23 +612,6 @@ The package includes custom exceptions for common API errors:
 ## Utility Tools
 
 The repository includes several utility tools to help with development and usage:
-
-### Session Management
-
-Tools for maintaining persistent sessions with the Fogis API:
-
-```bash
-# Save cookies from a Fogis login
-python tools/session_keeper/save_fogis_cookies.py --username YOUR_USERNAME --password YOUR_PASSWORD
-
-# Start the session keeper with those cookies
-python tools/session_keeper/fogis_session_keeper.py --cookies-file fogis_cookies.json --interval 300 --monitor --log-file fogis_session.log
-
-# Check session status
-python tools/session_keeper/check_session_status.py
-```
-
-See [tools/session_keeper/README.md](tools/session_keeper/README.md) for more details.
 
 ### Testing Utilities
 

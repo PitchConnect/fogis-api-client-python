@@ -8,6 +8,7 @@ This document provides detailed information about the FOGIS API Client classes, 
 - [Exception Classes](#exception-classes)
 - [Data Types](#data-types)
 - [Event Types](#event-types)
+- [API Contracts](#api-contracts)
 - [Logging Utilities](#logging-utilities)
 
 ## FogisApiClient Class
@@ -208,20 +209,31 @@ else:
 #### report_match_result
 
 ```python
-report_match_result(result_data: Dict[str, Any]) -> Dict[str, Any]
+report_match_result(result_data: Union[MatchResultDict, Dict[str, Any]]) -> Dict[str, Any]
 ```
 
 Reports match results (halftime and fulltime) to the FOGIS API.
 
+> **⚠️ WARNING: Critical API Contract**
+> This method maintains a critical API contract with the FOGIS server. The server requires a specific nested structure, but the client library provides a simplified flat structure for ease of use. The library automatically handles the conversion between these formats.
+
 **Parameters:**
-- `result_data` (Dict[str, Any]): Data containing match results. Must include:
+- `result_data` (Union[MatchResultDict, Dict[str, Any]]): Data containing match results. Can be either:
+
+  **Format 1 (flat structure - PREFERRED):**
   - `matchid`: The ID of the match
   - `hemmamal`: Full-time score for the home team
   - `bortamal`: Full-time score for the away team
+  - `halvtidHemmamal`: Half-time score for the home team (optional)
+  - `halvtidBortamal`: Half-time score for the away team (optional)
 
-  Optional fields:
-  - `halvtidHemmamal`: Half-time score for the home team
-  - `halvtidBortamal`: Half-time score for the away team
+  **Format 2 (nested structure - for backward compatibility):**
+  - `matchresultatListaJSON`: Array of match result objects with:
+    - `matchid`: The ID of the match
+    - `matchresultattypid`: 1 for full-time, 2 for half-time
+    - `matchlag1mal`: Score for team 1
+    - `matchlag2mal`: Score for team 2
+    - `wo`, `ow`, `ww`: Boolean flags
 
 **Returns:**
 - `Dict[str, Any]`: Response from the API, typically containing success status
@@ -232,7 +244,7 @@ Reports match results (halftime and fulltime) to the FOGIS API.
 - `FogisDataError`: If the response data is invalid or not a dictionary
 - `ValueError`: If required fields are missing
 
-**Example:**
+**Example (Flat Structure - Recommended):**
 ```python
 client = FogisApiClient(username="your_username", password="your_password")
 result = {
@@ -245,6 +257,45 @@ result = {
 response = client.report_match_result(result)
 print(f"Result reported successfully: {response.get('success', False)}")
 ```
+
+**Example (Nested Structure - Legacy):**
+```python
+client = FogisApiClient(username="your_username", password="your_password")
+result = {
+    "matchresultatListaJSON": [
+        {
+            "matchid": 123456,
+            "matchresultattypid": 1,  # Full time
+            "matchlag1mal": 2,
+            "matchlag2mal": 1,
+            "wo": False,
+            "ow": False,
+            "ww": False
+        },
+        {
+            "matchid": 123456,
+            "matchresultattypid": 2,  # Half-time
+            "matchlag1mal": 1,
+            "matchlag2mal": 0,
+            "wo": False,
+            "ow": False,
+            "ww": False
+        }
+    ]
+}
+response = client.report_match_result(result)
+print(f"Result reported successfully: {response.get('success', False)}")
+```
+
+**Field Mapping:**
+
+| Client Format (Flat) | Server Format (Nested) |
+|---------------------|------------------------|
+| `matchid`           | `matchid` in both objects |
+| `hemmamal`          | `matchlag1mal` in object with `matchresultattypid=1` |
+| `bortamal`          | `matchlag2mal` in object with `matchresultattypid=1` |
+| `halvtidHemmamal`   | `matchlag1mal` in object with `matchresultattypid=2` |
+| `halvtidBortamal`   | `matchlag2mal` in object with `matchresultattypid=2` |
 
 #### mark_reporting_finished
 
@@ -333,6 +384,85 @@ if players:
     print(f"First player: {players[0]['fornamn']} {players[0]['efternamn']}")
 ```
 
+#### save_match_participant
+
+```python
+save_match_participant(participant_data: Dict[str, Any]) -> Dict[str, Any]
+```
+
+Updates specific fields for a match participant in FOGIS while preserving other fields. This method is used to modify only the fields you specify (like jersey number, captain status, etc.) while keeping all other player information unchanged.
+
+**Parameters:**
+- `participant_data` (Dict[str, Any]): Data containing match participant details. Must include:
+  - `matchdeltagareid`: The ID of the match participant (this is a match-specific ID, NOT the permanent `spelareid`)
+  - `trojnummer`: Jersey number
+  - `lagdelid`: Team part ID (typically 0)
+  - `lagkapten`: Boolean indicating if the player is team captain
+  - `ersattare`: Boolean indicating if the player is a substitute
+  - `positionsnummerhv`: Position number (typically 0)
+  - `arSpelandeLedare`: Boolean indicating if the player is a playing leader
+  - `ansvarig`: Boolean indicating if the player is responsible
+
+  **Note:** It's important to use `matchdeltagareid` (match-specific player ID) and not `spelareid` (permanent player ID) when updating player information for a specific match.
+
+**Returns:**
+- `Dict[str, Any]`: Response from the API containing:
+  - `success`: Boolean indicating if the update was successful
+  - `roster`: The updated team roster
+  - `updated_player`: The updated player information
+  - `verified`: Boolean indicating if the changes were verified in the returned roster
+
+**Raises:**
+- `FogisLoginError`: If not logged in
+- `FogisAPIRequestError`: If there's an error with the API request
+- `FogisDataError`: If the response data is invalid or not a dictionary
+- `ValueError`: If required fields are missing
+
+**Example:**
+```python
+client = FogisApiClient(username="your_username", password="your_password")
+
+# First, get the current player information
+match_players = client.fetch_match_players_json(123456)
+home_players = match_players.get('hemmalag', [])
+
+# Find the player we want to update
+player_to_update = None
+for player in home_players:
+    if player['fornamn'] == 'John' and player['efternamn'] == 'Doe':
+        player_to_update = player
+        break
+
+if player_to_update:
+    # Create an update object with only the fields we want to change
+    # We must include matchdeltagareid to identify the player
+    participant_update = {
+        "matchdeltagareid": player_to_update['matchdeltagareid'],  # Required to identify the player
+        "trojnummer": 10,                                       # Change jersey number to 10
+        "lagkapten": True,                                      # Make this player the captain
+
+        # These fields are required by the API but will keep their current values
+        "lagdelid": 0,
+        "ersattare": player_to_update.get('ersattare', False),
+        "positionsnummerhv": 0,
+        "arSpelandeLedare": False,
+        "ansvarig": False
+    }
+
+    # Send only the fields we want to update
+    response = client.save_match_participant(participant_update)
+
+    if response["success"] and response["verified"]:
+        print(f"Player updated successfully with jersey #{response['updated_player']['trojnummer']}")
+        # You can access the full team roster if needed
+        roster = response["roster"]
+        print(f"Team has {len(roster.get('spelare', []))} players")
+    else:
+        print("Update failed or changes not verified")
+else:
+    print("Player not found")
+```
+
 ### Event Methods
 
 #### fetch_match_events_json
@@ -365,23 +495,45 @@ print(f"Total events: {len(events)}, Goals: {len(goals)}")
 #### report_match_event
 
 ```python
-report_match_event(event_data: Dict[str, Any]) -> Dict[str, Any]
+report_match_event(event_data: EventDict) -> Dict[str, Any]
 ```
 
 Reports a match event to FOGIS.
 
-**Parameters:**
-- `event_data` (Dict[str, Any]): Data for the event to report. Must include at minimum:
-  - `matchid`: The ID of the match
-  - `handelsekod`: The event type code (see EVENT_TYPES)
-  - `minut`: The minute when the event occurred
-  - `lagid`: The ID of the team associated with the event
+> **⚠️ WARNING: Critical API Contract**
+> This method maintains a critical API contract with the FOGIS server. Different event types require different fields, and all fields must be correctly formatted for the API to accept the request.
 
-  Depending on the event type, additional fields may be required:
-  - `personid`: The ID of the player (for player-related events)
-  - `assisterandeid`: The ID of the assisting player (for goals)
-  - `period`: The period number
-  - `resultatHemma/resultatBorta`: Updated score (for goals)
+**Parameters:**
+- `event_data` (EventDict): Data for the event to report. Must include at minimum:
+  - `matchid`: The ID of the match (integer)
+  - `matchhandelsetypid`: The event type code (see EVENT_TYPES)
+  - `matchminut`: The minute when the event occurred
+  - `matchlagid`: The ID of the team associated with the event
+  - `period`: The period number (1 for first half, 2 for second half)
+
+  **For Goals (matchhandelsetypid 6, 39, 28, 29, 15, 14):**
+  - All base fields above
+  - `spelareid`: The ID of the player who scored
+  - `hemmamal`: Updated score for the home team
+  - `bortamal`: Updated score for the away team
+  - `assisterandeid`: The ID of the assisting player (optional)
+
+  **For Cards (matchhandelsetypid 20, 8, 9):**
+  - All base fields above
+  - `spelareid`: The ID of the player who received the card
+
+  **For Substitutions (matchhandelsetypid 17):**
+  - All base fields above
+  - `spelareid`: The ID of the player coming on
+  - `assisterandeid`: The ID of the player going off
+
+  **Default values for rarely used fields:**
+  - `sekund`: 0 (default)
+  - `planpositionx`: '-1' (default)
+  - `planpositiony`: '-1' (default)
+  - `relateradTillMatchhandelseID`: 0 (default)
+  - `spelareid2`: -1 (default, except for substitutions)
+  - `matchdeltagareid2`: -1 (default, except for substitutions)
 
 **Returns:**
 - `Dict[str, Any]`: Response from the API, typically containing success status and the ID of the created event
@@ -391,19 +543,52 @@ Reports a match event to FOGIS.
 - `FogisAPIRequestError`: If there's an error with the API request
 - `FogisDataError`: If the response data is invalid or not a dictionary
 
-**Example:**
+**Example (Goal):**
 ```python
 client = FogisApiClient(username="your_username", password="your_password")
 # Report a goal
 event = {
     "matchid": 123456,
-    "handelsekod": 6,  # Regular goal
-    "minut": 35,
-    "lagid": 78910,  # Team ID
-    "personid": 12345,  # Player ID
+    "matchhandelsetypid": 6,  # Regular goal
+    "matchminut": 35,
+    "matchlagid": 78910,  # Team ID
+    "spelareid": 12345,  # Player ID
     "period": 1,
-    "resultatHemma": 1,
-    "resultatBorta": 0
+    "hemmamal": 1,
+    "bortamal": 0
+}
+response = client.report_match_event(event)
+print(f"Event reported successfully: {response.get('success', False)}")
+```
+
+**Example (Yellow Card):**
+```python
+client = FogisApiClient(username="your_username", password="your_password")
+# Report a yellow card
+event = {
+    "matchid": 123456,
+    "matchhandelsetypid": 20,  # Yellow card
+    "matchminut": 42,
+    "matchlagid": 78910,  # Team ID
+    "spelareid": 12345,  # Player ID
+    "period": 1
+}
+response = client.report_match_event(event)
+print(f"Event reported successfully: {response.get('success', False)}")
+```
+
+**Example (Substitution):**
+```python
+client = FogisApiClient(username="your_username", password="your_password")
+# Report a substitution
+event = {
+    "matchid": 123456,
+    "matchhandelsetypid": 17,  # Substitution
+    "matchminut": 65,
+    "matchlagid": 78910,  # Team ID
+    "spelareid": 12345,  # Player coming on
+    "assisterandeid": 67890,  # Player going off
+    "period": 2
 }
 response = client.report_match_event(event)
 print(f"Event reported successfully: {response.get('success', False)}")
@@ -538,12 +723,12 @@ Reports team official disciplinary action to the FOGIS API.
 **Parameters:**
 - `action_data` (Dict[str, Any]): Data containing team official action details. Must include:
   - `matchid`: The ID of the match
-  - `lagid`: The ID of the team
-  - `personid`: The ID of the team official
+  - `matchlagid`: The ID of the team
+  - `matchlagledareid`: The ID of the team official
   - `matchlagledaretypid`: The type ID of the disciplinary action
 
   Optional fields:
-  - `minut`: The minute when the action occurred
+  - `matchminut`: The minute when the action occurred
 
 **Returns:**
 - `Dict[str, Any]`: Response from the API, typically containing success status and the ID of the created action
@@ -560,10 +745,10 @@ client = FogisApiClient(username="your_username", password="your_password")
 # Report a yellow card for a team official
 action = {
     "matchid": 123456,
-    "lagid": 78910,  # Team ID
-    "personid": 12345,  # Official ID
+    "matchlagid": 78910,  # Team ID
+    "matchlagledareid": 12345,  # Official ID
     "matchlagledaretypid": 1,  # Yellow card
-    "minut": 35
+    "matchminut": 35
 }
 response = client.report_team_official_action(action)
 print(f"Action reported successfully: {response.get('success', False)}")
@@ -730,6 +915,122 @@ The FOGIS API Client defines several event types for match events:
 - `31`: Period Start
 - `32`: Period End
 - `23`: Match Slut (Match End)
+
+## API Contracts
+
+The FOGIS API Client maintains several critical API contracts that define the expected structure of data sent to and received from the FOGIS API. These contracts are essential for ensuring proper functionality.
+
+### What Are API Contracts?
+
+API contracts define the expected structure, data types, and behavior of API requests and responses. They serve as an agreement between the client and the server about how they will communicate.
+
+### Critical API Contracts
+
+#### Match Result Reporting
+
+The FOGIS API requires a specific nested structure for match result reporting, but the client library provides a simplified flat structure for ease of use. The library automatically handles the conversion between these formats.
+
+**Client-Facing API (Flat Structure):**
+```json
+{
+  "matchid": 123456,
+  "hemmamal": 2,
+  "bortamal": 1,
+  "halvtidHemmamal": 1,
+  "halvtidBortamal": 0
+}
+```
+
+**Server API (Nested Structure):**
+```json
+{
+  "matchresultatListaJSON": [
+    {
+      "matchid": 123456,
+      "matchresultattypid": 1,
+      "matchlag1mal": 2,
+      "matchlag2mal": 1,
+      "wo": false,
+      "ow": false,
+      "ww": false
+    },
+    {
+      "matchid": 123456,
+      "matchresultattypid": 2,
+      "matchlag1mal": 1,
+      "matchlag2mal": 0,
+      "wo": false,
+      "ow": false,
+      "ww": false
+    }
+  ]
+}
+```
+
+#### Event Reporting
+
+Different event types require different fields, and all fields must be correctly formatted for the API to accept the request.
+
+**For Goals:**
+```json
+{
+  "matchid": 123456,
+  "handelsekod": 6,
+  "minut": 35,
+  "lagid": 78910,
+  "personid": 12345,
+  "period": 1,
+  "resultatHemma": 1,
+  "resultatBorta": 0
+}
+```
+
+**For Cards:**
+```json
+{
+  "matchid": 123456,
+  "handelsekod": 20,
+  "minut": 35,
+  "lagid": 78910,
+  "personid": 12345,
+  "period": 1
+}
+```
+
+**For Substitutions:**
+```json
+{
+  "matchid": 123456,
+  "handelsekod": 17,
+  "minut": 65,
+  "lagid": 78910,
+  "personid": 12345,
+  "assisterandeid": 67890,
+  "period": 2
+}
+```
+
+### API Contract Validation
+
+The FOGIS API Client includes validation functions to help ensure your data is correctly formatted:
+
+```python
+from fogis_api_client.api_contracts import validate_request, validate_response
+
+# Validate a request payload
+try:
+    validate_request('/MatchWebMetoder.aspx/SparaMatchresultatLista', payload)
+    # Payload is valid
+except ValidationError as e:
+    # Handle validation error
+    print(f"Invalid payload: {e}")
+```
+
+### Further Reading
+
+For more detailed information about API contracts, see:
+- [API Contracts Documentation](api_contracts.md)
+- [API Contracts Guide](user_guides/api_contracts.md)
 
 ## Logging Utilities
 

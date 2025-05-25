@@ -1,0 +1,14 @@
+name: Release PR Generator
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.2.0)'
+        required: true
+
+jobs:
+  generate-release-pr:
+    uses: PitchConnect/.github/.github/workflows/release-pr-generator.yml@main
+    with:
+      version: ${{ github.event.inputs.version }}
