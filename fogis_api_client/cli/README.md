@@ -133,3 +133,37 @@ run_server()
 # Specify host and port
 run_server(host="0.0.0.0", port=5001)
 ```
+
+### Integration with Pytest
+
+The project includes a pytest plugin that makes it easy to use the mock server in tests. The plugin provides fixtures for automatically starting and stopping the mock server, as well as configuring the API client for testing.
+
+To use the plugin, simply include the fixtures in your test functions:
+
+```python
+def test_some_functionality(mock_server_auto, mock_api_urls_auto):
+    # Create a client
+    client = FogisApiClient(
+        username="test_user",
+        password="test_password",
+    )
+
+    # Test the functionality
+    result = client.some_method()
+
+    # Verify the result
+    assert result is not None
+```
+
+Or use the combined fixture for simplicity:
+
+```python
+def test_some_functionality(fogis_test_client_auto):
+    # Test the functionality
+    result = fogis_test_client_auto.some_method()
+
+    # Verify the result
+    assert result is not None
+```
+
+See the [integration tests README](../../integration_tests/README.md) for more details on using the pytest plugin.
