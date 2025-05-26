@@ -4,8 +4,7 @@ Authentication module for the FOGIS API client.
 This module handles authentication with the FOGIS API server.
 """
 import logging
-import re
-from typing import Dict, Optional, Tuple, cast
+from typing import cast
 
 import requests
 from bs4 import BeautifulSoup
@@ -35,36 +34,57 @@ def authenticate(session: requests.Session, username: str, password: str, base_u
     login_url = f"{base_url}/Login.aspx?ReturnUrl=%2fmdk%2f"
     logger.debug(f"Authenticating with {login_url}")
 
-    # Get the login page to extract the request verification token
-    response = session.get(login_url)
+    # Set browser-like headers to avoid being blocked
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'sv-SE,sv;q=0.9,en;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Upgrade-Insecure-Requests': '1',
+    })
+
+    # Get the login page to extract all form tokens
+    response = session.get(login_url, timeout=(10, 30))
     response.raise_for_status()
 
-    # Parse the HTML to extract the form tokens
+    # Parse the HTML to extract all hidden form fields
     soup = BeautifulSoup(response.text, "html.parser")
-    viewstate_input = soup.find("input", {"name": "__VIEWSTATE"})
-    if not viewstate_input or not viewstate_input.get("value"):
-        logger.error("Failed to extract VIEWSTATE token from login page")
-        raise ValueError("Failed to extract VIEWSTATE token from login page")
 
-    token = viewstate_input["value"]
+    # Extract all hidden form fields
+    form_data = {}
+    hidden_inputs = soup.find_all("input", {"type": "hidden"})
+    for inp in hidden_inputs:
+        name = inp.get("name", "")
+        value = inp.get("value", "")
+        if name:
+            form_data[name] = value
 
-    # Prepare the login payload
-    login_payload = {
-        "__VIEWSTATE": token,
-        "__EVENTVALIDATION": token,  # Using the same token for simplicity
+    # Verify we have the required tokens
+    if "__VIEWSTATE" not in form_data:
+        logger.error("Failed to extract __VIEWSTATE token from login page")
+        raise ValueError("Failed to extract __VIEWSTATE token from login page")
+
+    if "__EVENTVALIDATION" not in form_data:
+        logger.error("Failed to extract __EVENTVALIDATION token from login page")
+        raise ValueError("Failed to extract __EVENTVALIDATION token from login page")
+
+    # Prepare the login payload with all form fields
+    login_payload = form_data.copy()
+    login_payload.update({
         "ctl00$MainContent$UserName": username,
         "ctl00$MainContent$Password": password,
         "ctl00$MainContent$LoginButton": "Logga in",
-    }
+    })
 
     # Submit the login form
-    response = session.post(login_url, data=login_payload, allow_redirects=True)
+    response = session.post(login_url, data=login_payload, allow_redirects=True, timeout=(10, 30))
     response.raise_for_status()
 
     # Check if login was successful
     if "FogisMobilDomarKlient.ASPXAUTH" not in session.cookies:
-        logger.error("Authentication failed: Invalid credentials")
-        raise ValueError("Authentication failed: Invalid credentials")
+        logger.error("Authentication failed: Invalid credentials or login form changed")
+        raise ValueError("Authentication failed: Invalid credentials or login form changed")
 
     # Extract the cookies
     cookies = cast(
