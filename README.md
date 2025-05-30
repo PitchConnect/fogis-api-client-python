@@ -1,111 +1,148 @@
-# FOGIS API Client
+# 🚀 FOGIS Deployment - Complete Automated Solution
 
-[![PyPI version](https://badge.fury.io/py/fogis-api-client-timmyBird.svg)](https://badge.fury.io/py/fogis-api-client-timmyBird)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## **🎯 What This Repository Provides**
 
-A Python client for interacting with the FOGIS API (Svenska Fotbollförbundet).
+This repository contains a **complete automated deployment solution** for the FOGIS containerized system, including:
 
-This is a test change for workflow automation testing after permission fixes.
+- ✅ **One-click setup** with automated dependency checking
+- ✅ **Cron automation** for hourly match processing
+- ✅ **Easy management commands** for system control
+- ✅ **Comprehensive documentation** for non-technical users
+- ✅ **Health monitoring** and troubleshooting tools
 
-## Features
-
-* **Authentication Options**: Login with credentials or session cookies
-* **Lazy Authentication**: Automatically authenticates when needed
-* **Match Management**: Fetch match lists, details, and results
-* **Event Reporting**: Report goals, cards, substitutions, and other match events
-* **Team Information**: Access team players, officials, and match assignments
-* **Type Safety**: Comprehensive type annotations for better IDE support
-* **Error Handling**: Detailed error messages and exception handling
-* **Logging**: Built-in logging for debugging and monitoring
-* **Docker Support**: Easy deployment and development with Docker
-* **Utility Tools**: Testing utilities and development tools
-* **Clean Architecture**: Separation of public and internal APIs for better maintainability
-
-## Architecture
-
-The FOGIS API Client is designed with a clean architecture that separates the public API from the internal implementation details. This separation allows for better maintainability and makes it easier to adapt to changes in the FOGIS API without breaking the public interface.
-
-### Public API
-
-The public API is what users of the library interact with. It provides a simple, intuitive interface for common operations like fetching match lists, reporting events, and managing match results. The public API is designed to be stable and backward-compatible.
-
-Key components:
-- `FogisApiClient` class in `public_api_client.py` - The main entry point for users
-- Public type definitions in `types.py` - User-friendly data structures
-- Exception classes for clear error handling
-
-### Internal API
-
-The internal API handles the low-level communication with the FOGIS API server. It's responsible for:
-
-1. Converting between public and internal data formats
-2. Handling authentication and session management
-3. Implementing the low-level API contracts
-4. Validating request and response data
-
-Key components:
-- `InternalApiClient` class in `internal/api_client.py` - Handles server communication
-- Adapter functions in `internal/adapters.py` - Convert between data formats
-- API contracts in `internal/api_contracts.py` - Define and validate data structures
-- Internal type definitions in `internal/types.py` - Match server requirements
-
-### Adapter Pattern
-
-The adapter pattern is used to convert between the user-friendly public API formats and the server-specific internal API formats. This allows us to:
-
-1. Present a clean, consistent interface to users
-2. Handle complex server requirements internally
-3. Adapt to server changes without breaking the public API
-4. Apply default values and transformations automatically
-
-For detailed information about the API architecture, including diagrams, examples, and best practices, see the [API Architecture Documentation](docs/api_architecture.md).
-
-## Installation
-
-### Using pip
+## **🚀 Quick Start (3 Commands)**
 
 ```bash
-pip install fogis-api-client-timmyBird
+# 1. Check system status
+./show_system_status.sh
+
+# 2. Start the system (if needed)
+./manage_fogis_system.sh start
+
+# 3. Add automation
+./manage_fogis_system.sh cron-add
 ```
 
-### From Source
+**That's it! Your FOGIS system is now fully automated.** 🎉
+
+## **📋 What This System Does**
+
+- 🔄 **Automatically fetches** your FOGIS match assignments every hour
+- 📱 **Creates WhatsApp group descriptions and avatars** for each match
+- ☁️ **Uploads everything to Google Drive** with organized filenames
+- 📅 **Syncs matches to your Google Calendar**
+- 📞 **Manages referee contact information**
+- 📊 **Logs all activity** for monitoring and troubleshooting
+
+## **🔧 Management Commands**
+
+### **System Control:**
+```bash
+./manage_fogis_system.sh start      # Start all services
+./manage_fogis_system.sh stop       # Stop all services
+./manage_fogis_system.sh restart    # Restart all services
+./manage_fogis_system.sh status     # Show detailed status
+```
+
+### **Testing & Monitoring:**
+```bash
+./manage_fogis_system.sh test       # Test the system manually
+./manage_fogis_system.sh health     # Check service health
+./manage_fogis_system.sh logs       # View all logs
+```
+
+### **Automation:**
+```bash
+./manage_fogis_system.sh cron-add     # Add hourly automation
+./manage_fogis_system.sh cron-remove  # Remove automation
+./manage_fogis_system.sh cron-status  # Check automation status
+```
+
+## **🌐 Service Architecture**
+
+| Service | Purpose | Port |
+|---------|---------|------|
+| **FOGIS API Client** | Connects to FOGIS, serves match data | 9086 |
+| **Team Logo Combiner** | Creates WhatsApp group avatars | 9088 |
+| **Calendar/Phonebook Sync** | Syncs to Google Calendar | 9084 |
+| **Google Drive Service** | Uploads files to Google Drive | 9085 |
+| **Match Processor** | Main processing engine | (triggered) |
+
+## **⏰ Automation**
+
+Once set up, the system automatically:
+- **Runs every hour** at minute 0 (1:00, 2:00, 3:00, etc.)
+- **Checks for new matches** from FOGIS
+- **Creates WhatsApp assets** for any new assignments
+- **Uploads to Google Drive** with proper organization
+- **Logs everything** for monitoring
+
+## **🔍 Monitoring**
 
 ```bash
-git clone https://github.com/timmybird/fogis_api_client_python.git
-cd fogis_api_client_python
-pip install -e .
+# Quick system overview
+./show_system_status.sh
+
+# Check if automation is working
+./manage_fogis_system.sh cron-status
+
+# View recent activity
+tail -f logs/cron/match-processing.log
+
+# Health check all services
+./manage_fogis_system.sh health
 ```
 
-### Using Docker
+## **🛠️ Prerequisites**
 
+- **Docker Desktop** installed and running
+- **Docker Compose** available
+- **Google OAuth** configured (for Calendar/Drive access)
+- **FOGIS credentials** for match data access
+
+## **🎉 Success Indicators**
+
+**✅ System is working when:**
+- All services show "healthy" status
+- Cron job runs every hour automatically
+- WhatsApp assets are created and uploaded
+- Matches appear in Google Calendar
+- Logs show successful processing
+
+## **🆘 Troubleshooting**
+
+### **Common Issues:**
+- **Services not starting:** `./manage_fogis_system.sh restart`
+- **Docker not running:** Start Docker Desktop
+- **Permission denied:** `chmod +x *.sh`
+- **Cron not working:** Check system cron permissions
+
+### **Get Help:**
 ```bash
-# Pull the Docker image
-docker pull timmybird/fogis_api_client_python:latest
+# System diagnostics
+./show_system_status.sh
 
-# Run a script using the Docker image
-docker run --rm -v $(pwd):/app \
-  -e FOGIS_USERNAME="your_username" \
-  -e FOGIS_PASSWORD="your_password" \
-  timmybird/fogis_api_client_python:latest \
-  python /app/your_script.py
+# View logs
+./manage_fogis_system.sh logs
+
+# Test manually
+./manage_fogis_system.sh test
 ```
 
-### Development with Docker
+## **🔗 Related Repositories**
 
-For development purposes, you can use the provided development script:
+This deployment orchestrates services from:
+- [fogis-api-client-python](https://github.com/PitchConnect/fogis-api-client-python)
+- [match-list-processor](https://github.com/PitchConnect/match-list-processor)
+- [team-logo-combiner](https://github.com/PitchConnect/team-logo-combiner)
+- [google-drive-service](https://github.com/PitchConnect/google-drive-service)
+- [fogis-calendar-phonebook-sync](https://github.com/PitchConnect/fogis-calendar-phonebook-sync)
 
-```bash
-# Start the development environment
-./dev.sh
-```
+---
 
-This script will:
-1. Create necessary directories (data, logs, test-results)
-2. Create a default .env.dev file if it doesn't exist
-3. Start the Docker development environment using docker-compose.dev.yml
-4. Show logs from the containers
+**🎯 This repository provides everything needed for a complete, automated FOGIS deployment with zero technical knowledge required.**
 
-See the [Docker Usage](docs/getting_started.md#docker-usage) and [Development with Docker](docs/getting_started.md#development-with-docker) sections in the documentation for more details.
+
 
 ## Quick Start
 
