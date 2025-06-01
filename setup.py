@@ -28,6 +28,10 @@ setuptools.setup(
         "marshmallow>=3.26.0",
         "psutil",
         "jsonschema>=4.17.3",
+        "google-auth",
+        "google-auth-oauthlib",
+        "google-auth-httplib2",
+        "google-api-python-client",
     ],
     extras_require={
         "dev": [
