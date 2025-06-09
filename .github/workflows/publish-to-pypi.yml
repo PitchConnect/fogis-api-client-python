@@ -3,41 +3,272 @@ name: Publish Python Package
 on:
   release:
     types: [created]
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: 'Dry run (build but do not publish)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
-  deploy:
+  check-version:
+    name: Check Version and Changes
     runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.check.outputs.should_publish }}
+      version: ${{ steps.check.outputs.version }}
+      is_release: ${{ steps.check.outputs.is_release }}
+      version_changed: ${{ steps.check.outputs.version_changed }}
+
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
-        ref: main
         fetch-depth: 0
+
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
+        python-version: '3.11'
+
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install build twine
-    - name: Debug setup.py
+        pip install packaging requests
+
+    - name: Check version and determine if we should publish
+      id: check
       run: |
-        echo "Current setup.py content:"
-        cat setup.py
-        grep -n "version" setup.py
-    - name: Modify setup.py version
+        # Determine trigger type
+        if [[ "${{ github.event_name }}" == "release" ]]; then
+          echo "is_release=true" >> $GITHUB_OUTPUT
+          # Extract version from release tag
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+          echo "version_changed=true" >> $GITHUB_OUTPUT
+          echo "📦 Release trigger detected: $VERSION"
+        elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "is_release=false" >> $GITHUB_OUTPUT
+          # Manual trigger - we'll bump version
+          echo "should_publish=true" >> $GITHUB_OUTPUT
+          echo "version_changed=true" >> $GITHUB_OUTPUT
+          echo "🔧 Manual trigger detected"
+        else
+          echo "is_release=false" >> $GITHUB_OUTPUT
+          # Push to main - check if version changed
+          CURRENT_VERSION=$(python -c "import setup; print(setup.setup_kwargs['version'])" 2>/dev/null || echo "unknown")
+
+          # Check if version exists on PyPI - simplified approach
+          VERSION_CHANGED="false"
+          if curl -s "https://pypi.org/pypi/fogis-api-client/json" | grep -q "\"version\""; then
+            PYPI_VERSION=$(curl -s "https://pypi.org/pypi/fogis-api-client/json" | python -c "import sys, json; data=json.load(sys.stdin); print(data['info']['version'])")
+            echo "Current version: $CURRENT_VERSION"
+            echo "PyPI version: $PYPI_VERSION"
+
+            # Simple version comparison (assumes semantic versioning)
+            if [[ "$CURRENT_VERSION" != "$PYPI_VERSION" ]]; then
+              VERSION_CHANGED="true"
+              echo "📈 Version change detected: $PYPI_VERSION -> $CURRENT_VERSION"
+            else
+              echo "⏭️ No version change detected"
+            fi
+          else
+            VERSION_CHANGED="true"
+            echo "📦 Package not found on PyPI, will publish"
+          fi
+
+          echo "version_changed=$VERSION_CHANGED" >> $GITHUB_OUTPUT
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+          if [[ "$VERSION_CHANGED" == "true" ]]; then
+            echo "should_publish=true" >> $GITHUB_OUTPUT
+            echo "📈 Will publish to PyPI"
+          else
+            echo "should_publish=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Skipping PyPI publish"
+          fi
+        fi
+
+  build-and-publish:
+    name: Build and Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: check-version
+    if: needs.check-version.outputs.should_publish == 'true'
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: main
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+
+    - name: Install dependencies
       run: |
-        # Extract version from release tag
-        VERSION=${GITHUB_REF#refs/tags/v}
-        echo "Extracted version: $VERSION"
-        # Update version in setup.py
+        python -m pip install --upgrade pip
+        pip install build twine bump2version
+
+    - name: Bump version (if manual trigger)
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        echo "🔢 Bumping version (${{ github.event.inputs.version_type }})"
+        bump2version ${{ github.event.inputs.version_type }} --verbose
+        NEW_VERSION=$(python -c "import setup; print(setup.setup_kwargs['version'])")
+        echo "New version: $NEW_VERSION"
+
+    - name: Update version for release
+      if: needs.check-version.outputs.is_release == 'true'
+      run: |
+        VERSION=${{ needs.check-version.outputs.version }}
+        echo "📦 Setting version to: $VERSION"
         sed -i "s/version=\".*\"/version=\"$VERSION\"/" setup.py
-        echo "Updated setup.py:"
-        cat setup.py | grep version
+
+    - name: Verify setup.py
+      run: |
+        echo "📋 Current setup.py version configuration:"
+        python -c "import setup; print(f'Version: {setup.setup_kwargs[\"version\"]}')"
+        python setup.py check
+
     - name: Build package
-      run: python -m build
-    - name: Build and publish
+      run: |
+        echo "🔨 Building package..."
+        python -m build
+        echo "📦 Built packages:"
+        ls -la dist/
+
+    - name: Check package
+      run: |
+        echo "🔍 Checking package integrity..."
+        twine check dist/*
+
+    - name: Publish to PyPI (dry run)
+      if: github.event.inputs.dry_run == 'true'
+      run: |
+        echo "🧪 Dry run - would publish these packages:"
+        twine check dist/* --strict
+        echo "✅ Packages are valid and ready for publishing"
+
+    - name: Publish to PyPI
+      if: github.event.inputs.dry_run != 'true'
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         password: ${{ secrets.PYPI_API_TOKEN }}
         verbose: true
+
+    - name: Create GitHub release (if version bump)
+      if: github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run != 'true'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const version = await exec.getExecOutput('python', ['-c', 'import setup; print(setup.setup_kwargs["version"])']);
+          const newVersion = version.stdout.trim();
+
+          const { data: release } = await github.rest.repos.createRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag_name: `v${newVersion}`,
+            name: `Release v${newVersion}`,
+            body: `## Release v${newVersion}
+
+            This release was automatically created after publishing to PyPI.
+
+            ### Changes
+            - Version bump: ${{ github.event.inputs.version_type }}
+            - Published to PyPI: https://pypi.org/project/fogis-api-client/${newVersion}/
+
+            ### Installation
+            \`\`\`bash
+            pip install fogis-api-client==${newVersion}
+            \`\`\`
+
+            _This release was automatically created by the publish workflow._`,
+            draft: false,
+            prerelease: false
+          });
+
+          console.log(`Created release: ${release.html_url}`);
+
+    - name: Notify success
+      if: success()
+      run: |
+        VERSION=${{ needs.check-version.outputs.version }}
+        echo "🎉 Successfully published fogis-api-client v$VERSION to PyPI!"
+        echo "📦 Package URL: https://pypi.org/project/fogis-api-client/$VERSION/"
+
+  build-and-publish-container:
+    name: Build and Publish Container to GHCR
+    runs-on: ubuntu-latest
+    needs: [check-version, build-and-publish]
+    if: needs.check-version.outputs.should_publish == 'true'
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: main
+        fetch-depth: 0
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}},value=${{ needs.check-version.outputs.version }}
+          type=semver,pattern={{major}}.{{minor}},value=${{ needs.check-version.outputs.version }}
+          type=semver,pattern={{major}},value=${{ needs.check-version.outputs.version }}
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push container image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          VERSION=${{ needs.check-version.outputs.version }}
+          BUILD_DATE=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.created'] }}
+          VCS_REF=${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Notify container success
+      if: success()
+      run: |
+        VERSION=${{ needs.check-version.outputs.version }}
+        echo "🐳 Successfully published container to GHCR!"
+        echo "📦 Container URL: ghcr.io/${{ github.repository }}:$VERSION"
+        echo "🔗 Container Registry: https://github.com/${{ github.repository }}/pkgs/container/$(echo ${{ github.repository }} | cut -d'/' -f2)"
