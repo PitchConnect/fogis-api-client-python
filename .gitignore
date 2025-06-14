@@ -36,3 +36,11 @@ build/
 .env.dev
 .env.*
 !.env.example
+
+# Credentials and sensitive files
+credentials/
+*.json
+!package.json
+!package-lock.json
+!**/tests/**/*.json
+!**/test_data/**/*.json
