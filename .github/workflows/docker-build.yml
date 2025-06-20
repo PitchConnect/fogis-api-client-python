@@ -90,7 +90,7 @@ jobs:
   docker-build-prod:
     runs-on: ubuntu-latest
     needs: [docker-unit-tests, docker-integration-tests]
-    if: github.event_name == 'release'  # Only run on release events
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
 
@@ -113,7 +113,8 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=ref,event=branch
-            type=sha
+            type=sha,format=long
+            type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push production Docker image
         uses: docker/build-push-action@v5
@@ -121,6 +122,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
