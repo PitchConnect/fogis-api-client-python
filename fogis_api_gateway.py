@@ -17,6 +17,7 @@ except ImportError:
 from fogis_api_client.fogis_api_client import FogisApiClient
 from fogis_api_client.match_list_filter import MatchListFilter
 from fogis_api_client_swagger import get_swagger_blueprint, spec
+from auth_routes import register_auth_routes
 
 # Configure logging
 logging.basicConfig(
@@ -57,6 +58,9 @@ if CORS:
 # Register Swagger UI blueprint
 swagger_ui_blueprint, SWAGGER_URL, API_URL = get_swagger_blueprint()
 app.register_blueprint(swagger_ui_blueprint, url_prefix=SWAGGER_URL)
+
+# Register authentication routes
+register_auth_routes(app)
 
 
 # Add endpoint to serve the OpenAPI specification
