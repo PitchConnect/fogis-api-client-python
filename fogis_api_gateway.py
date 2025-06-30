@@ -14,10 +14,10 @@ except ImportError:
     # CORS is optional, only needed for development
     CORS = None
 
+from auth_routes import register_auth_routes
 from fogis_api_client.fogis_api_client import FogisApiClient
 from fogis_api_client.match_list_filter import MatchListFilter
 from fogis_api_client_swagger import get_swagger_blueprint, spec
-from auth_routes import register_auth_routes
 
 # Configure logging
 logging.basicConfig(
@@ -100,20 +100,14 @@ def debug():
     try:
         # Get all network interfaces
         for interface, addrs in psutil.net_if_addrs().items():
-            ip_addresses[interface] = [
-                addr.address for addr in addrs if addr.family == socket.AF_INET
-            ]
+            ip_addresses[interface] = [addr.address for addr in addrs if addr.family == socket.AF_INET]
     except Exception as net_err:
         ip_addresses = {"error": str(net_err)}
 
     # Get environment variables (excluding sensitive ones)
     env_vars = {}
     for key, value in os.environ.items():
-        if (
-            "password" not in key.lower()
-            and "secret" not in key.lower()
-            and "key" not in key.lower()
-        ):
+        if "password" not in key.lower() and "secret" not in key.lower() and "key" not in key.lower():
             env_vars[key] = value
 
     # Get Docker-specific information
@@ -197,9 +191,7 @@ def health():
         try:
             # Get all network interfaces
             for interface, addrs in psutil.net_if_addrs().items():
-                ip_addresses[interface] = [
-                    addr.address for addr in addrs if addr.family == socket.AF_INET
-                ]
+                ip_addresses[interface] = [addr.address for addr in addrs if addr.family == socket.AF_INET]
         except Exception as net_err:
             ip_addresses = {"error": str(net_err)}
 
