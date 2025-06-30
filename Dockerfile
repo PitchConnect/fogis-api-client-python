@@ -48,6 +48,7 @@ COPY fogis_api_client/ ./fogis_api_client/
 COPY fogis_api_gateway.py .
 COPY fogis_api_client_http_wrapper.py .
 COPY fogis_api_client_swagger.py .
+COPY auth_routes.py .
 
 # Create directories for logs and data
 RUN mkdir -p /app/logs /app/data && \
