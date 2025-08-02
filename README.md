@@ -1,386 +1,432 @@
-# 🚀 FOGIS Deployment - Complete Automated Solution
+# FOGIS API Client for Python
 
-## **🎯 What This Repository Provides**
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![PyPI version](https://badge.fury.io/py/fogis-api-client-timmyBird.svg)](https://badge.fury.io/py/fogis-api-client-timmyBird)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-This repository contains a **complete automated deployment solution** for the FOGIS containerized system, including:
+A comprehensive Python client library for interacting with the FOGIS API (Swedish Football Association). This library provides a simple, intuitive interface for referees and match officials to access match data, report results, manage events, and handle all aspects of match administration through the FOGIS system.
 
-- ✅ **One-click setup** with automated dependency checking
-- ✅ **Cron automation** for hourly match processing
-- ✅ **Easy management commands** for system control
-- ✅ **Comprehensive documentation** for non-technical users
-- ✅ **Health monitoring** and troubleshooting tools
+## 🎯 What is FOGIS?
 
-## **🚀 Quick Start (3 Commands)**
+FOGIS (Fotbollens Organisations- och Informationssystem) is the official system used by the Swedish Football Association (Svensk Fotboll) for managing football matches, referee assignments, and match reporting. This Python client provides programmatic access to FOGIS functionality.
 
-```bash
-# 1. Check system status
-./show_system_status.sh
+## ✨ Key Features
 
-# 2. Start the system (if needed)
-./manage_fogis_system.sh start
+- **🔐 Secure Authentication** - Support for both username/password and cookie-based authentication
+- **⚽ Match Management** - Fetch match lists, get match details, and report results
+- **📊 Advanced Filtering** - Powerful filtering system for matches by date, status, age category, gender, and more
+- **🎯 Event Reporting** - Report goals, cards, substitutions, and other match events
+- **👥 Team & Player Data** - Access team rosters, player information, and official details
+- **🔄 Real-time Updates** - Mark matches as finished and update match status
+- **🛡️ Type Safety** - Full type hints and TypedDict definitions for better IDE support
+- **📝 Comprehensive Logging** - Built-in logging with sensitive data filtering
+- **🧪 Testing Support** - Includes mock server for testing and development
+- **🐳 Docker Ready** - Full Docker support for containerized deployments
 
-# 3. Add automation
-./manage_fogis_system.sh cron-add
-```
+## 🚀 Quick Start
 
-**That's it! Your FOGIS system is now fully automated.** 🎉
-
-## **📋 What This System Does**
-
-- 🔄 **Automatically fetches** your FOGIS match assignments every hour
-- 📱 **Creates WhatsApp group descriptions and avatars** for each match
-- ☁️ **Uploads everything to Google Drive** with organized filenames
-- 📅 **Syncs matches to your Google Calendar**
-- 📞 **Manages referee contact information**
-- 📊 **Logs all activity** for monitoring and troubleshooting
-
-## **🔧 Management Commands**
-
-### **System Control:**
-```bash
-./manage_fogis_system.sh start      # Start all services
-./manage_fogis_system.sh stop       # Stop all services
-./manage_fogis_system.sh restart    # Restart all services
-./manage_fogis_system.sh status     # Show detailed status
-```
-
-### **Testing & Monitoring:**
-```bash
-./manage_fogis_system.sh test       # Test the system manually
-./manage_fogis_system.sh health     # Check service health
-./manage_fogis_system.sh logs       # View all logs
-```
-
-### **Automation:**
-```bash
-./manage_fogis_system.sh cron-add     # Add hourly automation
-./manage_fogis_system.sh cron-remove  # Remove automation
-./manage_fogis_system.sh cron-status  # Check automation status
-```
-
-## **🌐 Service Architecture**
-
-| Service | Purpose | Port |
-|---------|---------|------|
-| **FOGIS API Client** | Connects to FOGIS, serves match data | 9086 |
-| **Team Logo Combiner** | Creates WhatsApp group avatars | 9088 |
-| **Calendar/Phonebook Sync** | Syncs to Google Calendar | 9084 |
-| **Google Drive Service** | Uploads files to Google Drive | 9085 |
-| **Match Processor** | Main processing engine | (triggered) |
-
-## **⏰ Automation**
-
-Once set up, the system automatically:
-- **Runs every hour** at minute 0 (1:00, 2:00, 3:00, etc.)
-- **Checks for new matches** from FOGIS
-- **Creates WhatsApp assets** for any new assignments
-- **Uploads to Google Drive** with proper organization
-- **Logs everything** for monitoring
-
-## **🔍 Monitoring**
+### Installation
 
 ```bash
-# Quick system overview
-./show_system_status.sh
+# Install from PyPI
+pip install fogis-api-client-timmyBird
 
-# Check if automation is working
-./manage_fogis_system.sh cron-status
+# Or install with development dependencies
+pip install fogis-api-client-timmyBird[dev]
 
-# View recent activity
-tail -f logs/cron/match-processing.log
-
-# Health check all services
-./manage_fogis_system.sh health
+# Or install with mock server support
+pip install fogis-api-client-timmyBird[mock-server]
 ```
 
-## **🛠️ Prerequisites**
-
-- **Docker Desktop** installed and running
-- **Docker Compose** available
-- **Google OAuth** configured (for Calendar/Drive access)
-- **FOGIS credentials** for match data access
-
-## **🎉 Success Indicators**
-
-**✅ System is working when:**
-- All services show "healthy" status
-- Cron job runs every hour automatically
-- WhatsApp assets are created and uploaded
-- Matches appear in Google Calendar
-- Logs show successful processing
-
-## **🆘 Troubleshooting**
-
-### **Common Issues:**
-- **Services not starting:** `./manage_fogis_system.sh restart`
-- **Docker not running:** Start Docker Desktop
-- **Permission denied:** `chmod +x *.sh`
-- **Cron not working:** Check system cron permissions
-
-### **Get Help:**
-```bash
-# System diagnostics
-./show_system_status.sh
-
-# View logs
-./manage_fogis_system.sh logs
-
-# Test manually
-./manage_fogis_system.sh test
-```
-
-## **🔗 Related Repositories**
-
-This deployment orchestrates services from:
-- [fogis-api-client-python](https://github.com/PitchConnect/fogis-api-client-python)
-- [match-list-processor](https://github.com/PitchConnect/match-list-processor)
-- [team-logo-combiner](https://github.com/PitchConnect/team-logo-combiner)
-- [google-drive-service](https://github.com/PitchConnect/google-drive-service)
-- [fogis-calendar-phonebook-sync](https://github.com/PitchConnect/fogis-calendar-phonebook-sync)
-
----
-
-**🎯 This repository provides everything needed for a complete, automated FOGIS deployment with zero technical knowledge required.**
-
-
-
-## Quick Start
-
-For new developers, see the [QUICKSTART.md](QUICKSTART.md) guide for step-by-step instructions to get up and running quickly.
+### Basic Usage
 
 ```python
-from fogis_api_client import FogisApiClient, FogisLoginError, FogisAPIRequestError, configure_logging
+from fogis_api_client import FogisApiClient, configure_logging
 
-# Configure logging with enhanced options
+# Configure logging (optional)
 configure_logging(level="INFO")
 
-# Initialize with credentials
+# Initialize the client
 client = FogisApiClient(username="your_username", password="your_password")
 
-# Fetch matches (lazy login happens automatically)
-try:
-    matches = client.fetch_matches_list_json()
-    print(f"Found {len(matches)} matches")
+# Fetch your assigned matches
+matches = client.fetch_matches_list_json()
+print(f"Found {len(matches)} matches")
 
-    # Display the next 3 matches
-    for match in matches[:3]:
-        print(f"{match['datum']} {match['tid']}: {match['hemmalag']} vs {match['bortalag']} at {match['arena']}")
-
-except FogisLoginError as e:
-    print(f"Authentication error: {e}")
-except FogisAPIRequestError as e:
-    print(f"API request error: {e}")
+# Display upcoming matches
+for match in matches[:3]:
+    print(f"{match['datum']} {match['tid']}: {match['hemmalag']} vs {match['bortalag']}")
 ```
 
-## Documentation
-
-Comprehensive documentation is available in the [docs](docs/) directory:
-
-* [Getting Started Guide](docs/getting_started.md)
-* [API Reference](docs/api_reference.md)
-* [User Guides](docs/user_guides/)
-* [Architecture Overview](docs/architecture.md)
-* [Troubleshooting](docs/troubleshooting.md)
-
-## Integration Testing
-
-This project includes comprehensive integration tests to verify that the client correctly interacts with the FOGIS API. These tests use a mock server to simulate the FOGIS API, allowing for reliable testing without requiring real credentials or internet access.
-
-### Benefits of Integration Tests
-
-- **Verify API Contracts**: Ensure the client adheres to the expected API contracts
-- **Catch Regressions**: Detect breaking changes before they affect users
-- **Test Edge Cases**: Validate behavior with various input combinations
-- **No Real Credentials**: Test without needing actual FOGIS credentials
-- **Fast and Reliable**: Tests run quickly and consistently in any environment
-
-### Mock Server
-
-The mock server simulates the FOGIS API for testing and development. You can use it in two ways:
-
-#### Using the CLI Tool
-
-```bash
-# Install the mock server dependencies
-pip install -e ".[mock-server]"
-
-# Start the mock server
-python -m fogis_api_client.cli.mock_server
-
-# With custom host and port
-python -m fogis_api_client.cli.mock_server --host 0.0.0.0 --port 5001
-```
-
-#### Using the Standalone Script
-
-```bash
-# Start the mock server
-python scripts/run_mock_server.py
-```
-
-The mock server provides a simulated FOGIS API environment that you can use for:
-- Running integration tests without Docker
-- Developing and testing new features
-- Debugging API interactions
-- Testing client applications without real credentials
-
-### Running Integration Tests
-
-There are multiple ways to run integration tests:
-
-#### Using Docker (Recommended for CI/CD)
-
-```bash
-./run_integration_tests.sh
-```
-
-This script will:
-1. Start a Docker environment with the mock FOGIS server
-2. Run all integration tests against the mock server
-3. Report the results and clean up the environment
-
-#### Using the Integration Test Script (Recommended for Development)
-
-```bash
-# Run integration tests with automatic mock server management
-python scripts/run_integration_tests_with_mock.py
-
-# Run with verbose output
-python scripts/run_integration_tests_with_mock.py --verbose
-
-# Run a specific test file
-python scripts/run_integration_tests_with_mock.py --test-file test_with_mock_server.py
-```
-
-This script will automatically start the mock server if needed, run the tests, and provide a clean output.
-
-#### Using Local Mock Server (Manual Approach)
-
-```bash
-# In terminal 1: Start the mock server
-python -m fogis_api_client.cli.mock_server start
-
-# In terminal 2: Run the tests
-python -m pytest integration_tests
-```
-
-The mock server CLI provides many useful commands for development and testing:
-
-```bash
-# Show help
-python -m fogis_api_client.cli.mock_server --help
-
-# Check the status of the mock server
-python -m fogis_api_client.cli.mock_server status
-
-# View request history
-python -m fogis_api_client.cli.mock_server history view
-
-# Test an endpoint
-python -m fogis_api_client.cli.mock_server test /mdk/Login.aspx --method POST
-
-# Stop the mock server
-python -m fogis_api_client.cli.mock_server stop
-```
-
-See the [CLI README](fogis_api_client/cli/README.md) for more details on the available commands.
-
-You can also run specific test files directly:
-
-```bash
-python -m pytest integration_tests/test_match_result_reporting.py -v
-```
-
-#### Using IDE Integration
-
-The project now includes configuration files for VSCode and PyCharm that make it easy to run integration tests from your IDE:
-
-**VSCode**:
-1. Open the project in VSCode
-2. Go to the Run and Debug panel
-3. Select "Python: Run Integration Tests" from the dropdown
-4. Click the Run button
-
-**PyCharm**:
-1. Open the project in PyCharm
-2. Go to the Run configurations dropdown
-3. Select "Run Integration Tests"
-4. Click the Run button
-
-### Adding New Tests
-
-When implementing new features, it's recommended to add corresponding integration tests. See the [integration tests README](integration_tests/README.md) for detailed instructions on adding new tests and extending the mock server.
-
-#### Usage
+### Using Filters for Historic Data
 
 ```python
-import logging
-from fogis_api_client.fogis_api_client import FogisApiClient, FogisLoginError, FogisAPIRequestError
+from fogis_api_client import FogisApiClient, MatchListFilter
+from fogis_api_client.enums import MatchStatus, AgeCategory
+from datetime import datetime, timedelta
 
-logging.basicConfig(level=logging.INFO)
+client = FogisApiClient(username="your_username", password="your_password")
 
-username = "your_fogis_username"
-password = "your_fogis_password"
+# Create a filter for historic data
+filter = MatchListFilter()
+last_month = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+today = datetime.now().strftime('%Y-%m-%d')
 
-try:
-    client = FogisApiClient(username, password)
-    # No need to call login() explicitly - the client implements lazy login
-    matches = client.fetch_matches_list_json()
-    if matches:
-        print(f"Found {len(matches)} matches.")
-    else:
-        print("No matches found.")
-except FogisLoginError as e:
-    print(f"Login failed: {e}")
-except FogisAPIRequestError as e:
-    print(f"API request error: {e}")
-except Exception as e:
-    print(f"An unexpected error occurred: {e}")
+# Fetch completed matches from the last month
+historic_matches = (filter
+    .start_date(last_month)
+    .end_date(today)
+    .include_statuses([MatchStatus.COMPLETED])
+    .fetch_filtered_matches(client))
+
+print(f"Found {len(historic_matches)} completed matches in the last month")
 ```
 
-You can also call `login()` explicitly if you want to pre-authenticate:
+
+## 📖 Table of Contents
+
+- [Installation](#-installation)
+- [Authentication](#-authentication)
+- [Basic Usage](#-basic-usage)
+- [Advanced Filtering](#-advanced-filtering)
+- [Match Management](#-match-management)
+- [Event Reporting](#-event-reporting)
+- [Error Handling](#-error-handling)
+- [Docker Support](#-docker-support)
+- [Development](#-development)
+- [API Reference](#-api-reference)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+## 🔧 Installation
+
+### From PyPI (Recommended)
+
+```bash
+pip install fogis-api-client-timmyBird
+```
+
+### From Source
+
+```bash
+git clone https://github.com/PitchConnect/fogis-api-client-python.git
+cd fogis-api-client-python
+pip install -e .
+```
+
+### Development Installation
+
+```bash
+git clone https://github.com/PitchConnect/fogis-api-client-python.git
+cd fogis-api-client-python
+pip install -e ".[dev]"
+```
+
+## 🔐 Authentication
+
+The FOGIS API Client supports two authentication methods:
+
+### 1. Username and Password (Recommended for Development)
 
 ```python
-client = FogisApiClient(username, password)
-client.login()  # Explicitly authenticate
-# ... make API requests
+from fogis_api_client import FogisApiClient
+
+client = FogisApiClient(username="your_username", password="your_password")
+# Authentication happens automatically on first API call (lazy login)
 ```
 
-#### Cookie-Based Authentication
-
-For improved security, you can authenticate using cookies instead of storing credentials:
+### 2. Cookie-based Authentication (Recommended for Production)
 
 ```python
 # First, get cookies from a logged-in session
-client = FogisApiClient(username, password)
-client.login()
-cookies = client.get_cookies()  # Save these cookies securely
+client = FogisApiClient(username="your_username", password="your_password")
+cookies = client.login()  # Explicitly authenticate and get cookies
 
-# Later, in another session, use the saved cookies
+# Save cookies securely for later use
+# Later, use saved cookies (more secure - no credentials in memory)
 client = FogisApiClient(cookies=cookies)
-# No need to call login() - already authenticated with cookies
-matches = client.fetch_matches_list_json()
+
+# Validate cookies before use
+if client.validate_cookies():
+    matches = client.fetch_matches_list_json()
+else:
+    print("Cookies expired, need to re-authenticate")
 ```
 
-You can validate if the cookies are still valid:
+## 🎯 Basic Usage
+
+### Fetching Matches
 
 ```python
-client = FogisApiClient(cookies=cookies)
-if client.validate_cookies():
-    print("Cookies are valid")
-else:
-    print("Cookies have expired, need to login with credentials again")
+from fogis_api_client import FogisApiClient, FogisLoginError, FogisAPIRequestError
+
+try:
+    client = FogisApiClient(username="your_username", password="your_password")
+
+    # Get all assigned matches
+    matches = client.fetch_matches_list_json()
+    print(f"Found {len(matches)} matches")
+
+    # Display match information
+    for match in matches:
+        print(f"Match {match['matchid']}: {match['hemmalag']} vs {match['bortalag']}")
+        print(f"Date: {match['datum']} {match['tid']}")
+        print(f"Venue: {match['arena']}")
+        print("---")
+
+except FogisLoginError as e:
+    print(f"Authentication failed: {e}")
+except FogisAPIRequestError as e:
+    print(f"API request failed: {e}")
 ```
 
----
-#### Docker Support
+### Reporting Match Results
 
-The package includes Docker support for easy deployment and development:
+```python
+# Report a match result
+result = {
+    "matchid": 123456,
+    "hemmamal": 2,        # Home team goals
+    "bortamal": 1,        # Away team goals
+    "halvtidHemmamal": 1, # Half-time home goals
+    "halvtidBortamal": 0  # Half-time away goals
+}
 
-##### Production Deployment
+response = client.report_match_result(result)
+if response.get('success'):
+    print("Match result reported successfully!")
+```
+
+### Getting Match Details
+
+```python
+# Get detailed information about a specific match
+match_id = 123456
+match_details = client.get_match(match_id)
+players = client.get_team_players(match_details['hemmalagid'])
+officials = client.get_match_officials(match_id)
+```
+
+## 🔍 Advanced Filtering
+
+The FOGIS API Client includes a powerful filtering system for querying matches with specific criteria. See the [Filter Documentation](docs/filter_guide.md) for comprehensive examples.
+
+### Basic Date Range Filtering
+
+```python
+from fogis_api_client import MatchListFilter
+from datetime import datetime, timedelta
+
+# Create a filter for the last 7 days
+filter = MatchListFilter()
+week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+today = datetime.now().strftime('%Y-%m-%d')
+
+matches = (filter
+    .start_date(week_ago)
+    .end_date(today)
+    .fetch_filtered_matches(client))
+```
+
+### Status and Category Filtering
+
+```python
+from fogis_api_client.enums import MatchStatus, AgeCategory, Gender
+
+# Filter for completed youth matches
+matches = (MatchListFilter()
+    .include_statuses([MatchStatus.COMPLETED])
+    .include_age_categories([AgeCategory.YOUTH])
+    .include_genders([Gender.MALE])
+    .fetch_filtered_matches(client))
+```
+
+### Complex Filtering Examples
+
+```python
+# Get all postponed or cancelled matches from last month
+last_month = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
+
+problematic_matches = (MatchListFilter()
+    .start_date(last_month)
+    .end_date(today)
+    .include_statuses([MatchStatus.POSTPONED, MatchStatus.CANCELLED])
+    .fetch_filtered_matches(client))
+
+# Exclude veteran matches, include only outdoor football
+outdoor_non_veteran = (MatchListFilter()
+    .exclude_age_categories([AgeCategory.VETERANS])
+    .include_football_types([FootballType.FOOTBALL])
+    .fetch_filtered_matches(client))
+```
+
+## ⚽ Match Management
+
+### Getting Match Information
+
+```python
+# Get a specific match by ID
+match = client.get_match(123456)
+print(f"Match: {match['hemmalag']} vs {match['bortalag']}")
+print(f"Status: {match['status']}")
+
+# Get match result details
+result = client.get_match_result(123456)
+print(f"Score: {result['hemmamal']}-{result['bortamal']}")
+
+# Get match officials
+officials = client.get_match_officials(123456)
+for official in officials:
+    print(f"{official['roll']}: {official['fornamn']} {official['efternamn']}")
+```
+
+### Team and Player Information
+
+```python
+# Get team players
+team_id = 12345
+players = client.get_team_players(team_id)
+for player in players:
+    print(f"#{player['trojnummer']} {player['fornamn']} {player['efternamn']}")
+
+# Get team officials
+team_officials = client.get_team_officials(team_id)
+```
+
+### Match Status Management
+
+```python
+# Mark a match report as finished
+response = client.mark_reporting_finished(123456)
+if response.get('success'):
+    print("Match reporting marked as complete")
+```
+
+## 🎯 Event Reporting
+
+### Reporting Goals and Cards
+
+```python
+from fogis_api_client import EVENT_TYPES
+
+# Report a goal
+goal_event = {
+    "matchid": 123456,
+    "handelsekod": 6,  # Regular goal (see EVENT_TYPES)
+    "minut": 25,       # 25th minute
+    "lagid": 12345,    # Team ID
+    "personid": 67890, # Player ID
+    "resultatHemma": 1,
+    "resultatBorta": 0
+}
+
+response = client.report_match_event(goal_event)
+
+# Report a yellow card
+card_event = {
+    "matchid": 123456,
+    "handelsekod": 20,  # Yellow card
+    "minut": 42,
+    "lagid": 12345,
+    "personid": 67890
+}
+
+response = client.report_match_event(card_event)
+```
+
+### Available Event Types
+
+```python
+from fogis_api_client import EVENT_TYPES
+
+# Print all available event types
+for code, details in EVENT_TYPES.items():
+    print(f"Code {code}: {details['name']} (Goal: {details.get('goal', False)})")
+```
+
+### Managing Match Events
+
+```python
+# Get all events for a match
+events = client.get_match_events(123456)
+
+# Clear all events for a match (use with caution!)
+response = client.clear_match_events(123456)
+```
+
+## 🛡️ Error Handling
+
+The library provides specific exception types for different error scenarios:
+
+```python
+from fogis_api_client import (
+    FogisApiClient,
+    FogisLoginError,
+    FogisAPIRequestError,
+    FogisDataError
+)
+
+try:
+    client = FogisApiClient(username="user", password="pass")
+    matches = client.fetch_matches_list_json()
+
+except FogisLoginError as e:
+    # Authentication failed - check credentials
+    print(f"Login failed: {e}")
+
+except FogisAPIRequestError as e:
+    # Network or server error
+    print(f"API request failed: {e}")
+
+except FogisDataError as e:
+    # Data parsing or validation error
+    print(f"Data error: {e}")
+
+except Exception as e:
+    # Unexpected error
+    print(f"Unexpected error: {e}")
+```
+
+### Common Error Scenarios
+
+- **FogisLoginError**: Invalid credentials, expired session, account locked
+- **FogisAPIRequestError**: Network issues, server downtime, rate limiting
+- **FogisDataError**: Invalid response format, missing required fields
+
+## 📝 Logging
+
+The library includes comprehensive logging with sensitive data filtering:
+
+```python
+from fogis_api_client import configure_logging, get_logger
+
+# Configure logging for the entire library
+configure_logging(level="INFO")
+
+# Get a logger for your module
+logger = get_logger("my_module")
+logger.info("This will be logged")
+
+# Sensitive information is automatically filtered
+logger.info("Password: secret123")  # Logs as "Password: ********"
+```
+
+### Available Log Levels
+
+```python
+from fogis_api_client import get_log_levels
+
+levels = get_log_levels()
+print(levels)  # {'DEBUG': 10, 'INFO': 20, 'WARNING': 30, 'ERROR': 40, 'CRITICAL': 50}
+```
+## 🐳 Docker Support
+
+The library includes comprehensive Docker support for both development and production use.
+
+### Production Deployment
 
 1. Create a `.env` file with your credentials:
-   ```
+   ```env
    FOGIS_USERNAME=your_fogis_username
    FOGIS_PASSWORD=your_fogis_password
    ```
@@ -390,297 +436,220 @@ The package includes Docker support for easy deployment and development:
    docker compose up -d
    ```
 
-3. Access the API at http://localhost:8080
+3. Access the API gateway at http://localhost:8080
 
-##### Development Environment
-
-For development, we provide a more comprehensive setup:
-
-1. Start the development environment:
-   ```bash
-   ./dev.sh
-   ```
-
-2. Run integration tests:
-   ```bash
-   ./run_integration_tests.sh
-   ```
-
-For more details on the development environment, see [README.dev.md](README.dev.md).
-
----
-#### API Endpoints
-
-The FOGIS API Gateway provides the following endpoints:
-
-##### Basic Endpoints
-- `GET /` - Returns a test JSON response
-- `GET /hello` - Returns a simple hello world message
-
-##### Match Endpoints
-- `GET /matches` - Returns a list of matches
-- `POST /matches/filter` - Returns a filtered list of matches based on provided criteria
-- `GET /match/<match_id>` - Returns details for a specific match
-- `GET /match/<match_id>/result` - Returns result information for a specific match
-- `GET /match/<match_id>/officials` - Returns officials information for a specific match
-- `POST /match/<match_id>/finish` - Marks a match report as completed/finished
-
-##### Match Events Endpoints
-- `GET /match/<match_id>/events` - Returns events for a specific match
-- `POST /match/<match_id>/events` - Reports a new event for a match
-- `POST /match/<match_id>/events/clear` - Clears all events for a match
-
-##### Team Endpoints
-- `GET /team/<team_id>/players` - Returns player information for a specific team
-- `GET /team/<team_id>/officials` - Returns officials information for a specific team
-
-#### Query Parameters
-
-Many endpoints support query parameters for filtering, sorting, and pagination:
-
-##### `/matches` Endpoint
-- `from_date` - Start date for filtering matches (format: YYYY-MM-DD)
-- `to_date` - End date for filtering matches (format: YYYY-MM-DD)
-- `limit` - Maximum number of matches to return
-- `offset` - Number of matches to skip (for pagination)
-- `sort_by` - Field to sort by (options: datum, hemmalag, bortalag, tavling)
-- `order` - Sort order, 'asc' or 'desc'
-
-##### `/match/<match_id>` Endpoint
-- `include_events` - Whether to include events in the response (default: true)
-- `include_players` - Whether to include players in the response (default: false)
-- `include_officials` - Whether to include officials in the response (default: false)
-
-##### `/match/<match_id>/events` Endpoint
-- `type` - Filter events by type (e.g., 'goal', 'card', 'substitution')
-- `player` - Filter events by player name
-- `team` - Filter events by team name
-- `limit` - Maximum number of events to return
-- `offset` - Number of events to skip (for pagination)
-- `sort_by` - Field to sort by (options: time, type, player, team)
-- `order` - Sort order, 'asc' or 'desc'
-
-##### `/team/<team_id>/players` Endpoint
-- `name` - Filter players by name
-- `position` - Filter players by position
-- `number` - Filter players by jersey number
-- `limit` - Maximum number of players to return
-- `offset` - Number of players to skip (for pagination)
-- `sort_by` - Field to sort by (options: name, position, number)
-- `order` - Sort order, 'asc' or 'desc'
-
-##### `/team/<team_id>/officials` Endpoint
-- `name` - Filter officials by name
-- `role` - Filter officials by role
-- `limit` - Maximum number of officials to return
-- `offset` - Number of officials to skip (for pagination)
-- `sort_by` - Field to sort by (options: name, role)
-- `order` - Sort order, 'asc' or 'desc'
-
-##### Filter Parameters for `/matches/filter` Endpoint
-The `/matches/filter` endpoint accepts the following parameters in the request body (JSON):
-- `from_date` - Start date for filtering matches (format: YYYY-MM-DD)
-- `to_date` - End date for filtering matches (format: YYYY-MM-DD)
-- `status` - Match status (e.g., "upcoming", "completed")
-- `age_category` - Age category for filtering matches
-- `gender` - Gender for filtering matches
-- `football_type` - Type of football (e.g., "indoor", "outdoor")
-
----
-#### Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature-name`
-3. Make your changes
-4. Run the pre-merge check to ensure all tests pass:
-   ```bash
-   ./pre-merge-check.sh
-   ```
-5. Commit your changes: `git commit -m "Add your feature"`
-6. Push to the branch: `git push origin feature/your-feature-name`
-7. Create a pull request
-
-#### Development Setup
-
-We provide setup scripts to make it easy to set up your development environment, including pre-commit hooks.
-
-To set up pre-commit hooks that match our CI/CD pipeline:
+### Development Environment
 
 ```bash
-./update_precommit_hooks.sh
-```
+# Start development environment with hot reload
+./dev.sh
 
-This script will install pre-commit, generate hooks that match our CI/CD configuration, and install them automatically.
+# Run integration tests in Docker
+./run_integration_tests.sh
 
-##### Using the Setup Script
-
-On macOS/Linux:
-```bash
-./scripts/setup_dev_env.sh
-```
-
-On Windows (PowerShell):
-```powershell
-.\scripts\setup_dev_env.ps1
-```
-
-This script will:
-1. Create a virtual environment (if it doesn't exist)
-2. Install the package in development mode with all dev dependencies
-3. Install pre-commit and set up the hooks
-
-##### Manual Setup
-
-If you prefer to set up manually:
-
-1. Create and activate a virtual environment:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-2. Install the package in development mode:
-   ```bash
-   pip install -e ".[dev]"
-   ```
-
-3. Install pre-commit hooks:
-   ```bash
-   pip install pre-commit
-   pre-commit install
-   ```
-
-##### Pre-Commit Hooks
-
-We use pre-commit hooks to ensure code quality. The hooks will automatically run before each commit, checking for:
-- Code formatting (Black, isort)
-- Linting issues (flake8)
-- Type checking (mypy)
-- Unit test failures
-- Whether hooks need updating to match CI/CD
-
-For more details on keeping hooks in sync with CI/CD, see [CONTRIBUTING.md](CONTRIBUTING.md#keeping-hooks-in-sync-with-cicd).
-
-You can also run the hooks manually on all files:
-```bash
-pre-commit run --all-files
-```
-
-##### Verifying Docker Builds Locally
-
-Before pushing changes that might affect Docker builds, you can verify them locally:
-
-```bash
-# Run the Docker verification hook
-pre-commit run docker-verify --hook-stage manual
-
-# Or run the script directly
+# Build and test Docker images
 ./scripts/verify_docker_build.sh
 ```
 
-This will build all Docker images locally and ensure they work correctly, preventing CI/CD pipeline failures.
+### Available Docker Images
 
-##### Running Integration Tests
+- **Production**: Optimized for deployment
+- **Development**: Includes dev tools and hot reload
+- **Testing**: Configured for running tests
+- **Mock Server**: Standalone mock FOGIS API
 
-To run integration tests locally before pushing changes:
+### Docker Compose Services
+
+```yaml
+services:
+  fogis-api-client:    # Main API client service
+  mock-server:         # Mock FOGIS API for testing
+  integration-tests:   # Test runner service
+```
+## 🧪 Development & Testing
+
+### Setting Up Development Environment
 
 ```bash
-# Run the integration tests script
-./scripts/run_integration_tests.sh
+# Clone the repository
+git clone https://github.com/PitchConnect/fogis-api-client-python.git
+cd fogis-api-client-python
+
+# Set up development environment
+./scripts/setup_dev_env.sh  # On macOS/Linux
+# or
+.\scripts\setup_dev_env.ps1  # On Windows PowerShell
 ```
 
-This script will:
-1. Set up a virtual environment if needed
-2. Install dependencies
-3. Run the integration tests with the mock server
-
-Running integration tests locally helps catch issues before they reach the CI/CD pipeline.
-
-##### Dynamic Pre-commit Hook Generator
-
-This project uses a dynamic pre-commit hook generator powered by Google's Gemini LLM to maintain consistent code quality and documentation standards.
+### Running Tests
 
 ```bash
-# Generate pre-commit hooks interactively
-python3 scripts/dynamic_precommit_generator.py
+# Run unit tests
+python -m pytest tests/
 
-# Generate pre-commit hooks non-interactively
-python3 scripts/dynamic_precommit_generator.py --non-interactive --install
+# Run integration tests with mock server
+python scripts/run_integration_tests_with_mock.py
+
+# Run all tests with coverage
+python -m pytest --cov=fogis_api_client
+
+# Run specific test file
+python -m pytest tests/test_match_list_filter.py -v
 ```
 
-See [scripts/README_DYNAMIC_HOOKS.md](scripts/README_DYNAMIC_HOOKS.md) for detailed documentation.
+### Mock Server for Development
 
-##### Pre-Merge Check
-
-Before merging any changes, always run the pre-merge check script to ensure all tests pass:
+The library includes a mock FOGIS API server for development and testing:
 
 ```bash
-./pre-merge-check.sh
+# Start mock server
+python -m fogis_api_client.cli.mock_server
+
+# Use mock server in your code
+client = FogisApiClient(username="test", password="test")
+# Point to mock server (automatically detected in test environment)
 ```
 
-This script:
-- Runs all unit tests
-- Builds and tests the Docker image (if Docker is available)
-- Ensures your changes won't break existing functionality
-
-## Troubleshooting
-
-If you encounter issues while using the FOGIS API Client, check the [Troubleshooting Guide](docs/troubleshooting.md) for solutions to common problems.
-
-### Common Issues
-
-1. **Authentication Failures**
-   - Check your credentials
-   - Verify your account is active
-   - Ensure you have the necessary permissions
-
-2. **API Request Errors**
-   - Check your network connection
-   - Verify the FOGIS API is accessible
-   - Ensure your request parameters are valid
-
-3. **Data Errors**
-   - Verify that the requested resource exists
-   - Check for API changes
-   - Ensure your data is properly formatted
-
-4. **Match Reporting Issues**
-   - Ensure all required fields are included
-   - Verify that the match is in a reportable state
-   - Check that player and team IDs are correct
-
-5. **Performance Issues**
-   - Implement caching for frequently accessed data
-   - Use more specific queries to reduce data size
-   - Process large data sets in chunks
-
-## Error Handling
-
-The package includes custom exceptions for common API errors:
-
-- **FogisLoginError**: Raised when login fails due to invalid credentials, missing credentials, or session expiration.
-
-- **FogisAPIRequestError**: Raised for general API request errors such as network issues, server errors, or invalid parameters.
-
-- **FogisDataError**: Raised when there's an issue with the data from FOGIS, such as invalid response format, missing fields, or parsing errors.
-
-## Utility Tools
-
-The repository includes several utility tools to help with development and usage:
-
-### Testing Utilities
-
-Tools for running tests locally:
+### Pre-commit Hooks
 
 ```bash
-# Run all tests with proper Docker setup
-./tools/testing/run_local_tests.sh
+# Install pre-commit hooks
+pre-commit install
+
+# Run hooks manually
+pre-commit run --all-files
+
+# Update hooks to match CI/CD
+./update_precommit_hooks.sh
 ```
 
-See [tools/testing/README.md](tools/testing/README.md) for more details.
+### Code Quality
 
-## License
+The project maintains high code quality standards:
 
-MIT License
+- **Type hints**: Full type annotations throughout
+- **Linting**: flake8, black, isort
+- **Testing**: pytest with comprehensive coverage
+- **Documentation**: Comprehensive docstrings and examples
+## 📚 API Reference
+
+### Core Classes
+
+- **`FogisApiClient`**: Main client class for API interactions
+- **`MatchListFilter`**: Advanced filtering for match queries
+- **`EVENT_TYPES`**: Dictionary of available match event types
+
+### Exception Classes
+
+- **`FogisLoginError`**: Authentication failures
+- **`FogisAPIRequestError`**: API request failures
+- **`FogisDataError`**: Data parsing/validation failures
+
+### Type Definitions
+
+- **`MatchDict`**: Match data structure
+- **`PlayerDict`**: Player information structure
+- **`EventDict`**: Match event structure
+- **`OfficialDict`**: Official information structure
+
+### Enums
+
+- **`MatchStatus`**: Match status values (COMPLETED, CANCELLED, etc.)
+- **`AgeCategory`**: Age categories (YOUTH, SENIOR, etc.)
+- **`Gender`**: Gender categories (MALE, FEMALE, MIXED)
+- **`FootballType`**: Football types (FOOTBALL, FUTSAL)
+
+For detailed API documentation, see:
+- [API Reference](docs/api_reference.md)
+- [Getting Started Guide](docs/getting_started.md)
+- [Filter Guide](docs/filter_guide.md)
+- [Architecture Overview](docs/architecture.md)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Quick Start for Contributors
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Set up development environment: `./scripts/setup_dev_env.sh`
+4. Make your changes and add tests
+5. Run pre-merge check: `./pre-merge-check.sh`
+6. Commit and push your changes
+7. Create a pull request
+
+### Development Guidelines
+
+- Follow PEP 8 style guidelines
+- Add type hints to all functions
+- Write comprehensive tests
+- Update documentation for new features
+- Ensure all tests pass before submitting PR
+
+## 🔧 Troubleshooting
+
+### Common Issues and Solutions
+
+#### Authentication Problems
+```python
+# Problem: FogisLoginError
+# Solution: Check credentials and account status
+try:
+    client = FogisApiClient(username="user", password="pass")
+    client.login()  # Test authentication explicitly
+except FogisLoginError as e:
+    print(f"Check your credentials: {e}")
+```
+
+#### Network and API Issues
+```python
+# Problem: FogisAPIRequestError
+# Solution: Implement retry logic and check connectivity
+import time
+from fogis_api_client import FogisAPIRequestError
+
+def fetch_with_retry(client, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            return client.fetch_matches_list_json()
+        except FogisAPIRequestError as e:
+            if attempt < max_retries - 1:
+                time.sleep(2 ** attempt)  # Exponential backoff
+                continue
+            raise e
+```
+
+#### Data Validation Issues
+```python
+# Problem: FogisDataError
+# Solution: Validate data before sending
+def safe_report_result(client, result_data):
+    required_fields = ['matchid', 'hemmamal', 'bortamal']
+    if not all(field in result_data for field in required_fields):
+        raise ValueError(f"Missing required fields: {required_fields}")
+
+    return client.report_match_result(result_data)
+```
+
+For more detailed troubleshooting, see [docs/troubleshooting.md](docs/troubleshooting.md).
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
+
+## 🙏 Acknowledgments
+
+- Swedish Football Association (Svensk Fotboll) for providing the FOGIS system
+- All contributors who have helped improve this library
+- The Python community for excellent tools and libraries
+
+## 📞 Support
+
+- **Documentation**: [docs/](docs/)
+- **Issues**: [GitHub Issues](https://github.com/PitchConnect/fogis-api-client-python/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/PitchConnect/fogis-api-client-python/discussions)
+
+---
+
+**Made with ⚽ for the Swedish football community**
