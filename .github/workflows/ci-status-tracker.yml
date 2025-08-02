@@ -1,31 +1,20 @@
 name: CI Status Tracker
 
+# Temporarily disabled due to missing external reusable workflow
+# Re-enable when PitchConnect/.github repository has the required workflow
 on:
-  workflow_run:
-    workflows: ["*"]
-    types: [completed]
+  workflow_dispatch:  # Manual trigger only
+  # workflow_run:
+  #   workflows: ["*"]
+  #   types: [completed]
 
 jobs:
-  get_pr_info:
+  disabled_notice:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion != 'skipped' && github.event.workflow_run.pull_requests[0] != null
-    outputs:
-      pr_number: ${{ steps.pr-info.outputs.PR_NUMBER }}
-      ci_status: ${{ github.event.workflow_run.conclusion }}
+    if: github.event_name == 'workflow_dispatch'
     steps:
-      - name: Get PR information
-        id: pr-info
+      - name: Notice
         run: |
-          PR_NUMBER="${{ github.event.workflow_run.pull_requests[0].number }}"
-          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_OUTPUT
-          echo "Processing PR #$PR_NUMBER with CI status: ${{ github.event.workflow_run.conclusion }}"
-
-  call_reusable_workflow:
-    needs: get_pr_info
-    uses: PitchConnect/.github/.github/workflows/ci-failure-tracker.yml@main
-    with:
-      project_id: 'PVT_kwDODF_kVc4A4M8N'
-      project_number: 3
-      ci_status: ${{ needs.get_pr_info.outputs.ci_status }}
-    secrets:
-      token: ${{ secrets.GITHUB_TOKEN }}
+          echo "CI Status Tracker is temporarily disabled"
+          echo "Reason: Missing external reusable workflow PitchConnect/.github/.github/workflows/ci-failure-tracker.yml"
+          echo "This workflow will be re-enabled when the external dependency is available"
