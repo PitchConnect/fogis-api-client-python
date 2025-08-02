@@ -14,22 +14,28 @@ Welcome to the FOGIS API Client documentation. This documentation provides compr
    - Data Types
    - Error Handling
 
-3. [User Guides](user_guides/README.md)
+3. [Filter Guide](filter_guide.md)
+   - Advanced Filtering
+   - Historic Data Fetching
+   - Performance Optimization
+   - Filter Examples
+
+4. [User Guides](user_guides/README.md)
    - [Match Reporting Guide](user_guides/match_reporting.md)
    - [Team Management Guide](user_guides/team_management.md)
    - [Event Tracking Guide](user_guides/event_tracking.md)
 
-4. [Architecture](architecture.md)
+5. [Architecture](architecture.md)
    - System Components
    - Data Flow
    - Integration Points
 
-5. [Troubleshooting](troubleshooting.md)
+6. [Troubleshooting](troubleshooting.md)
    - Common Issues
    - Error Messages
    - FAQ
 
-6. [Contributing](../CONTRIBUTING.md)
+7. [Contributing](../CONTRIBUTING.md)
    - Development Setup
    - Code Style
    - Testing Guidelines
