@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from .enums import AgeCategory, FootballType, Gender, MatchStatus
 from .fogis_api_client import FogisApiClient
+from .public_api_client import FogisAPIRequestError, FogisDataError
 
 
 class MatchListFilter:
@@ -61,12 +62,16 @@ class MatchListFilter:
         self._status_exclude = statuses
         return self
 
-    def include_age_categories(self, age_categories: List[AgeCategory]) -> "MatchListFilter":
+    def include_age_categories(
+        self, age_categories: List[AgeCategory]
+    ) -> "MatchListFilter":
         """Includes matches with any of the specified age categories in the filter."""
         self._alderskategori_include = age_categories
         return self
 
-    def exclude_age_categories(self, age_categories: List[AgeCategory]) -> "MatchListFilter":
+    def exclude_age_categories(
+        self, age_categories: List[AgeCategory]
+    ) -> "MatchListFilter":
         """Excludes matches with any of the specified age categories from the filter."""
         self._alderskategori_exclude = age_categories
         return self
@@ -81,12 +86,16 @@ class MatchListFilter:
         self._kon_exclude = genders
         return self
 
-    def include_football_types(self, football_types: List[FootballType]) -> "MatchListFilter":
+    def include_football_types(
+        self, football_types: List[FootballType]
+    ) -> "MatchListFilter":
         """Includes matches with any of the specified football types in the filter."""
         self._fotbollstypid_include = football_types
         return self
 
-    def exclude_football_types(self, football_types: List[FootballType]) -> "MatchListFilter":
+    def exclude_football_types(
+        self, football_types: List[FootballType]
+    ) -> "MatchListFilter":
         """Excludes matches with any of the specified football types from the filter."""
         self._fotbollstypid_exclude = football_types
         return self
@@ -121,9 +130,13 @@ class MatchListFilter:
         if self._alderskategori_include or self._alderskategori_exclude:
             age_category_values: List[int] = []
             if self._alderskategori_include:
-                age_category_values = [cat.value for cat in self._alderskategori_include]
+                age_category_values = [
+                    cat.value for cat in self._alderskategori_include
+                ]
             elif self._alderskategori_exclude:
-                age_category_values = [cat.value for cat in self._alderskategori_exclude]
+                age_category_values = [
+                    cat.value for cat in self._alderskategori_exclude
+                ]
             payload_filter["alderskategori"] = age_category_values
 
         if self._kon_include or self._kon_exclude:
@@ -138,7 +151,9 @@ class MatchListFilter:
 
     def filter_matches(self, matches: List[Any]) -> List[Any]:
         """Applies the configured client-side filters to the list of matches."""
-        filtered_matches = list(matches)  # Create a copy to avoid modifying original list
+        filtered_matches = list(
+            matches
+        )  # Create a copy to avoid modifying original list
 
         if self._status_include is not None:
             status_filter_values = set(status.value for status in self._status_include)
@@ -149,8 +164,10 @@ class MatchListFilter:
                     [  # Inclusion logic for status
                         match.get("installd") and "installd" in status_filter_values,
                         match.get("avbruten") and "avbruten" in status_filter_values,
-                        match.get("uppskjuten") and "uppskjuten" in status_filter_values,
-                        match.get("arslutresultat") and "genomford" in status_filter_values,
+                        match.get("uppskjuten")
+                        and "uppskjuten" in status_filter_values,
+                        match.get("arslutresultat")
+                        and "genomford" in status_filter_values,
                         # ... (add conditions for other statuses) ...
                     ]
                 )
@@ -163,9 +180,18 @@ class MatchListFilter:
                 match
                 for match in filtered_matches
                 if not (  # Exclusion logic for status
-                    ("installd" in status_filter_values and match.get("installd", False))
-                    or ("avbruten" in status_filter_values and match.get("avbruten", False))
-                    or ("uppskjuten" in status_filter_values and match.get("uppskjuten", False))
+                    (
+                        "installd" in status_filter_values
+                        and match.get("installd", False)
+                    )
+                    or (
+                        "avbruten" in status_filter_values
+                        and match.get("avbruten", False)
+                    )
+                    or (
+                        "uppskjuten" in status_filter_values
+                        and match.get("uppskjuten", False)
+                    )
                     # ... (add conditions for other statuses) ...
                 )
             ]
@@ -177,7 +203,8 @@ class MatchListFilter:
             filtered_matches = [
                 match
                 for match in filtered_matches
-                if match.get("tavlingAlderskategori") in allowed_categories  # Inclusion logic
+                if match.get("tavlingAlderskategori")
+                in allowed_categories  # Inclusion logic
             ]
         if self._alderskategori_exclude is not None:
             excluded_categories = set(
@@ -186,7 +213,8 @@ class MatchListFilter:
             filtered_matches = [
                 match
                 for match in filtered_matches
-                if match.get("tavlingAlderskategori") not in excluded_categories  # Exclusion logic
+                if match.get("tavlingAlderskategori")
+                not in excluded_categories  # Exclusion logic
             ]
 
         if self._kon_include is not None:
@@ -215,7 +243,8 @@ class MatchListFilter:
             filtered_matches = [
                 match
                 for match in filtered_matches
-                if match.get("fotbollstypid") in allowed_football_types  # Inclusion logic
+                if match.get("fotbollstypid")
+                in allowed_football_types  # Inclusion logic
             ]
         if self._fotbollstypid_exclude is not None:
             excluded_football_types = set(
@@ -224,28 +253,71 @@ class MatchListFilter:
             filtered_matches = [
                 match
                 for match in filtered_matches
-                if match.get("fotbollstypid") not in excluded_football_types  # Exclusion logic
+                if match.get("fotbollstypid")
+                not in excluded_football_types  # Exclusion logic
             ]
 
         return filtered_matches
 
-    def fetch_filtered_matches(self, api_client: FogisApiClient) -> List[Dict[str, Any]]:
+    def fetch_filtered_matches(
+        self, api_client: FogisApiClient
+    ) -> List[Dict[str, Any]]:
         """
         Fetches matches from the API using FogisApiClient and applies the configured filters.
+
+        This method uses server-side filtering when possible for better performance,
+        and falls back to client-side filtering if server-side filtering fails.
 
         Args:
             api_client: An instance of FogisApiClient to use for fetching matches.
 
         Returns:
             A list of match dictionaries, filtered according to the configured criteria.
+
+        Raises:
+            FogisAPIRequestError: If the API request fails and fallback is not possible.
+            FogisDataError: If the response data is invalid.
         """
         payload_filter = self.build_payload()  # Build server-side payload
-        all_matches = api_client.fetch_matches_list_json(
-            filter=payload_filter
-        )  # Fetch using API client and server-side filters
 
-        if all_matches is None:  # Handle None response from API (error case)
-            return []  # Or raise an exception, depending on desired error handling
+        try:
+            # Use the correct parameter name for PublicApiClient
+            response = api_client.fetch_matches_list_json(
+                filter_params=payload_filter
+            )  # Fetch using API client and server-side filters
 
-        filtered_matches = self.filter_matches(all_matches)  # Apply client-side filtering
+            # Extract matches from response - handle different response formats
+            all_matches = []
+            if response is None:
+                return []
+            elif isinstance(response, list):
+                all_matches = response
+            elif isinstance(response, dict):
+                if "matchlista" in response:
+                    all_matches = response["matchlista"]
+                else:
+                    # If response is a dict but doesn't have matchlista, treat as single match
+                    all_matches = [response] if response else []
+            else:
+                # Unexpected response format
+                return []
+
+        except Exception as e:
+            # Fallback to basic fetch if server-side filtering fails
+            try:
+                basic_response = api_client.fetch_matches_list_json()
+                if isinstance(basic_response, list):
+                    all_matches = basic_response
+                elif (
+                    isinstance(basic_response, dict) and "matchlista" in basic_response
+                ):
+                    all_matches = basic_response["matchlista"]
+                else:
+                    all_matches = []
+            except Exception:
+                # If both server-side and fallback fail, re-raise the original exception
+                raise e
+
+        # Apply client-side filtering to the results
+        filtered_matches = self.filter_matches(all_matches)
         return filtered_matches
