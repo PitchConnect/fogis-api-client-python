@@ -13,22 +13,22 @@ jobs:
       contents: write
     steps:
       - name: Process PR status
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
           # Debug output
           echo "Event action: ${{ github.event.action }}"
           echo "PR draft status: ${{ github.event.pull_request.draft }}"
           echo "PR merged status: ${{ github.event.pull_request.merged }}"
           echo "PR base branch: ${{ github.event.pull_request.base.ref }}"
-          echo "PR body: ${{ github.event.pull_request.body }}"
+          echo "PR body length: ${#PR_BODY}"
 
           # For draft PRs
           if [[ "${{ github.event.action }}" == "converted_to_draft" || ("${{ github.event.action }}" == "opened" && "${{ github.event.pull_request.draft }}" == "true") ]]; then
             PR_NUMBER="${{ github.event.pull_request.number }}"
-            PR_BODY="${{ github.event.pull_request.body }}"
             echo "Processing draft PR #$PR_NUMBER"
-            echo "PR body: $PR_BODY"
 
-            # Extract issue numbers from PR body
+            # Extract issue numbers from PR body (using environment variable to avoid bash injection)
             ISSUE_REFS=$(echo "$PR_BODY" | grep -o -E "(close[sd]?|fix(es|ed)?|resolve[sd]?)\s*:?\s*#[0-9]+" || echo "")
             ISSUE_NUMBERS=$(echo "$ISSUE_REFS" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
             echo "Issue references: $ISSUE_REFS"
@@ -66,11 +66,9 @@ jobs:
           # For PRs marked ready for review
           elif [[ "${{ github.event.action }}" == "ready_for_review" ]]; then
             PR_NUMBER="${{ github.event.pull_request.number }}"
-            PR_BODY="${{ github.event.pull_request.body }}"
             echo "Processing PR #$PR_NUMBER marked as ready for review"
-            echo "PR body: $PR_BODY"
 
-            # Extract issue numbers from PR body
+            # Extract issue numbers from PR body (using environment variable to avoid bash injection)
             ISSUE_REFS=$(echo "$PR_BODY" | grep -o -E "(close[sd]?|fix(es|ed)?|resolve[sd]?)\s*:?\s*#[0-9]+" || echo "")
             ISSUE_NUMBERS=$(echo "$ISSUE_REFS" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
             echo "Issue references: $ISSUE_REFS"
@@ -108,12 +106,10 @@ jobs:
           # For merged PRs
           elif [[ "${{ github.event.action }}" == "closed" && "${{ github.event.pull_request.merged }}" == "true" ]]; then
             PR_NUMBER="${{ github.event.pull_request.number }}"
-            PR_BODY="${{ github.event.pull_request.body }}"
             TARGET_BRANCH="${{ github.event.pull_request.base.ref }}"
             echo "Processing merged PR #$PR_NUMBER to $TARGET_BRANCH"
-            echo "PR body: $PR_BODY"
 
-            # Extract issue numbers from PR body using a different approach
+            # Extract issue numbers from PR body using environment variable to avoid bash injection
             ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -o -E "([Ff]ix(es|ed)?|[Cc]lose[sd]?|[Rr]esolve[sd]?)\s*:?\s*#[0-9]+" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
             if [[ -z "$ISSUE_NUMBERS" ]]; then
               ISSUE_NUMBERS=$(echo "$PR_BODY" | grep -o -E "#[0-9]+" | sed 's/#//' || echo "")
