@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Optional
 
 from .enums import AgeCategory, FootballType, Gender, MatchStatus
 from .fogis_api_client import FogisApiClient
-from .public_api_client import FogisAPIRequestError, FogisDataError
 
 
 class MatchListFilter:
@@ -62,16 +61,12 @@ class MatchListFilter:
         self._status_exclude = statuses
         return self
 
-    def include_age_categories(
-        self, age_categories: List[AgeCategory]
-    ) -> "MatchListFilter":
+    def include_age_categories(self, age_categories: List[AgeCategory]) -> "MatchListFilter":
         """Includes matches with any of the specified age categories in the filter."""
         self._alderskategori_include = age_categories
         return self
 
-    def exclude_age_categories(
-        self, age_categories: List[AgeCategory]
-    ) -> "MatchListFilter":
+    def exclude_age_categories(self, age_categories: List[AgeCategory]) -> "MatchListFilter":
         """Excludes matches with any of the specified age categories from the filter."""
         self._alderskategori_exclude = age_categories
         return self
@@ -86,16 +81,12 @@ class MatchListFilter:
         self._kon_exclude = genders
         return self
 
-    def include_football_types(
-        self, football_types: List[FootballType]
-    ) -> "MatchListFilter":
+    def include_football_types(self, football_types: List[FootballType]) -> "MatchListFilter":
         """Includes matches with any of the specified football types in the filter."""
         self._fotbollstypid_include = football_types
         return self
 
-    def exclude_football_types(
-        self, football_types: List[FootballType]
-    ) -> "MatchListFilter":
+    def exclude_football_types(self, football_types: List[FootballType]) -> "MatchListFilter":
         """Excludes matches with any of the specified football types from the filter."""
         self._fotbollstypid_exclude = football_types
         return self
@@ -130,13 +121,9 @@ class MatchListFilter:
         if self._alderskategori_include or self._alderskategori_exclude:
             age_category_values: List[int] = []
             if self._alderskategori_include:
-                age_category_values = [
-                    cat.value for cat in self._alderskategori_include
-                ]
+                age_category_values = [cat.value for cat in self._alderskategori_include]
             elif self._alderskategori_exclude:
-                age_category_values = [
-                    cat.value for cat in self._alderskategori_exclude
-                ]
+                age_category_values = [cat.value for cat in self._alderskategori_exclude]
             payload_filter["alderskategori"] = age_category_values
 
         if self._kon_include or self._kon_exclude:
@@ -151,9 +138,7 @@ class MatchListFilter:
 
     def filter_matches(self, matches: List[Any]) -> List[Any]:
         """Applies the configured client-side filters to the list of matches."""
-        filtered_matches = list(
-            matches
-        )  # Create a copy to avoid modifying original list
+        filtered_matches = list(matches)  # Create a copy to avoid modifying original list
 
         if self._status_include is not None:
             status_filter_values = set(status.value for status in self._status_include)
@@ -164,104 +149,67 @@ class MatchListFilter:
                     [  # Inclusion logic for status
                         match.get("installd") and "installd" in status_filter_values,
                         match.get("avbruten") and "avbruten" in status_filter_values,
-                        match.get("uppskjuten")
-                        and "uppskjuten" in status_filter_values,
-                        match.get("arslutresultat")
-                        and "genomford" in status_filter_values,
+                        match.get("uppskjuten") and "uppskjuten" in status_filter_values,
+                        match.get("arslutresultat") and "genomford" in status_filter_values,
                         # ... (add conditions for other statuses) ...
                     ]
                 )
             ]
         if self._status_exclude is not None:
-            status_filter_values = set(
-                status.value for status in self._status_exclude
-            )  # Use .value for Enum
+            status_filter_values = set(status.value for status in self._status_exclude)  # Use .value for Enum
             filtered_matches = [
                 match
                 for match in filtered_matches
                 if not (  # Exclusion logic for status
-                    (
-                        "installd" in status_filter_values
-                        and match.get("installd", False)
-                    )
-                    or (
-                        "avbruten" in status_filter_values
-                        and match.get("avbruten", False)
-                    )
-                    or (
-                        "uppskjuten" in status_filter_values
-                        and match.get("uppskjuten", False)
-                    )
+                    ("installd" in status_filter_values and match.get("installd", False))
+                    or ("avbruten" in status_filter_values and match.get("avbruten", False))
+                    or ("uppskjuten" in status_filter_values and match.get("uppskjuten", False))
                     # ... (add conditions for other statuses) ...
                 )
             ]
 
         if self._alderskategori_include is not None:
-            allowed_categories = set(
-                cat.value for cat in self._alderskategori_include
-            )  # Use .value for Enum
+            allowed_categories = set(cat.value for cat in self._alderskategori_include)  # Use .value for Enum
             filtered_matches = [
                 match
                 for match in filtered_matches
-                if match.get("tavlingAlderskategori")
-                in allowed_categories  # Inclusion logic
+                if match.get("tavlingAlderskategori") in allowed_categories  # Inclusion logic
             ]
         if self._alderskategori_exclude is not None:
-            excluded_categories = set(
-                cat.value for cat in self._alderskategori_exclude
-            )  # Use .value for Enum
+            excluded_categories = set(cat.value for cat in self._alderskategori_exclude)  # Use .value for Enum
             filtered_matches = [
                 match
                 for match in filtered_matches
-                if match.get("tavlingAlderskategori")
-                not in excluded_categories  # Exclusion logic
+                if match.get("tavlingAlderskategori") not in excluded_categories  # Exclusion logic
             ]
 
         if self._kon_include is not None:
-            allowed_genders = set(
-                gender.value for gender in self._kon_include
-            )  # Use .value for Enum
+            allowed_genders = set(gender.value for gender in self._kon_include)  # Use .value for Enum
             filtered_matches = [
-                match
-                for match in filtered_matches
-                if match.get("tavlingKonId") in allowed_genders  # Inclusion logic
+                match for match in filtered_matches if match.get("tavlingKonId") in allowed_genders  # Inclusion logic
             ]
         if self._kon_exclude is not None:
-            excluded_genders = set(
-                gender.value for gender in self._kon_exclude
-            )  # Use .value for Enum
+            excluded_genders = set(gender.value for gender in self._kon_exclude)  # Use .value for Enum
             filtered_matches = [
-                match
-                for match in filtered_matches
-                if match.get("tavlingKonId") not in excluded_genders  # Exclusion logic
+                match for match in filtered_matches if match.get("tavlingKonId") not in excluded_genders  # Exclusion logic
             ]
 
         if self._fotbollstypid_include is not None:
-            allowed_football_types = set(
-                ftype.value for ftype in self._fotbollstypid_include
-            )  # Use .value for Enum
+            allowed_football_types = set(ftype.value for ftype in self._fotbollstypid_include)  # Use .value for Enum
             filtered_matches = [
-                match
-                for match in filtered_matches
-                if match.get("fotbollstypid")
-                in allowed_football_types  # Inclusion logic
+                match for match in filtered_matches if match.get("fotbollstypid") in allowed_football_types  # Inclusion logic
             ]
         if self._fotbollstypid_exclude is not None:
-            excluded_football_types = set(
-                ftype.value for ftype in self._fotbollstypid_exclude
-            )  # Use .value for Enum
+            excluded_football_types = set(ftype.value for ftype in self._fotbollstypid_exclude)  # Use .value for Enum
             filtered_matches = [
                 match
                 for match in filtered_matches
-                if match.get("fotbollstypid")
-                not in excluded_football_types  # Exclusion logic
+                if match.get("fotbollstypid") not in excluded_football_types  # Exclusion logic
             ]
 
         return filtered_matches
 
-    def fetch_filtered_matches(
-        self, api_client: FogisApiClient
-    ) -> List[Dict[str, Any]]:
+    def fetch_filtered_matches(self, api_client: FogisApiClient) -> List[Dict[str, Any]]:
         """
         Fetches matches from the API using FogisApiClient and applies the configured filters.
 
@@ -308,9 +256,7 @@ class MatchListFilter:
                 basic_response = api_client.fetch_matches_list_json()
                 if isinstance(basic_response, list):
                     all_matches = basic_response
-                elif (
-                    isinstance(basic_response, dict) and "matchlista" in basic_response
-                ):
+                elif isinstance(basic_response, dict) and "matchlista" in basic_response:
                     all_matches = basic_response["matchlista"]
                 else:
                     all_matches = []

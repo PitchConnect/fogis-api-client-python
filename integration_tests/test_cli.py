@@ -4,13 +4,8 @@ Integration tests for the CLI.
 This module contains integration tests for the CLI.
 """
 
-import json
-import os
-import subprocess
-import sys
 import time
 import unittest
-from unittest.mock import patch, MagicMock
 
 import requests
 

@@ -216,9 +216,7 @@ class SensitiveFilter(logging.Filter):
                                     # Replace the value with the mask
                                     if value_end > 0:
                                         orig_parts[1] = mask + orig_parts[1][value_end:]
-                                        msg = (msg.lower().split(prefix, 1)[0] + prefix).join(
-                                            orig_parts
-                                        )
+                                        msg = (msg.lower().split(prefix, 1)[0] + prefix).join(orig_parts)
                                         break
 
             record.msg = msg

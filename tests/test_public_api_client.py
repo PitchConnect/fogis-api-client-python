@@ -3,14 +3,12 @@ Tests for the public API client.
 
 These tests verify that the public API client correctly interacts with the internal API layer.
 """
-import pytest
-from unittest.mock import MagicMock, patch
 
-import requests
+from unittest.mock import patch
+
+import pytest
 
 from fogis_api_client.public_api_client import (
-    FogisAPIRequestError,
-    FogisDataError,
     FogisLoginError,
     PublicApiClient,
 )
@@ -55,7 +53,7 @@ def test_login():
         raise FogisLoginError("Test login error")
 
     # Save original login method
-    original_login = client.login
+    client.login
     # Replace with our mock
     client.login = mock_login
 

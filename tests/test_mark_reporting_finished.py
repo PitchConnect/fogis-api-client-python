@@ -21,9 +21,7 @@ class MockResponse:
 
     def raise_for_status(self):
         if 400 <= self.status_code < 600:
-            raise requests.exceptions.HTTPError(
-                f"Mocked HTTP Error: {self.status_code}", response=None
-            )
+            raise requests.exceptions.HTTPError(f"Mocked HTTP Error: {self.status_code}", response=None)
 
 
 class TestMarkReportingFinished(unittest.TestCase):
@@ -40,9 +38,7 @@ class TestMarkReportingFinished(unittest.TestCase):
         mock_session.cookies.set = MagicMock()
 
         self.client.session = mock_session
-        self.client.cookies = {
-            "FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"
-        }  # Simulate being logged in
+        self.client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}  # Simulate being logged in
 
     def test_mark_reporting_finished_success(self):
         """Test that mark_reporting_finished works correctly with a valid match ID."""
@@ -80,13 +76,9 @@ class TestMarkReportingFinished(unittest.TestCase):
     def test_mark_reporting_finished_api_error(self):
         """Test that mark_reporting_finished handles API errors correctly."""
         # Mock the API response to simulate an error
-        mock_api_response = MockResponse(
-            json_data={"d": {"error": "Some API error"}}, status_code=400
-        )
+        mock_api_response = MockResponse(json_data={"d": {"error": "Some API error"}}, status_code=400)
         self.client.session.post.return_value = mock_api_response
-        mock_api_response.raise_for_status = MagicMock(
-            side_effect=requests.exceptions.HTTPError("Mocked HTTP Error: 400")
-        )
+        mock_api_response.raise_for_status = MagicMock(side_effect=requests.exceptions.HTTPError("Mocked HTTP Error: 400"))
 
         # Call mark_reporting_finished
         match_id = "123456"

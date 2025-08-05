@@ -5,6 +5,7 @@ This module provides a client for interacting with the FOGIS API.
 It uses the internal API layer to communicate with the server,
 but presents a simpler, more user-friendly interface.
 """
+
 import json
 import logging
 from datetime import datetime, timedelta
@@ -42,25 +43,17 @@ from fogis_api_client.types import (
 class FogisApiError(Exception):
     """Base exception for all FOGIS API errors."""
 
-    pass
-
 
 class FogisLoginError(FogisApiError):
     """Exception raised when login fails."""
-
-    pass
 
 
 class FogisAPIRequestError(FogisApiError):
     """Exception raised when an API request fails."""
 
-    pass
-
 
 class FogisDataError(FogisApiError):
     """Exception raised when data validation fails."""
-
-    pass
 
 
 class PublicApiClient:
@@ -84,6 +77,7 @@ class PublicApiClient:
     BASE_URL: str = "https://fogis.svenskfotboll.se/mdk"
     # For tests, this can be overridden with an environment variable
     import os
+
     if os.environ.get("FOGIS_API_BASE_URL"):
         BASE_URL = os.environ.get("FOGIS_API_BASE_URL")
     logger: logging.Logger = logging.getLogger("fogis_api_client.api")
@@ -158,18 +152,14 @@ class PublicApiClient:
 
         try:
             # Authenticate with the FOGIS API
-            self.cookies = authenticate(
-                self.session, self.username, self.password, self.BASE_URL
-            )
+            self.cookies = authenticate(self.session, self.username, self.password, self.BASE_URL)
             return self.cookies
         except (requests.exceptions.RequestException, ValueError) as e:
             error_msg = f"Login failed: {e}"
             self.logger.error(error_msg)
             raise FogisLoginError(error_msg) from e
 
-    def fetch_matches_list_json(
-        self, filter_params: Optional[Dict[str, Any]] = None
-    ) -> MatchListResponse:
+    def fetch_matches_list_json(self, filter_params: Optional[Dict[str, Any]] = None) -> MatchListResponse:
         """
         Fetch the list of matches for the logged-in referee.
 
@@ -406,13 +396,7 @@ class PublicApiClient:
             self.login()
 
         # Validate required fields
-        required_fields = [
-            "matchid",
-            "matchhandelsetypid",
-            "matchminut",
-            "matchlagid",
-            "period"
-        ]
+        required_fields = ["matchid", "matchhandelsetypid", "matchminut", "matchlagid", "period"]
         for field in required_fields:
             if field not in event_data:
                 error_msg = f"Missing required field '{field}' in event data"
@@ -762,11 +746,15 @@ class PublicApiClient:
             payload = {"matchid": match_id_int}
 
             # For now, use the _api_request method directly since we don't have an internal method for this
-            response_data = self.session.post(url, json=payload, headers={
-                "Content-Type": "application/json; charset=utf-8",
-                "Accept": "application/json, text/javascript, */*; q=0.01",
-                "X-Requested-With": "XMLHttpRequest",
-            })
+            response_data = self.session.post(
+                url,
+                json=payload,
+                headers={
+                    "Content-Type": "application/json; charset=utf-8",
+                    "Accept": "application/json, text/javascript, */*; q=0.01",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            )
             response_data.raise_for_status()
 
             # Parse the JSON response

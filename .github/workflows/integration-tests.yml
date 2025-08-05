@@ -82,7 +82,7 @@ jobs:
 
           # Run the integration tests
           ./run_ci_tests.sh ${{ github.event.inputs.test_files }}
-        
+
       - name: Upload integration test logs
         if: always()  # Upload logs even if tests fail
         uses: actions/upload-artifact@v3
@@ -115,7 +115,7 @@ jobs:
 
           # Run the integration tests with the local mock server
           python ./scripts/run_integration_tests_with_mock.py ${{ github.event.inputs.test_files }}
-        
+
       - name: Upload integration test logs
         if: always()  # Upload logs even if tests fail
         uses: actions/upload-artifact@v3

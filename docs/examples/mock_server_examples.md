@@ -88,10 +88,10 @@ This workflow is useful for running integration tests in CI/CD environments:
    def test_fetch_matches(mock_api_urls):
        # The mock_api_urls fixture starts the mock server and configures the client
        client = FogisApiClient(username="test_user", password="test_password")
-       
+
        # Fetch matches
        matches = client.get_matches()
-       
+
        # Assert the result
        assert len(matches) > 0
        assert "matchid" in matches[0]
@@ -265,7 +265,7 @@ When adding support for a new FOGIS API endpoint, follow these steps:
        password="test_password",
        base_url="http://localhost:5001/mdk"
    )
-   
+
    result = client.new_endpoint_method()
    print(f"Result: {result}")
    ```

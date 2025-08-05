@@ -8,7 +8,6 @@ import argparse
 import json
 import logging
 import os
-from typing import Dict, List, Any
 
 from fogis_api_client.cli.commands.base import Command
 
@@ -50,7 +49,7 @@ class HistoryCommand(Command):
         )
 
         # Clear history
-        clear_parser = subparsers.add_parser("clear", help="Clear the request history")
+        subparsers.add_parser("clear", help="Clear the request history")
 
         # Export history
         export_parser = subparsers.add_parser("export", help="Export the request history to a file")
@@ -103,14 +102,14 @@ class HistoryCommand(Command):
             int: The exit code (0 for success, non-zero for failure)
         """
         history = self.client.get_history()
-        
+
         if not history:
             print("No requests in history")
             return 0
 
         # Limit the number of requests to show
         if args.limit > 0:
-            history = history[-args.limit:]
+            history = history[-args.limit :]
 
         if args.json:
             print(json.dumps(history, indent=2))
@@ -154,7 +153,7 @@ class HistoryCommand(Command):
             int: The exit code (0 for success, non-zero for failure)
         """
         history = self.client.get_history()
-        
+
         try:
             with open(args.file, "w") as f:
                 json.dump(history, f, indent=2)
@@ -178,10 +177,10 @@ class HistoryCommand(Command):
             if not os.path.exists(args.file):
                 logger.error(f"File not found: {args.file}")
                 return 1
-                
+
             with open(args.file, "r") as f:
-                history = json.load(f)
-                
+                json.load(f)
+
             # TODO: Implement importing history to the server
             logger.error("Importing history is not yet implemented")
             return 1

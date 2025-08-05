@@ -1018,9 +1018,7 @@ spec.path(
                     "description": "Validation result",
                     "content": {
                         "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/TokenValidationResponseSchema"
-                            },
+                            "schema": {"$ref": "#/components/schemas/TokenValidationResponseSchema"},
                         }
                     },
                 },

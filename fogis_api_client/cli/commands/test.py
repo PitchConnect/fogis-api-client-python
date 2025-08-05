@@ -7,7 +7,7 @@ This module provides the command to test endpoints.
 import argparse
 import json
 import logging
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
 
 from fogis_api_client.cli.commands.base import Command
 
@@ -72,18 +72,18 @@ class TestCommand(Command):
 
         endpoint = args.endpoint
         method = args.method
-        
+
         # Parse data and headers
         data: Optional[Dict[str, Any]] = None
         headers: Optional[Dict[str, str]] = None
-        
+
         if args.data:
             try:
                 data = json.loads(args.data)
             except json.JSONDecodeError as e:
                 logger.error(f"Invalid JSON data: {e}")
                 return 1
-                
+
         if args.headers:
             try:
                 headers = json.loads(args.headers)
@@ -93,7 +93,7 @@ class TestCommand(Command):
 
         # Send the request
         response = self.client.test_endpoint(endpoint, method, data, headers)
-        
+
         if args.json:
             print(json.dumps(response, indent=2))
         else:

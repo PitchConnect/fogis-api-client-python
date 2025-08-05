@@ -140,7 +140,18 @@ def check_network_connectivity() -> None:
         # Try to connect to other containers by IP
         for other_name, other_ip in container_ips.items():
             if other_name != container_name:
-                cmd = ["docker", "exec", container_id, "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", f"http://{other_ip}:8080/health"]
+                cmd = [
+                    "docker",
+                    "exec",
+                    container_id,
+                    "curl",
+                    "-s",
+                    "-o",
+                    "/dev/null",
+                    "-w",
+                    "%{http_code}",
+                    f"http://{other_ip}:8080/health",
+                ]
                 result = run_command(cmd)
                 print(f"  {other_name} ({other_ip}): {result}")
 

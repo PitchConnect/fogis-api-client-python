@@ -6,13 +6,12 @@ that was fixed in issue #249 to resolve the TypeError when calling the API.
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
-from typing import Dict, List, Any
+from unittest.mock import MagicMock
 
 from fogis_api_client import FogisApiClient
+from fogis_api_client.enums import AgeCategory, FootballType, Gender, MatchStatus
 from fogis_api_client.match_list_filter import MatchListFilter
-from fogis_api_client.enums import MatchStatus, AgeCategory, Gender, FootballType
-from fogis_api_client.public_api_client import FogisAPIRequestError, FogisDataError
+from fogis_api_client.public_api_client import FogisAPIRequestError
 
 
 class TestMatchListFilterFetchFilteredMatches(unittest.TestCase):
@@ -144,9 +143,7 @@ class TestMatchListFilterFetchFilteredMatches(unittest.TestCase):
         result = filter_obj.fetch_filtered_matches(self.mock_client)
 
         # Verify
-        self.assertEqual(
-            len(self.mock_client.fetch_matches_list_json.call_args_list), 2
-        )
+        self.assertEqual(len(self.mock_client.fetch_matches_list_json.call_args_list), 2)
         # First call should have filter_params
         first_call = self.mock_client.fetch_matches_list_json.call_args_list[0]
         self.assertIn("filter_params", first_call.kwargs)
@@ -163,9 +160,7 @@ class TestMatchListFilterFetchFilteredMatches(unittest.TestCase):
         filter_obj = MatchListFilter().start_date("2025-05-01")
 
         # Mock both calls to fail
-        self.mock_client.fetch_matches_list_json.side_effect = FogisAPIRequestError(
-            "Complete failure"
-        )
+        self.mock_client.fetch_matches_list_json.side_effect = FogisAPIRequestError("Complete failure")
 
         # Execute & Verify
         with self.assertRaises(FogisAPIRequestError):
@@ -198,9 +193,7 @@ class TestMatchListFilterFetchFilteredMatches(unittest.TestCase):
             "alderskategori": [AgeCategory.SENIOR.value],
             "kon": [Gender.MALE.value],
         }
-        self.mock_client.fetch_matches_list_json.assert_called_once_with(
-            filter_params=expected_payload
-        )
+        self.mock_client.fetch_matches_list_json.assert_called_once_with(filter_params=expected_payload)
 
         # Verify filtering - should only return matches that meet all criteria
         self.assertEqual(len(result), 1)

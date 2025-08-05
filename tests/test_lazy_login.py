@@ -21,9 +21,7 @@ class MockResponse:
 
     def raise_for_status(self):
         if 400 <= self.status_code < 600:
-            raise requests.exceptions.HTTPError(
-                f"Mocked HTTP Error: {self.status_code}", response=None
-            )
+            raise requests.exceptions.HTTPError(f"Mocked HTTP Error: {self.status_code}", response=None)
 
 
 class TestLazyLogin(unittest.TestCase):

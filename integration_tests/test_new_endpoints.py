@@ -5,13 +5,10 @@ This module contains tests for the endpoints that were added to the mock server
 to enhance its capabilities and make it more comprehensive.
 """
 
-import pytest
 from fogis_api_client import FogisApiClient
 
 
-def test_fetch_match_officials(
-    fogis_test_client: FogisApiClient, clear_request_history
-):
+def test_fetch_match_officials(fogis_test_client: FogisApiClient, clear_request_history):
     """Test fetching match officials data."""
     # Get a random match ID
     matches = fogis_test_client.fetch_matches_list_json()
@@ -29,9 +26,7 @@ def test_fetch_match_officials(
     assert "bortalag" in result
 
 
-def test_fetch_match_result(
-    fogis_test_client: FogisApiClient, clear_request_history
-):
+def test_fetch_match_result(fogis_test_client: FogisApiClient, clear_request_history):
     """Test fetching match result data."""
     # Get a random match ID
     matches = fogis_test_client.fetch_matches_list_json()
