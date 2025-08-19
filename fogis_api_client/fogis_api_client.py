@@ -22,6 +22,23 @@ from fogis_api_client.types import (
     TeamPlayersResponse,
 )
 
+import warnings
+
+# Deprecation guidance: prefer 'from fogis_api_client import FogisApiClient'
+warnings.warn(
+    "fogis_api_client.fogis_api_client is deprecated. Use 'from fogis_api_client import FogisApiClient' "
+    "which provides the supported public API backed by the internal layer.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+# Optional re-export for backward compatibility (so imports still resolve)
+try:
+    from fogis_api_client.public_api_client import PublicApiClient as FogisApiClient  # type: ignore
+except Exception:
+    # If public API not available for some reason, fall back to the legacy class below.
+    pass
+
 
 # Custom exceptions
 class FogisLoginError(Exception):
