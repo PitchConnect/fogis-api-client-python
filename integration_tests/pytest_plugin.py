@@ -160,7 +160,7 @@ class MockServerManager:
                     logger.info(f"Mock server is ready at {self._base_url}")
                     return True
             except requests.exceptions.RequestException as e:
-                logger.info(f"Waiting for mock server to be ready (attempt {i+1}/{max_retries}): {e}")
+                logger.info(f"Waiting for mock server to be ready (attempt {i + 1}/{max_retries}): {e}")
 
             time.sleep(retry_delay)
 

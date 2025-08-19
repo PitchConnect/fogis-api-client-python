@@ -83,7 +83,7 @@ def mock_fogis_server() -> Generator[Dict[str, str], None, None]:
                 logger.info(f"Successfully connected to mock FOGIS server at {mock_server_url}")
                 break
         except requests.exceptions.RequestException as e:
-            logger.info(f"Waiting for mock FOGIS server to be ready (attempt {i+1}/{max_retries}): {e}")
+            logger.info(f"Waiting for mock FOGIS server to be ready (attempt {i + 1}/{max_retries}): {e}")
 
         time.sleep(retry_delay)
     else:
