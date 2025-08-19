@@ -4,6 +4,7 @@ Regression tests for parameter names in the FOGIS API client.
 These tests ensure that the parameter names used in the API calls match
 what the FOGIS API expects, preventing regressions in future changes.
 """
+
 import unittest
 from unittest.mock import MagicMock
 

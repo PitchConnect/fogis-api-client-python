@@ -4,6 +4,7 @@ Tests for the schema validator.
 
 import json
 import os
+
 import pytest
 from jsonschema.exceptions import ValidationError
 
@@ -47,7 +48,7 @@ class TestSchemaValidator:
                 "speldatum": "2025-05-06",
                 "avsparkstid": "17:00",
                 "tavlingid": 3001,
-                "tavlingnamn": "League"
+                "tavlingnamn": "League",
             }
             assert SchemaValidator.validate_match(match_data)
 
@@ -56,7 +57,7 @@ class TestSchemaValidator:
         # Missing required fields
         match_data = {
             "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchJSON",
-            "value": "000402010"
+            "value": "000402010",
             # Missing other required fields
         }
         with pytest.raises(ValidationError):
@@ -85,7 +86,7 @@ class TestSchemaValidator:
                 "matchminut": 13,
                 "period": 1,
                 "hemmamal": 1,
-                "bortamal": 0
+                "bortamal": 0,
             }
             assert SchemaValidator.validate_match_event(event_data)
 
@@ -94,7 +95,7 @@ class TestSchemaValidator:
         # Missing required fields
         event_data = {
             "matchhandelseid": 12345,
-            "matchid": 67890
+            "matchid": 67890,
             # Missing other required fields
         }
         with pytest.raises(ValidationError):
@@ -123,7 +124,7 @@ class TestSchemaValidator:
                 "matchlag2mal": 1,
                 "wo": False,
                 "ow": False,
-                "ww": False
+                "ww": False,
             }
             assert SchemaValidator.validate_match_result(result_data)
 
@@ -131,24 +132,16 @@ class TestSchemaValidator:
         """Test validating valid match officials data."""
         # Create a minimal valid officials data
         officials_data = {
-            "hemmalag": [
-                {
-                    "personid": 12345,
-                    "fornamn": "John",
-                    "efternamn": "Doe",
-                    "roll": "Tränare",
-                    "matchlagid": 1001
-                }
-            ],
+            "hemmalag": [{"personid": 12345, "fornamn": "John", "efternamn": "Doe", "roll": "Tränare", "matchlagid": 1001}],
             "bortalag": [
                 {
                     "personid": 67890,
                     "fornamn": "Jane",
                     "efternamn": "Smith",
                     "roll": "Assisterande tränare",
-                    "matchlagid": 1002
+                    "matchlagid": 1002,
                 }
-            ]
+            ],
         }
         assert SchemaValidator.validate_match_officials(officials_data)
 
@@ -176,6 +169,6 @@ class TestSchemaValidator:
                 "matchlagid": 12316432,
                 "spelareid": 986655,
                 "fornamn": "Player",
-                "efternamn": "One"
+                "efternamn": "One",
             }
             assert SchemaValidator.validate_match_participant(participant_data)

@@ -6,7 +6,7 @@ This module provides the base command class for the mock server CLI.
 
 import abc
 import argparse
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fogis_api_client.cli.api_client import MockServerApiClient
 
@@ -31,7 +31,6 @@ class Command(abc.ABC):
         Args:
             parser: The argument parser
         """
-        pass
 
     @abc.abstractmethod
     def execute(self, args: argparse.Namespace) -> int:
@@ -44,7 +43,6 @@ class Command(abc.ABC):
         Returns:
             int: The exit code (0 for success, non-zero for failure)
         """
-        pass
 
     def set_client(self, client: MockServerApiClient) -> None:
         """

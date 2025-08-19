@@ -5,6 +5,7 @@ This module provides a client for interacting with the FOGIS API.
 It uses the internal API layer to communicate with the server,
 but presents a simpler, more user-friendly interface.
 """
+
 import json
 import logging
 from datetime import datetime, timedelta
@@ -42,25 +43,17 @@ from fogis_api_client.types import (
 class FogisApiError(Exception):
     """Base exception for all FOGIS API errors."""
 
-    pass
-
 
 class FogisLoginError(FogisApiError):
     """Exception raised when login fails."""
-
-    pass
 
 
 class FogisAPIRequestError(FogisApiError):
     """Exception raised when an API request fails."""
 
-    pass
-
 
 class FogisDataError(FogisApiError):
     """Exception raised when data validation fails."""
-
-    pass
 
 
 class PublicApiClient:
@@ -84,6 +77,7 @@ class PublicApiClient:
     BASE_URL: str = "https://fogis.svenskfotboll.se/mdk"
     # For tests, this can be overridden with an environment variable
     import os
+
     if os.environ.get("FOGIS_API_BASE_URL"):
         BASE_URL = os.environ.get("FOGIS_API_BASE_URL")
     logger: logging.Logger = logging.getLogger("fogis_api_client.api")
@@ -158,18 +152,14 @@ class PublicApiClient:
 
         try:
             # Authenticate with the FOGIS API
-            self.cookies = authenticate(
-                self.session, self.username, self.password, self.BASE_URL
-            )
+            self.cookies = authenticate(self.session, self.username, self.password, self.BASE_URL)
             return self.cookies
         except (requests.exceptions.RequestException, ValueError) as e:
             error_msg = f"Login failed: {e}"
             self.logger.error(error_msg)
             raise FogisLoginError(error_msg) from e
 
-    def fetch_matches_list_json(
-        self, filter_params: Optional[Dict[str, Any]] = None
-    ) -> MatchListResponse:
+    def fetch_matches_list_json(self, filter_params: Optional[Dict[str, Any]] = None) -> MatchListResponse:
         """
         Fetch the list of matches for the logged-in referee.
 
@@ -406,13 +396,7 @@ class PublicApiClient:
             self.login()
 
         # Validate required fields
-        required_fields = [
-            "matchid",
-            "matchhandelsetypid",
-            "matchminut",
-            "matchlagid",
-            "period"
-        ]
+        required_fields = ["matchid", "matchhandelsetypid", "matchminut", "matchlagid", "period"]
         for field in required_fields:
             if field not in event_data:
                 error_msg = f"Missing required field '{field}' in event data"
@@ -648,28 +632,9 @@ class PublicApiClient:
             internal_participant = convert_match_participant_to_internal(participant_data)
 
             # Use the internal API client to save the match participant
-            url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare"
-            headers = {
-                "Content-Type": "application/json; charset=utf-8",
-                "Accept": "application/json, text/javascript, */*; q=0.01",
-                "X-Requested-With": "XMLHttpRequest",
-            }
-
-            response = self.session.post(url, json=internal_participant, headers=headers)
-            response.raise_for_status()
-
-            # Parse the JSON response
-            response_data = response.json()
-
-            # Extract the 'd' field if it exists
-            if isinstance(response_data, dict) and "d" in response_data:
-                try:
-                    return json.loads(response_data["d"])
-                except (json.JSONDecodeError, TypeError):
-                    return response_data["d"]
-
+            response_data = self.internal_client.save_match_participant(internal_participant)
             return response_data
-        except requests.exceptions.RequestException as e:
+        except InternalApiError as e:
             error_msg = f"Failed to save match participant: {e}"
             self.logger.error(error_msg)
             raise FogisAPIRequestError(error_msg) from e
@@ -758,29 +723,8 @@ class PublicApiClient:
 
         try:
             # Use the internal API client to mark reporting as finished
-            url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport"
-            payload = {"matchid": match_id_int}
-
-            # For now, use the _api_request method directly since we don't have an internal method for this
-            response_data = self.session.post(url, json=payload, headers={
-                "Content-Type": "application/json; charset=utf-8",
-                "Accept": "application/json, text/javascript, */*; q=0.01",
-                "X-Requested-With": "XMLHttpRequest",
-            })
-            response_data.raise_for_status()
-
-            # Parse the JSON response
-            response_json = response_data.json()
-
-            # Extract the 'd' field if it exists
-            if isinstance(response_json, dict) and "d" in response_json:
-                try:
-                    result = json.loads(response_json["d"])
-                    return cast(Dict[str, bool], result)
-                except (json.JSONDecodeError, TypeError):
-                    return {"success": True}
-
-            return {"success": True}
+            response = self.internal_client.mark_reporting_finished(match_id_int)
+            return response
         except requests.exceptions.RequestException as e:
             error_msg = f"Failed to mark reporting as finished: {e}"
             self.logger.error(error_msg)

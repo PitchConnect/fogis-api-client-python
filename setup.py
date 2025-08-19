@@ -37,6 +37,11 @@ setup_kwargs = {
             "pytest-cov",
             "flake8",
             "flask-cors",
+            "docker",
+            "pylint",
+            "bandit",
+            "mypy",
+            "types-requests",
         ],
         "mock-server": [
             "flask",

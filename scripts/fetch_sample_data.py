@@ -11,6 +11,7 @@ Environment variables:
     FOGIS_USERNAME: FOGIS username
     FOGIS_PASSWORD: FOGIS password
 """
+
 import json
 import logging
 import os
@@ -266,9 +267,7 @@ def fetch_and_anonymize_data():
     return sample_data
 
 
-def generate_python_file(
-    data: Dict[str, Any], output_file: str = "integration_tests/sample_data.py"
-):
+def generate_python_file(data: Dict[str, Any], output_file: str = "integration_tests/sample_data.py"):
     """
     Generate a Python file with the sample data.
 

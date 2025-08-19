@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import requests
 
-from fogis_api_client.fogis_api_client import FogisApiClient, FogisLoginError
+from fogis_api_client.fogis_api_client import FogisApiClient
 
 
 class TestCookieAuth(unittest.TestCase):

@@ -3,6 +3,7 @@ Tests for the API contracts module.
 
 This module contains tests for the API contract validation functionality.
 """
+
 import json
 import unittest
 from unittest.mock import patch
@@ -10,12 +11,9 @@ from unittest.mock import patch
 from jsonschema import ValidationError
 
 from fogis_api_client.api_contracts import (
-    MATCH_EVENT_SCHEMA,
     MATCH_RESULT_FLAT_SCHEMA,
-    MATCH_RESULT_NESTED_SCHEMA,
     convert_flat_to_nested_match_result,
     validate_request,
-    validate_response,
 )
 from fogis_api_client.fogis_api_client import FogisApiClient
 
@@ -80,6 +78,7 @@ class TestApiContracts(unittest.TestCase):
         # This should not raise an exception when validating against the flat schema
         try:
             from jsonschema import validate
+
             validate(instance=data, schema=MATCH_RESULT_FLAT_SCHEMA)
             # If we get here, validation passed
             validation_passed = True
@@ -219,6 +218,7 @@ def validate_flat_schema(data):
     """Helper function to validate against the flat schema."""
     if isinstance(data, dict) and "matchid" in data:
         from jsonschema import validate
+
         validate(instance=data, schema=MATCH_RESULT_FLAT_SCHEMA)
     return data
 

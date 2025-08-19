@@ -439,7 +439,7 @@ class TestFogisApiClient(unittest.TestCase):
                         "matchlag2mal": 1,
                         "wo": False,
                         "ow": False,
-                        "ww": False
+                        "ww": False,
                     },
                     {
                         "matchid": 12345,
@@ -448,8 +448,8 @@ class TestFogisApiClient(unittest.TestCase):
                         "matchlag2mal": 0,
                         "wo": False,
                         "ow": False,
-                        "ww": False
-                    }
+                        "ww": False,
+                    },
                 ]
             },
         )
@@ -480,7 +480,7 @@ class TestFogisApiClient(unittest.TestCase):
                         "matchlag2mal": 1,
                         "wo": False,
                         "ow": False,
-                        "ww": False
+                        "ww": False,
                     },
                     {
                         "matchid": 12345,
@@ -489,8 +489,8 @@ class TestFogisApiClient(unittest.TestCase):
                         "matchlag2mal": 0,
                         "wo": False,
                         "ow": False,
-                        "ww": False
-                    }
+                        "ww": False,
+                    },
                 ]
             },
         )

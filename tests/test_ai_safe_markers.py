@@ -29,28 +29,6 @@ class TestAISafeMarkers(unittest.TestCase):
         self.assertEqual(response, {"success": True})
 
         # Verify the API was called with the correct nested structure
-        expected_payload = {
-            "matchresultatListaJSON": [
-                {
-                    "matchid": 12345,
-                    "matchresultattypid": 1,  # Full time
-                    "matchlag1mal": 2,
-                    "matchlag2mal": 1,
-                    "wo": False,
-                    "ow": False,
-                    "ww": False
-                },
-                {
-                    "matchid": 12345,
-                    "matchresultattypid": 2,  # Half-time
-                    "matchlag1mal": 1,
-                    "matchlag2mal": 0,
-                    "wo": False,
-                    "ow": False,
-                    "ww": False
-                }
-            ]
-        }
 
         self.client._api_request.assert_called_once()
 
@@ -58,8 +36,8 @@ class TestAISafeMarkers(unittest.TestCase):
         call_args = self.client._api_request.call_args
 
         # Extract URL and payload from kwargs
-        url = call_args.kwargs.get('url')
-        actual_payload = call_args.kwargs.get('payload')
+        url = call_args.kwargs.get("url")
+        actual_payload = call_args.kwargs.get("payload")
 
         # If not in kwargs, try positional args
         if url is None and len(call_args.args) > 0:
@@ -96,7 +74,7 @@ class TestAISafeMarkers(unittest.TestCase):
             "spelareid": 12345,  # Player ID
             "period": 1,
             "hemmamal": 1,
-            "bortamal": 0
+            "bortamal": 0,
         }
 
         response = self.client.report_match_event(event_data)
@@ -111,8 +89,8 @@ class TestAISafeMarkers(unittest.TestCase):
         call_args = self.client._api_request.call_args
 
         # Extract URL and payload from kwargs
-        url = call_args.kwargs.get('url')
-        actual_payload = call_args.kwargs.get('payload')
+        url = call_args.kwargs.get("url")
+        actual_payload = call_args.kwargs.get("payload")
 
         # If not in kwargs, try positional args
         if url is None and len(call_args.args) > 0:
@@ -149,8 +127,8 @@ class TestAISafeMarkers(unittest.TestCase):
         call_args = self.client._api_request.call_args
 
         # Extract URL and payload from kwargs
-        url = call_args.kwargs.get('url')
-        payload = call_args.kwargs.get('payload')
+        url = call_args.kwargs.get("url")
+        payload = call_args.kwargs.get("payload")
 
         # If not in kwargs, try positional args
         if url is None and len(call_args.args) > 0:

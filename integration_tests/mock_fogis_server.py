@@ -9,16 +9,16 @@ import json
 import logging
 import random
 import threading
-import time
 from datetime import datetime
-from typing import Dict, List, Any, Tuple, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple
 
 from flask import Flask, Response, jsonify, request, session
 
+# Import request validator
+from integration_tests.request_validator import RequestValidationError, RequestValidator
+
 # Import data factory for the mock server
 from integration_tests.sample_data_factory import MockDataFactory
-# Import request validator
-from integration_tests.request_validator import RequestValidator, RequestValidationError
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -174,7 +174,7 @@ class MockFogisServer:
 
             # Parse filter from request
             data = request.json or {}
-            filter_params = data.get("filter", {})
+            data.get("filter", {})
 
             # Generate a fresh match list using the factory
             match_list = MockDataFactory.generate_match_list()
@@ -191,7 +191,7 @@ class MockFogisServer:
                 "anvandareforeningid": 0,
                 "anvandartyp": "Domare",
                 "matchlista": matches_data["matchlista"],  # This is what the client expects
-                "success": True
+                "success": True,
             }
 
             # Return the response
@@ -242,7 +242,7 @@ class MockFogisServer:
             match_id = data.get("matchid")
 
             # Generate officials data using the factory
-            officials_data = MockDataFactory.generate_match_officials(match_id)
+            officials_data = MockDataFactory.generate_match_officials_simple(match_id)
 
             # For match officials, we need to keep the JSON structure
             return jsonify({"d": json.dumps(officials_data)})
@@ -420,7 +420,7 @@ class MockFogisServer:
 
             # Get match ID from request
             data = request.json or {}
-            match_id = data.get("matchid")
+            data.get("matchid")
 
             # Validate and log the request
             endpoint = "/MatchWebMetoder.aspx/GetMatchfunktionarerLista"
@@ -439,7 +439,7 @@ class MockFogisServer:
                         "efternamn": "Doe",
                         "roll": "Tränare",
                         "rollid": 1,
-                        "matchlagid": 12345
+                        "matchlagid": 12345,
                     }
                 ],
                 "bortalag": [
@@ -449,9 +449,9 @@ class MockFogisServer:
                         "efternamn": "Smith",
                         "roll": "Assisterande tränare",
                         "rollid": 2,
-                        "matchlagid": 67890
+                        "matchlagid": 67890,
                     }
-                ]
+                ],
             }
 
             # Return the response
@@ -543,7 +543,7 @@ class MockFogisServer:
 
             # Get event ID from request
             data = request.json or {}
-            event_id = data.get("matchhandelseid")
+            data.get("matchhandelseid")
 
             # Validate and log the request
             endpoint = "/MatchWebMetoder.aspx/RaderaMatchhandelse"
@@ -699,10 +699,12 @@ class MockFogisServer:
         # Request history endpoint (for debugging and testing)
         @self.app.route("/request-history", methods=["GET"])
         def request_history():
-            return jsonify({
-                "history": self.request_history,
-                "count": len(self.request_history),
-            })
+            return jsonify(
+                {
+                    "history": self.request_history,
+                    "count": len(self.request_history),
+                }
+            )
 
         # Clear request history endpoint (for debugging and testing)
         @self.app.route("/clear-request-history", methods=["POST"])
@@ -796,7 +798,7 @@ class MockFogisServer:
 
         try:
             # Try to use the Werkzeug shutdown function
-            func = request.environ.get('werkzeug.server.shutdown')
+            func = request.environ.get("werkzeug.server.shutdown")
             if func is not None:
                 func()
                 return
@@ -851,36 +853,44 @@ class MockFogisServer:
         @self.app.route("/api/cli/status", methods=["GET"])
         def get_status():
             """Get the server status."""
-            return jsonify({
-                "status": "running" if self.is_running else "stopped",
-                "host": self.host,
-                "port": self.port,
-                "validation_enabled": self.validate_requests,
-                "request_count": len(self.request_history),
-            })
+            return jsonify(
+                {
+                    "status": "running" if self.is_running else "stopped",
+                    "host": self.host,
+                    "port": self.port,
+                    "validation_enabled": self.validate_requests,
+                    "request_count": len(self.request_history),
+                }
+            )
 
         @self.app.route("/api/cli/history", methods=["GET"])
         def get_history():
             """Get the request history."""
-            return jsonify({
-                "history": self.request_history,
-            })
+            return jsonify(
+                {
+                    "history": self.request_history,
+                }
+            )
 
         @self.app.route("/api/cli/history", methods=["DELETE"])
         def clear_history():
             """Clear the request history."""
             self.clear_request_history()
-            return jsonify({
-                "status": "success",
-                "message": "Request history cleared",
-            })
+            return jsonify(
+                {
+                    "status": "success",
+                    "message": "Request history cleared",
+                }
+            )
 
         @self.app.route("/api/cli/validation", methods=["GET"])
         def get_validation():
             """Get the validation status."""
-            return jsonify({
-                "validation_enabled": self.validate_requests,
-            })
+            return jsonify(
+                {
+                    "validation_enabled": self.validate_requests,
+                }
+            )
 
         @self.app.route("/api/cli/validation", methods=["POST"])
         def set_validation():
@@ -888,24 +898,33 @@ class MockFogisServer:
             data = request.json
             if data and "enabled" in data:
                 self.validate_requests = data["enabled"]
-                return jsonify({
-                    "status": "success",
-                    "message": f"Validation {'enabled' if self.validate_requests else 'disabled'}",
-                    "validation_enabled": self.validate_requests,
-                })
-            return jsonify({
-                "status": "error",
-                "message": "Missing 'enabled' parameter",
-            }), 400
+                return jsonify(
+                    {
+                        "status": "success",
+                        "message": f"Validation {'enabled' if self.validate_requests else 'disabled'}",
+                        "validation_enabled": self.validate_requests,
+                    }
+                )
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": "Missing 'enabled' parameter",
+                    }
+                ),
+                400,
+            )
 
         @self.app.route("/api/cli/shutdown", methods=["POST"])
         def shutdown_server():
             """Shutdown the server."""
             self.shutdown()
-            return jsonify({
-                "status": "success",
-                "message": "Server shutting down",
-            })
+            return jsonify(
+                {
+                    "status": "success",
+                    "message": "Server shutting down",
+                }
+            )
 
 
 if __name__ == "__main__":

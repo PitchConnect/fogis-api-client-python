@@ -64,9 +64,7 @@ class TestDockerSetup(unittest.TestCase):
 
     def test_docker_compose_file_exists(self):
         """Test that the Docker Compose files exist."""
-        self.assertTrue(
-            os.path.exists("docker-compose.yml"), "Production Docker Compose file does not exist"
-        )
+        self.assertTrue(os.path.exists("docker-compose.yml"), "Production Docker Compose file does not exist")
         self.assertTrue(
             os.path.exists("docker-compose.dev.yml"),
             "Development Docker Compose file does not exist",
@@ -85,9 +83,7 @@ class TestDockerSetup(unittest.TestCase):
 
         if not (os.path.exists(".env") or os.path.exists(".env.example")):
             with open(".env.example", "w") as f:
-                f.write(
-                    "FOGIS_USERNAME=your_username\nFOGIS_PASSWORD=your_password\nFLASK_DEBUG=1\n"
-                )
+                f.write("FOGIS_USERNAME=your_username\nFOGIS_PASSWORD=your_password\nFLASK_DEBUG=1\n")
             env_created = True
 
         if not os.path.exists(".env.dev"):
@@ -100,9 +96,7 @@ class TestDockerSetup(unittest.TestCase):
                 os.path.exists(".env") or os.path.exists(".env.example"),
                 "Neither .env nor .env.example file exists",
             )
-            self.assertTrue(
-                os.path.exists(".env.dev"), "Development environment file does not exist"
-            )
+            self.assertTrue(os.path.exists(".env.dev"), "Development environment file does not exist")
         finally:
             # Clean up temporary files if we created them
             if env_created and os.path.exists(".env.example"):

@@ -195,9 +195,7 @@ class MockDataFactory:
                         "telefonarbete": "",
                         "adress": MockDataFactory.generate_address(),
                         "coadress": "",
-                        "epostadress": MockDataFactory.generate_email(
-                            referee_name.lower().replace(" ", ".")
-                        ),
+                        "epostadress": MockDataFactory.generate_email(referee_name.lower().replace(" ", ".")),
                         "land": "Sverige",
                         "namn": referee_name,
                         "postnr": MockDataFactory.generate_postal_code(),
@@ -221,9 +219,7 @@ class MockDataFactory:
                             "telefonarbete": "",
                             "adress": MockDataFactory.generate_address(),
                             "coadress": "",
-                            "epostadress": MockDataFactory.generate_email(
-                                contact_name.lower().replace(" ", ".")
-                            ),
+                            "epostadress": MockDataFactory.generate_email(contact_name.lower().replace(" ", ".")),
                             "land": "Sverige",
                             "postnr": MockDataFactory.generate_postal_code(),
                             "postort": MockDataFactory.generate_city(),
@@ -236,10 +232,7 @@ class MockDataFactory:
             match = {
                 "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchJSON",
                 "value": match_number,
-                "label": (
-                    f"{match_number}: {home_team} - {away_team} ({competition}), "
-                    f"{match_date} {match_time}"
-                ),
+                "label": (f"{match_number}: {home_team} - {away_team} ({competition}), " f"{match_date} {match_time}"),
                 "matchid": match_id,
                 "matchnr": match_number,
                 "fotbollstypid": 1,
@@ -258,9 +251,7 @@ class MockDataFactory:
                 "lag2namn": away_team,
                 "lag2spelsystem": "4-3-3",
                 "anlaggningid": MockDataFactory.generate_id(),
-                "anlaggningnamn": (
-                    f"{random.choice(['Arena', 'Stadium', 'Park'])} " f"{random.randint(1, 5)}"
-                ),
+                "anlaggningnamn": (f"{random.choice(['Arena', 'Stadium', 'Park'])} " f"{random.randint(1, 5)}"),
                 "anlaggningLatitud": round(57.0 + random.random(), 6),
                 "anlaggningLongitud": round(12.0 + random.random(), 6),
                 "tid": MockDataFactory.generate_formatted_timestamp(True),
@@ -323,13 +314,9 @@ class MockDataFactory:
                 "tavlingAlderskategori": 4,
                 "kontaktpersoner": contacts,
                 # Match squad publication time for home team
-                "matchlag1OffentliggorMatchtruppDatumTid": (
-                    MockDataFactory.generate_formatted_timestamp(True)
-                ),
+                "matchlag1OffentliggorMatchtruppDatumTid": (MockDataFactory.generate_formatted_timestamp(True)),
                 # Match squad publication time for away team
-                "matchlag2OffentliggorMatchtruppDatumTid": (
-                    MockDataFactory.generate_formatted_timestamp(True)
-                ),
+                "matchlag2OffentliggorMatchtruppDatumTid": (MockDataFactory.generate_formatted_timestamp(True)),
                 "tavlingDomareAntalMinuterForeMatchSomTrupperOffentliggors": 45,
                 # Additional fields
                 "domareArHuvuddomare": True,
@@ -425,9 +412,7 @@ class MockDataFactory:
             birth_year = random.randint(1990, 2005)
             birth_month = random.randint(1, 12)
             birth_day = random.randint(1, 28)  # Simplified to avoid invalid dates
-            personal_number = (
-                f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
-            )
+            personal_number = f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
 
             # Create player with the full structure from real data
             player = {
@@ -470,9 +455,7 @@ class MockDataFactory:
             birth_year = random.randint(1990, 2005)
             birth_month = random.randint(1, 12)
             birth_day = random.randint(1, 28)  # Simplified to avoid invalid dates
-            personal_number = (
-                f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
-            )
+            personal_number = f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
 
             # Create player with the full structure from real data
             player = {
@@ -530,16 +513,12 @@ class MockDataFactory:
         away_officials = []
 
         # Generate home team officials
-        for i, (role_id, role) in enumerate(
-            [(1, "Tränare"), (2, "Assisterande tränare"), (3, "Lagledare")]
-        ):
+        for i, (role_id, role) in enumerate([(1, "Tränare"), (2, "Assisterande tränare"), (3, "Lagledare")]):
             # Generate a random Swedish personal number (YYYYMMDDXXXX)
             birth_year = random.randint(1960, 1990)  # Staff are typically older
             birth_month = random.randint(1, 12)
             birth_day = random.randint(1, 28)  # Simplified to avoid invalid dates
-            personal_number = (
-                f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
-            )
+            personal_number = f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
 
             # Create official with the full structure from real data
             official = {
@@ -568,16 +547,12 @@ class MockDataFactory:
             home_officials.append(official)
 
         # Generate away team officials
-        for i, (role_id, role) in enumerate(
-            [(1, "Tränare"), (2, "Assisterande tränare"), (3, "Lagledare")]
-        ):
+        for i, (role_id, role) in enumerate([(1, "Tränare"), (2, "Assisterande tränare"), (3, "Lagledare")]):
             # Generate a random Swedish personal number (YYYYMMDDXXXX)
             birth_year = random.randint(1960, 1990)  # Staff are typically older
             birth_month = random.randint(1, 12)
             birth_day = random.randint(1, 28)  # Simplified to avoid invalid dates
-            personal_number = (
-                f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
-            )
+            personal_number = f"{birth_year}{birth_month:02d}{birth_day:02d}{random.randint(1000, 9999)}"
 
             # Create official with the full structure from real data
             official = {
@@ -611,9 +586,7 @@ class MockDataFactory:
         }
 
     @staticmethod
-    def generate_match_events(
-        match_id: Optional[int] = None, count: int = 5
-    ) -> List[Dict[str, Any]]:
+    def generate_match_events(match_id: Optional[int] = None, count: int = 5) -> List[Dict[str, Any]]:
         """Generate sample match events based on real FOGIS API data structure."""
         if match_id is None:
             match_id = MockDataFactory.generate_id()
@@ -671,9 +644,7 @@ class MockDataFactory:
                 # Select a random event type (weighted towards more common events)
                 weights = [10, 5, 2, 8, 3, 8, 8, 0]  # Higher weight = more likely
                 event_type_index = random.choices(range(len(event_types)), weights=weights, k=1)[0]
-                event_type_id, event_type_name, affects_score, requires_related = event_types[
-                    event_type_index
-                ]
+                event_type_id, event_type_name, affects_score, requires_related = event_types[event_type_index]
 
                 # For substitution in, we need a related "Byte ut" event
                 if requires_related and event_type_id == 17:  # Byte in
@@ -762,8 +733,8 @@ class MockDataFactory:
         return events
 
     @staticmethod
-    def generate_match_officials(match_id: Optional[int] = None) -> Dict[str, Any]:
-        """Generate sample match officials data."""
+    def generate_match_officials_simple(match_id: Optional[int] = None) -> Dict[str, Any]:
+        """Generate sample match officials data in simple format."""
         if match_id is None:
             match_id = MockDataFactory.generate_id()
 
@@ -1001,7 +972,7 @@ class MockDataFactory:
     @staticmethod
     def get_sample_match_officials_response() -> str:
         """Get a sample match officials response as a JSON string."""
-        match_officials = MockDataFactory.generate_match_officials()
+        match_officials = MockDataFactory.generate_match_officials_simple()
         return json.dumps({"d": json.dumps(match_officials)})
 
     @staticmethod
@@ -1021,7 +992,7 @@ class MockDataFactory:
 SAMPLE_MATCH_LIST = MockDataFactory.generate_match_list()
 SAMPLE_MATCH = MockDataFactory.generate_match_details()
 SAMPLE_MATCH_PLAYERS = MockDataFactory.generate_match_players()
-SAMPLE_MATCH_OFFICIALS = MockDataFactory.generate_match_officials()
+SAMPLE_MATCH_OFFICIALS = MockDataFactory.generate_match_officials_simple()
 SAMPLE_MATCH_EVENTS = MockDataFactory.generate_match_events()
 SAMPLE_MATCH_RESULT = MockDataFactory.generate_match_result()
 

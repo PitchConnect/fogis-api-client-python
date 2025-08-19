@@ -23,16 +23,15 @@ import inspect
 import logging
 import os
 import sys
-from typing import Dict, List, Type, Optional
+from typing import Dict, Optional, Type
+
+from fogis_api_client.cli.api_client import MockServerApiClient
+from fogis_api_client.cli.commands.base import Command
 
 # Add the project root to the Python path if needed
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-
-# Import the API client
-from fogis_api_client.cli.api_client import MockServerApiClient
-from fogis_api_client.cli.commands.base import Command
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -64,7 +63,7 @@ def discover_commands() -> Dict[str, Type[Command]]:
 
             # Find command classes in the module
             for name, obj in inspect.getmembers(module):
-                if (inspect.isclass(obj) and issubclass(obj, Command) and obj != Command):
+                if inspect.isclass(obj) and issubclass(obj, Command) and obj != Command:
                     commands[obj.name] = obj
         except ImportError as e:
             logger.warning(f"Failed to import command module {module_name}: {e}")

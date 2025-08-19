@@ -22,6 +22,23 @@ from fogis_api_client.types import (
     TeamPlayersResponse,
 )
 
+import warnings
+
+# Deprecation guidance: prefer 'from fogis_api_client import FogisApiClient'
+warnings.warn(
+    "fogis_api_client.fogis_api_client is deprecated. Use 'from fogis_api_client import FogisApiClient' "
+    "which provides the supported public API backed by the internal layer.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+# Optional re-export for backward compatibility (so imports still resolve)
+try:
+    from fogis_api_client.public_api_client import PublicApiClient as FogisApiClient  # type: ignore
+except Exception:
+    # If public API not available for some reason, fall back to the legacy class below.
+    pass
+
 
 # Custom exceptions
 class FogisLoginError(Exception):
@@ -1133,7 +1150,10 @@ class FogisApiClient:
             # Set up headers for the request
             headers = {
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                "User-Agent": (
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+                ),
                 "Referer": f"{FogisApiClient.BASE_URL}/",
             }
 

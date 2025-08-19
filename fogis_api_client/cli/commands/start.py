@@ -6,11 +6,9 @@ This module provides the command to start the mock server.
 
 import argparse
 import logging
-import time
-from typing import Optional
 
-from integration_tests.mock_fogis_server import MockFogisServer
 from fogis_api_client.cli.commands.base import Command
+from integration_tests.mock_fogis_server import MockFogisServer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -74,11 +72,11 @@ class StartCommand(Command):
 
         # Create and run the server
         server = MockFogisServer(host=host, port=port)
-        
+
         if threaded:
             server.run(threaded=True)
             logger.info(f"Mock FOGIS server started in the background on {host}:{port}")
-            
+
             if wait:
                 # Wait for the server to start
                 if self.client and self.client.wait_for_server():

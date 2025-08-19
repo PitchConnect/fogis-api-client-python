@@ -7,7 +7,6 @@ This module provides the command to check the status of the mock server.
 import argparse
 import json
 import logging
-from typing import Dict, Any
 
 from fogis_api_client.cli.commands.base import Command
 

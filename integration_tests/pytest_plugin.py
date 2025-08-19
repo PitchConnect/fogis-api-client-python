@@ -153,6 +153,9 @@ class MockServerManager:
         """
         logger.info(f"Waiting for mock server to be ready at {self._base_url}")
 
+        # Small initial delay to avoid immediate connection resets during server boot
+        time.sleep(0.2)
+
         for i in range(max_retries):
             try:
                 response = requests.get(f"{self._base_url}/health")
@@ -160,7 +163,11 @@ class MockServerManager:
                     logger.info(f"Mock server is ready at {self._base_url}")
                     return True
             except requests.exceptions.RequestException as e:
-                logger.info(f"Waiting for mock server to be ready (attempt {i+1}/{max_retries}): {e}")
+                # First couple of attempts are often during socket setup; keep them quieter
+                if i < 2:
+                    logger.debug(f"Waiting for mock server to be ready (attempt {i + 1}/{max_retries}): {e}")
+                else:
+                    logger.info(f"Waiting for mock server to be ready (attempt {i + 1}/{max_retries}): {e}")
 
             time.sleep(retry_delay)
 

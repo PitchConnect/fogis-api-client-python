@@ -43,9 +43,7 @@ def create_test_matches(num_matches=10) -> List[Dict[str, Any]]:
 
 class TestMatchListFilter(unittest.TestCase):
     def setUp(self):
-        self.test_matches = create_test_matches(
-            num_matches=20
-        )  # Create a larger, more diverse dataset
+        self.test_matches = create_test_matches(num_matches=20)  # Create a larger, more diverse dataset
 
     def _assert_filtered_statuses(self, filtered_matches, expected_statuses, exclude=False):
         """Helper assertion to check statuses of filtered matches."""
@@ -55,9 +53,7 @@ class TestMatchListFilter(unittest.TestCase):
                 "installd": match.get("installd", False),
                 "avbruten": match.get("avbruten", False),
                 "uppskjuten": match.get("uppskjuten", False),
-                "arslutresultat": match.get(
-                    "arslutresultat", False
-                ),  # Assuming arslutresultat implies completed
+                "arslutresultat": match.get("arslutresultat", False),  # Assuming arslutresultat implies completed
             }
             active_status = next(
                 (status for status, active in match_statuses.items() if active), None
@@ -109,9 +105,7 @@ class TestMatchListFilter(unittest.TestCase):
                     f"Match {match.get('matchid')} does not have expected gender (inclusion)",
                 )
 
-    def _assert_filtered_football_types(
-        self, filtered_matches, expected_football_types, exclude=False
-    ):
+    def _assert_filtered_football_types(self, filtered_matches, expected_football_types, exclude=False):
         """Helper assertion to check football types of filtered matches."""
         expected_football_type_ids = set(ftype.value for ftype in expected_football_types)
         for match in filtered_matches:
@@ -135,9 +129,7 @@ class TestMatchListFilter(unittest.TestCase):
         """Test including only cancelled matches."""
         match_filter = MatchListFilter().include_statuses([MatchStatus.CANCELLED])
         filtered_matches = match_filter.filter_matches(self.test_matches)
-        self._assert_filtered_statuses(
-            filtered_matches, [MatchStatus.CANCELLED]
-        )  # Use helper assertion
+        self._assert_filtered_statuses(filtered_matches, [MatchStatus.CANCELLED])  # Use helper assertion
 
     def test_filter_exclude_cancelled_status(self):
         """Test excluding cancelled matches."""
@@ -152,9 +144,7 @@ class TestMatchListFilter(unittest.TestCase):
         """Test including only youth age category matches."""
         match_filter = MatchListFilter().include_age_categories([AgeCategory.YOUTH])
         filtered_matches = match_filter.filter_matches(self.test_matches)
-        self._assert_filtered_categories(
-            filtered_matches, [AgeCategory.YOUTH]
-        )  # Use helper assertion
+        self._assert_filtered_categories(filtered_matches, [AgeCategory.YOUTH])  # Use helper assertion
 
     def test_filter_exclude_youth_age_category(self):
         """Test excluding youth age category matches."""
@@ -185,9 +175,7 @@ class TestMatchListFilter(unittest.TestCase):
         """Test including only futsal football type matches."""
         match_filter = MatchListFilter().include_football_types([FootballType.FUTSAL])
         filtered_matches = match_filter.filter_matches(self.test_matches)
-        self._assert_filtered_football_types(
-            filtered_matches, [FootballType.FUTSAL]
-        )  # Use helper assertion
+        self._assert_filtered_football_types(filtered_matches, [FootballType.FUTSAL])  # Use helper assertion
 
     def test_filter_exclude_futsal_football_type(self):
         """Test excluding futsal football type matches."""
