@@ -4,7 +4,6 @@ from .enums import AgeCategory, FootballType, Gender, MatchStatus
 from .fogis_api_client import FogisApiClient
 
 
-
 class MatchListFilter:
     """
     A class for building and applying filters to lists of matches fetched from the Fogis API.

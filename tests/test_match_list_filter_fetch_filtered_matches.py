@@ -6,13 +6,12 @@ that was fixed in issue #249 to resolve the TypeError when calling the API.
 """
 
 import unittest
-from unittest.mock import MagicMock, patch
-from typing import Dict, List, Any
+from unittest.mock import MagicMock
 
 from fogis_api_client import FogisApiClient
 from fogis_api_client.match_list_filter import MatchListFilter
 from fogis_api_client.enums import MatchStatus, AgeCategory, Gender, FootballType
-from fogis_api_client.public_api_client import FogisAPIRequestError, FogisDataError
+from fogis_api_client.public_api_client import FogisAPIRequestError
 
 
 class TestMatchListFilterFetchFilteredMatches(unittest.TestCase):
