@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from .enums import AgeCategory, FootballType, Gender, MatchStatus
 from .fogis_api_client import FogisApiClient
+from .public_api_client import FogisAPIRequestError, FogisDataError
 
 
 class MatchListFilter:
@@ -226,7 +227,8 @@ class MatchListFilter:
             filtered_matches = [
                 match
                 for match in filtered_matches
-                if match.get("fotbollstypid") in allowed_football_types  # Inclusion logic
+                if match.get("fotbollstypid")
+                in allowed_football_types  # Inclusion logic
             ]
         if self._fotbollstypid_exclude is not None:
             excluded_football_types = set(ftype.value for ftype in self._fotbollstypid_exclude)  # Use .value for Enum
@@ -288,7 +290,6 @@ class MatchListFilter:
                 basic_response = api_client.fetch_matches_list_json()
                 if isinstance(basic_response, list):
                     all_matches = basic_response
-
                 elif (
                     isinstance(basic_response, dict) and "matchlista" in basic_response
                 ):

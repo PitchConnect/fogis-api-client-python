@@ -7,6 +7,7 @@ with the mock server and real API interactions.
 
 import pytest
 from datetime import datetime, timedelta
+from typing import Dict, List
 
 from fogis_api_client import FogisApiClient
 from fogis_api_client.match_list_filter import MatchListFilter
