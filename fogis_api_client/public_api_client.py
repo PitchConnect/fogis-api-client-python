@@ -632,28 +632,9 @@ class PublicApiClient:
             internal_participant = convert_match_participant_to_internal(participant_data)
 
             # Use the internal API client to save the match participant
-            url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare"
-            headers = {
-                "Content-Type": "application/json; charset=utf-8",
-                "Accept": "application/json, text/javascript, */*; q=0.01",
-                "X-Requested-With": "XMLHttpRequest",
-            }
-
-            response = self.session.post(url, json=internal_participant, headers=headers)
-            response.raise_for_status()
-
-            # Parse the JSON response
-            response_data = response.json()
-
-            # Extract the 'd' field if it exists
-            if isinstance(response_data, dict) and "d" in response_data:
-                try:
-                    return json.loads(response_data["d"])
-                except (json.JSONDecodeError, TypeError):
-                    return response_data["d"]
-
+            response_data = self.internal_client.save_match_participant(internal_participant)
             return response_data
-        except requests.exceptions.RequestException as e:
+        except InternalApiError as e:
             error_msg = f"Failed to save match participant: {e}"
             self.logger.error(error_msg)
             raise FogisAPIRequestError(error_msg) from e
@@ -742,33 +723,8 @@ class PublicApiClient:
 
         try:
             # Use the internal API client to mark reporting as finished
-            url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport"
-            payload = {"matchid": match_id_int}
-
-            # For now, use the _api_request method directly since we don't have an internal method for this
-            response_data = self.session.post(
-                url,
-                json=payload,
-                headers={
-                    "Content-Type": "application/json; charset=utf-8",
-                    "Accept": "application/json, text/javascript, */*; q=0.01",
-                    "X-Requested-With": "XMLHttpRequest",
-                },
-            )
-            response_data.raise_for_status()
-
-            # Parse the JSON response
-            response_json = response_data.json()
-
-            # Extract the 'd' field if it exists
-            if isinstance(response_json, dict) and "d" in response_json:
-                try:
-                    result = json.loads(response_json["d"])
-                    return cast(Dict[str, bool], result)
-                except (json.JSONDecodeError, TypeError):
-                    return {"success": True}
-
-            return {"success": True}
+            response = self.internal_client.mark_reporting_finished(match_id_int)
+            return response
         except requests.exceptions.RequestException as e:
             error_msg = f"Failed to mark reporting as finished: {e}"
             self.logger.error(error_msg)

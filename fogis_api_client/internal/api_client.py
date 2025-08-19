@@ -17,6 +17,7 @@ from fogis_api_client.internal.types import (
     InternalEventDict,
     InternalMatchDict,
     InternalMatchListResponse,
+    InternalMatchParticipantDict,
     InternalMatchResultDict,
     InternalOfficialActionDict,
     InternalOfficialDict,
@@ -408,6 +409,56 @@ class InternalApiClient:
             raise InternalApiError(error_msg)
 
         return response_data
+
+
+    def save_match_participant(self, participant_data: InternalMatchParticipantDict) -> Dict[str, Any]:
+        """
+        Save a match participant to the FOGIS API.
+
+        Args:
+            participant_data: The match participant data to save
+
+        Returns:
+            Dict[str, Any]: The response from the API
+
+        Raises:
+            InternalApiError: If the request fails or response format is invalid
+        """
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare"
+        response_data = self.api_request(url, participant_data)
+
+        if not isinstance(response_data, dict):
+            error_msg = f"Invalid save match participant response: {response_data}"
+            self.logger.error(error_msg)
+            raise InternalApiError(error_msg)
+
+        return response_data
+
+    def mark_reporting_finished(self, match_id: int) -> Dict[str, bool]:
+        """
+        Mark match reporting as finished for a given match ID.
+
+        Args:
+            match_id: The ID of the match
+
+        Returns:
+            Dict[str, bool]: The response from the API, typically containing a success status
+
+        Raises:
+            InternalApiError: If the request fails or response format is invalid
+        """
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport"
+        payload = {"matchid": match_id}
+
+        response_data = self.api_request(url, payload)
+
+        if not isinstance(response_data, dict):
+            error_msg = f"Invalid mark reporting finished response: {response_data}"
+            self.logger.error(error_msg)
+            raise InternalApiError(error_msg)
+
+        # The typical successful response contains {"success": True}
+        return cast(Dict[str, bool], response_data)
 
     def clear_match_events(self, match_id: int) -> Dict[str, bool]:
         """
