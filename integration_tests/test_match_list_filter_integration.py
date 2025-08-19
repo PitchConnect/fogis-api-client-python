@@ -5,19 +5,21 @@ This test module verifies that the fix for issue #249 works correctly
 with the mock server and real API interactions.
 """
 
-from datetime import datetime, timedelta
-
 import pytest
+from datetime import datetime, timedelta
+from typing import Dict, List
 
 from fogis_api_client import FogisApiClient
-from fogis_api_client.enums import AgeCategory, FootballType, Gender, MatchStatus
 from fogis_api_client.match_list_filter import MatchListFilter
+from fogis_api_client.enums import MatchStatus, AgeCategory, Gender, FootballType
 
 
 class TestMatchListFilterIntegration:
     """Integration tests for MatchListFilter.fetch_filtered_matches method."""
 
-    def test_fetch_filtered_matches_basic_functionality(self, fogis_test_client: FogisApiClient):
+    def test_fetch_filtered_matches_basic_functionality(
+        self, fogis_test_client: FogisApiClient
+    ):
         """Test basic functionality of fetch_filtered_matches with mock server."""
         # Create a simple filter
         filter_obj = MatchListFilter()
@@ -45,7 +47,9 @@ class TestMatchListFilterIntegration:
             # Re-raise other exceptions for debugging
             raise
 
-    def test_fetch_filtered_matches_with_date_range(self, fogis_test_client: FogisApiClient):
+    def test_fetch_filtered_matches_with_date_range(
+        self, fogis_test_client: FogisApiClient
+    ):
         """Test fetch_filtered_matches with date range filtering."""
         # Create filter with date range
         start_date = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
@@ -66,7 +70,9 @@ class TestMatchListFilterIntegration:
             # Re-raise other exceptions for debugging
             raise
 
-    def test_fetch_filtered_matches_with_status_filter(self, fogis_test_client: FogisApiClient):
+    def test_fetch_filtered_matches_with_status_filter(
+        self, fogis_test_client: FogisApiClient
+    ):
         """Test fetch_filtered_matches with status filtering."""
         # Create filter with status
         filter_obj = MatchListFilter().include_statuses([MatchStatus.COMPLETED])
@@ -84,7 +90,9 @@ class TestMatchListFilterIntegration:
             # Re-raise other exceptions for debugging
             raise
 
-    def test_fetch_filtered_matches_complex_filter(self, fogis_test_client: FogisApiClient):
+    def test_fetch_filtered_matches_complex_filter(
+        self, fogis_test_client: FogisApiClient
+    ):
         """Test fetch_filtered_matches with complex multi-criteria filter."""
         # Create complex filter as shown in the issue
         start_date = "2025-05-01"
@@ -120,7 +128,9 @@ class TestMatchListFilterIntegration:
             # Re-raise other exceptions for debugging
             raise
 
-    def test_fetch_filtered_matches_reproduces_issue_249_example(self, fogis_test_client: FogisApiClient):
+    def test_fetch_filtered_matches_reproduces_issue_249_example(
+        self, fogis_test_client: FogisApiClient
+    ):
         """Test the exact example from issue #249 to ensure it's fixed."""
         # This is the exact code from the issue that was failing
         filter_obj = MatchListFilter()
@@ -147,7 +157,9 @@ class TestMatchListFilterIntegration:
             # but the specific TypeError should be fixed
             assert "unexpected keyword argument 'filter'" not in str(e)
 
-    def test_fetch_filtered_matches_fallback_behavior(self, fogis_test_client: FogisApiClient):
+    def test_fetch_filtered_matches_fallback_behavior(
+        self, fogis_test_client: FogisApiClient
+    ):
         """Test that fallback behavior works when server-side filtering fails."""
         # Create a filter that might cause server-side issues
         filter_obj = MatchListFilter().start_date("invalid-date")
@@ -176,7 +188,9 @@ class TestMatchListFilterIntegration:
         assert payload["datumTill"] == "2025-12-31"
 
         # Test status filter
-        status_filter = MatchListFilter().include_statuses([MatchStatus.COMPLETED, MatchStatus.CANCELLED])
+        status_filter = MatchListFilter().include_statuses(
+            [MatchStatus.COMPLETED, MatchStatus.CANCELLED]
+        )
         payload = status_filter.build_payload()
         assert "genomford" in payload["status"]
         assert "installd" in payload["status"]
