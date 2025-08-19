@@ -82,9 +82,9 @@ If changes involve critical API sections marked with AI-safe markers:
 
 Use this section to add any specific notes or concerns about the code changes:
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Approval
 

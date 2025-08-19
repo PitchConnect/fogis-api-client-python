@@ -4,8 +4,8 @@ import logging
 import unittest
 from unittest.mock import Mock, patch
 
-import requests
 import jsonschema
+import requests
 
 from fogis_api_client.fogis_api_client import (
     FogisApiClient,
@@ -49,9 +49,7 @@ class TestFogisApiClient(unittest.TestCase):
         mock_post_response = Mock()
         mock_post_response.status_code = 302
         mock_post_response.headers = {"Location": "/mdk/"}
-        mock_post_response.cookies = {
-            "FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"
-        }
+        mock_post_response.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
         mock_post.return_value = mock_post_response
 
         # Mock the redirect response
@@ -59,9 +57,7 @@ class TestFogisApiClient(unittest.TestCase):
         mock_get.side_effect = [mock_get_response, mock_redirect_response]
 
         # Mock the cookies
-        self.api_client.session.cookies = {
-            "FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"
-        }
+        self.api_client.session.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
 
         # Call login
         cookies = self.api_client.login()
@@ -97,9 +93,7 @@ class TestFogisApiClient(unittest.TestCase):
         self.api_client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
 
         # Call _api_request
-        result = self.api_client._api_request(
-            self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SomeEndpoint", {}
-        )
+        result = self.api_client._api_request(self.api_client.BASE_URL + "/MatchWebMetoder.aspx/SomeEndpoint", {})
 
         # Verify the result
         self.assertEqual(result, {"success": True})
@@ -108,21 +102,13 @@ class TestFogisApiClient(unittest.TestCase):
     def test_api_request_error_logging(self, mock_post):
         """Test API request error logging."""
         # Mock the post response to raise an exception
-        mock_post.side_effect = requests.exceptions.RequestException(
-            "API request failed"
-        )
+        mock_post.side_effect = requests.exceptions.RequestException("API request failed")
 
         # Set cookies to simulate being logged in
         self.api_client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
 
         # Create a valid payload for the endpoint
-        valid_payload = {
-            "matchid": 123456,
-            "matchhandelsetypid": 1,
-            "matchminut": 10,
-            "matchlagid": 1,
-            "period": 1
-        }
+        valid_payload = {"matchid": 123456, "matchhandelsetypid": 1, "matchminut": 10, "matchlagid": 1, "period": 1}
 
         # Call _api_request and expect an exception
         with self.assertRaises(FogisAPIRequestError):
@@ -163,16 +149,11 @@ class TestFogisApiClient(unittest.TestCase):
         self.api_client.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "mock_auth_cookie"}
 
         # Create a valid payload for the endpoint
-        valid_payload = {
-            "matchid": 123456,
-            "matchhandelsetypid": 1,
-            "matchminut": 10,
-            "matchlagid": 1,
-            "period": 1
-        }
+        valid_payload = {"matchid": 123456, "matchhandelsetypid": 1, "matchminut": 10, "matchlagid": 1, "period": 1}
 
         # Temporarily disable validation for this test
         from fogis_api_client.api_contracts import ValidationConfig
+
         original_enable_validation = ValidationConfig.enable_validation
         ValidationConfig.enable_validation = False
 
@@ -305,7 +286,7 @@ class TestFogisApiClient(unittest.TestCase):
             "matchlagid": 789,  # Integer instead of string
             "matchminut": 35,
             "spelareid": 456,  # Integer instead of string
-            "period": 1  # Add required period field
+            "period": 1,  # Add required period field
         }
 
         # Mock the _api_request method to return a valid response

@@ -138,9 +138,7 @@ def validate() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
         if is_valid:
             return jsonify({"success": True, "valid": True, "message": "Token is valid"})
         else:
-            return jsonify(
-                {"success": True, "valid": False, "message": "Token is invalid or expired"}
-            )
+            return jsonify({"success": True, "valid": False, "message": "Token is invalid or expired"})
 
     except Exception as e:
         logger.error(f"Unexpected error during token validation: {e}")

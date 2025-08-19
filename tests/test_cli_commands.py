@@ -6,15 +6,15 @@ This module contains unit tests for the CLI commands.
 
 import argparse
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from fogis_api_client.cli.commands.base import Command
+from fogis_api_client.cli.commands.history import HistoryCommand
 from fogis_api_client.cli.commands.start import StartCommand
 from fogis_api_client.cli.commands.status import StatusCommand
 from fogis_api_client.cli.commands.stop import StopCommand
-from fogis_api_client.cli.commands.history import HistoryCommand
-from fogis_api_client.cli.commands.validation import ValidationCommand
 from fogis_api_client.cli.commands.test import TestCommand
+from fogis_api_client.cli.commands.validation import ValidationCommand
 
 
 class TestCliCommands(unittest.TestCase):
@@ -22,6 +22,7 @@ class TestCliCommands(unittest.TestCase):
 
     def test_base_command(self):
         """Test the base command."""
+
         # The base command is abstract, so we need to create a concrete subclass
         class TestCommand(Command):
             name = "test"
@@ -102,22 +103,22 @@ class TestCliCommands(unittest.TestCase):
         # Test the add_arguments method
         parser = argparse.ArgumentParser()
         command.add_arguments(parser)
-        
+
         # Test the view subcommand
         args = parser.parse_args(["view"])
         self.assertEqual(args.history_command, "view")
         self.assertEqual(args.limit, 10)
         self.assertFalse(args.json)
-        
+
         # Test the clear subcommand
         args = parser.parse_args(["clear"])
         self.assertEqual(args.history_command, "clear")
-        
+
         # Test the export subcommand
         args = parser.parse_args(["export", "history.json"])
         self.assertEqual(args.history_command, "export")
         self.assertEqual(args.file, "history.json")
-        
+
         # Test the import subcommand
         args = parser.parse_args(["import", "history.json"])
         self.assertEqual(args.history_command, "import")
@@ -136,15 +137,15 @@ class TestCliCommands(unittest.TestCase):
         # Test the add_arguments method
         parser = argparse.ArgumentParser()
         command.add_arguments(parser)
-        
+
         # Test the status subcommand
         args = parser.parse_args(["status"])
         self.assertEqual(args.validation_command, "status")
-        
+
         # Test the enable subcommand
         args = parser.parse_args(["enable"])
         self.assertEqual(args.validation_command, "enable")
-        
+
         # Test the disable subcommand
         args = parser.parse_args(["disable"])
         self.assertEqual(args.validation_command, "disable")

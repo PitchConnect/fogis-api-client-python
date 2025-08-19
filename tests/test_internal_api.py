@@ -4,8 +4,6 @@ Tests for the internal API layer.
 These tests verify that the internal API layer correctly handles communication
 with the FOGIS API server and properly converts between public and internal data formats.
 """
-import pytest
-from unittest.mock import MagicMock, patch
 
 import requests
 

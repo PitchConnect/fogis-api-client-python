@@ -11,6 +11,7 @@ The schemas are used for:
 3. Testing API interactions to ensure contract compliance
 4. Documenting the required data structures
 """
+
 import logging
 import re
 from typing import Any, Dict, Optional

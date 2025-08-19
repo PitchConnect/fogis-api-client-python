@@ -86,9 +86,7 @@ def health():
         current_time = datetime.now().isoformat()
 
         # Return a simple response
-        return jsonify(
-            {"status": "healthy", "timestamp": current_time, "service": "fogis-api-client"}
-        )
+        return jsonify({"status": "healthy", "timestamp": current_time, "service": "fogis-api-client"})
     except Exception as e:
         # Log the error but still return a 200 status code
         logger.error(f"Error in health check endpoint: {e}")
@@ -109,9 +107,7 @@ def hello():
     Test endpoint that calls the hello_world method of the Fogis API Client.
     """
     if not client_initialized:
-        return jsonify(
-            {"message": "FOGIS API client not initialized, but hello endpoint is still working!"}
-        )
+        return jsonify({"message": "FOGIS API client not initialized, but hello endpoint is still working!"})
     return jsonify({"message": client.hello_world()})
 
 
@@ -286,9 +282,7 @@ def match_events(match_id):
 
         # Apply client-side filtering
         if event_type:
-            events_data = [
-                e for e in events_data if e.get("type", "").lower() == event_type.lower()
-            ]
+            events_data = [e for e in events_data if e.get("type", "").lower() == event_type.lower()]
         if player:
             events_data = [e for e in events_data if player.lower() in e.get("player", "").lower()]
         if team:
@@ -391,9 +385,7 @@ def team_players(team_id):
         if name:
             players_data = [p for p in players_data if name.lower() in p.get("name", "").lower()]
         if position:
-            players_data = [
-                p for p in players_data if position.lower() in p.get("position", "").lower()
-            ]
+            players_data = [p for p in players_data if position.lower() in p.get("position", "").lower()]
         if number:
             players_data = [p for p in players_data if p.get("number") == number]
 
@@ -444,20 +436,14 @@ def team_officials(team_id):
 
         # Apply client-side filtering
         if name:
-            officials_data = [
-                o for o in officials_data if name.lower() in o.get("name", "").lower()
-            ]
+            officials_data = [o for o in officials_data if name.lower() in o.get("name", "").lower()]
         if role:
-            officials_data = [
-                o for o in officials_data if role.lower() in o.get("role", "").lower()
-            ]
+            officials_data = [o for o in officials_data if role.lower() in o.get("role", "").lower()]
 
         # Apply client-side sorting
         if sort_by and sort_by in ["name", "role"]:
             reverse = order.lower() == "desc"
-            officials_data = sorted(
-                officials_data, key=lambda x: x.get(sort_by, ""), reverse=reverse
-            )
+            officials_data = sorted(officials_data, key=lambda x: x.get(sort_by, ""), reverse=reverse)
 
         # Apply client-side pagination
         if limit:

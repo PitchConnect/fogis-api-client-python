@@ -30,33 +30,22 @@ Usage:
     # Validate a response
     validate_response('/MatchWebMetoder.aspx/GetMatchresultatlista', response_data)
 """
-import logging
-import re
-import warnings
-from typing import Any, Dict, Optional
 
-import jsonschema
-from jsonschema import ValidationError
+import logging
+import warnings
 
 # Import from internal module
 from fogis_api_client.internal.api_contracts import (
-    MATCH_EVENT_DELETE_SCHEMA,
-    MATCH_EVENT_SCHEMA,
-    MATCH_FETCH_SCHEMA,
-    MATCH_LIST_FILTER_SCHEMA,
-    MATCH_PARTICIPANT_SCHEMA,
     MATCH_RESULT_FLAT_SCHEMA,
     MATCH_RESULT_NESTED_SCHEMA,
-    MARK_REPORTING_FINISHED_SCHEMA,
     REQUEST_SCHEMAS,
     RESPONSE_SCHEMAS,
-    TEAM_OFFICIAL_ACTION_SCHEMA,
     ValidationConfig,
     convert_flat_to_nested_match_result,
-    extract_endpoint_from_url,
-    get_schema_for_endpoint,
     validate_request,
     validate_response,
+    extract_endpoint_from_url,
+    get_schema_for_endpoint,
 )
 
 # Configure logging
@@ -64,14 +53,24 @@ logger = logging.getLogger(__name__)
 
 # Emit a deprecation warning
 warnings.warn(
-    "The fogis_api_client.api_contracts module is deprecated. "
-    "Use fogis_api_client.internal.api_contracts instead.",
+    "The fogis_api_client.api_contracts module is deprecated. " "Use fogis_api_client.internal.api_contracts instead.",
     DeprecationWarning,
-    stacklevel=2
+    stacklevel=2,
 )
 
-
-# ValidationConfig is imported from internal module
+# Re-export all symbols for backward compatibility
+__all__ = [
+    "MATCH_RESULT_FLAT_SCHEMA",
+    "MATCH_RESULT_NESTED_SCHEMA",
+    "REQUEST_SCHEMAS",
+    "RESPONSE_SCHEMAS",
+    "ValidationConfig",
+    "convert_flat_to_nested_match_result",
+    "validate_request",
+    "validate_response",
+    "extract_endpoint_from_url",
+    "get_schema_for_endpoint",
+]
 
 
 # All schemas and functions are imported from internal module

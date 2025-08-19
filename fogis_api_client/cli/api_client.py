@@ -5,11 +5,11 @@ This module provides a client for communicating with the mock server's REST API.
 It is used by the CLI to send commands to the server.
 """
 
-import json
 import logging
-import requests
 import time
-from typing import Dict, List, Any, Optional, Union
+from typing import Any, Dict, List, Optional
+
+import requests
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -172,7 +172,7 @@ class MockServerApiClient:
         try:
             url = f"{self.base_url}{endpoint}"
             method = method.upper()
-            
+
             if method == "GET":
                 response = requests.get(url, params=data, headers=headers)
             elif method == "POST":
@@ -183,7 +183,7 @@ class MockServerApiClient:
                 response = requests.delete(url, json=data, headers=headers)
             else:
                 return {"status": "error", "message": f"Unsupported method: {method}"}
-            
+
             return {
                 "status": "success",
                 "status_code": response.status_code,

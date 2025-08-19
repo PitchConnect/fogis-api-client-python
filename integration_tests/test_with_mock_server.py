@@ -4,13 +4,13 @@ Integration tests for the FOGIS API client using a mock server.
 These tests verify that the client can interact correctly with the API
 without requiring real credentials or internet access.
 """
+
 import logging
 from typing import Dict, cast
 
 import pytest
 
 from fogis_api_client import FogisApiClient, FogisLoginError
-from fogis_api_client.public_api_client import FogisAPIRequestError
 from fogis_api_client.types import CookieDict, EventDict, MatchResultDict
 
 # Configure logging
@@ -39,9 +39,16 @@ class TestFogisApiClientWithMockServer:
         ],
         ids=["login_success", "login_failure"],
     )
-    def test_login(self, mock_fogis_server: Dict[str, str], mock_api_urls, clear_request_history,
-                  scenario: str, credentials: Dict[str, str], expected_success: bool,
-                  error_message_contains: str):
+    def test_login(
+        self,
+        mock_fogis_server: Dict[str, str],
+        mock_api_urls,
+        clear_request_history,
+        scenario: str,
+        credentials: Dict[str, str],
+        expected_success: bool,
+        error_message_contains: str,
+    ):
         """Test login with different credentials.
 
         Args:
@@ -76,10 +83,11 @@ class TestFogisApiClientWithMockServer:
 
             # Verify the error message contains useful information
             error_message = str(excinfo.value)
-            assert error_message_contains in error_message.lower(), \
-                f"Error message should contain '{error_message_contains}'"
+            assert error_message_contains in error_message.lower(), f"Error message should contain '{error_message_contains}'"
 
-    def test_fetch_matches_list(self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history):
+    def test_fetch_matches_list(
+        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history
+    ):
         """Test fetching the match list."""
 
         # In a real test, we would create a client and use it to fetch data
@@ -146,8 +154,14 @@ class TestFogisApiClientWithMockServer:
         ],
         ids=["match_details", "match_players", "match_officials"],
     )
-    def test_fetch_match_data(self, fogis_test_client: FogisApiClient, clear_request_history,
-                             fetch_method: str, expected_fields: list, entity_fields: list):
+    def test_fetch_match_data(
+        self,
+        fogis_test_client: FogisApiClient,
+        clear_request_history,
+        fetch_method: str,
+        expected_fields: list,
+        entity_fields: list,
+    ):
         """Test fetching various match-related data.
 
         Args:
@@ -249,6 +263,7 @@ class TestFogisApiClientWithMockServer:
         assert response["success"] is True
 
         # No need to restore base URLs - the fixture will handle that
+
     def test_report_match_event(self, fogis_test_client: FogisApiClient, clear_request_history):
         """Test reporting a match event."""
 
@@ -335,9 +350,16 @@ class TestFogisApiClientWithMockServer:
         ],
         ids=["team_players", "team_officials"],
     )
-    def test_fetch_team_data(self, fogis_test_client: FogisApiClient, clear_request_history,
-                            fetch_method: str, response_type: type, entity_container: str,
-                            entity_fields: list, id_field: str):
+    def test_fetch_team_data(
+        self,
+        fogis_test_client: FogisApiClient,
+        clear_request_history,
+        fetch_method: str,
+        response_type: type,
+        entity_container: str,
+        entity_fields: list,
+        id_field: str,
+    ):
         """Test fetching various team-related data.
 
         Args:

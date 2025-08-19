@@ -152,7 +152,7 @@ jobs:
     - name: Run comprehensive linting
       run: |
         echo "🔍 Running flake8..."
-        flake8 . --statistics --tee --output-file=flake8-report.txt
+        flake8 . --statistics --tee --output-file=flake8-report.txt --config=setup.cfg
 
         echo "🔍 Running pylint..."
         pylint **/*.py --output-format=text --reports=yes > pylint-report.txt || true

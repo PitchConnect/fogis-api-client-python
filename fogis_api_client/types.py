@@ -3,6 +3,7 @@ Type definitions for FOGIS API client.
 
 This module contains TypedDict classes and other type definitions used throughout the API client.
 """
+
 from typing import List, Optional, TypedDict
 
 

@@ -6,6 +6,7 @@ for the mock FOGIS API server.
 """
 
 import logging
+
 import requests
 
 from fogis_api_client import FogisApiClient

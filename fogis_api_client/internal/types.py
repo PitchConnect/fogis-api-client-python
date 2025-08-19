@@ -4,11 +4,13 @@ Internal type definitions for FOGIS API client.
 This module contains TypedDict classes and other type definitions used by the internal API layer.
 These types represent the exact structure expected by the FOGIS API server.
 """
-from typing import Any, Dict, List, Optional, TypedDict, Union
+
+from typing import List, Optional, TypedDict
 
 
 class InternalMatchDict(TypedDict, total=False):
     """Internal type definition for a match object returned by the API."""
+
     matchid: int
     matchnr: str
     datum: str
@@ -38,11 +40,13 @@ class InternalMatchDict(TypedDict, total=False):
 
 class InternalMatchListResponse(TypedDict):
     """Internal type definition for the response from the match list endpoint."""
+
     matchlista: List[InternalMatchDict]
 
 
 class InternalPlayerDict(TypedDict, total=False):
     """Internal type definition for a player object returned by the API."""
+
     personid: int
     fornamn: str
     efternamn: str
@@ -57,11 +61,13 @@ class InternalPlayerDict(TypedDict, total=False):
 
 class InternalTeamPlayersResponse(TypedDict):
     """Internal type definition for the response from the team players endpoint."""
+
     spelare: List[InternalPlayerDict]
 
 
 class InternalOfficialDict(TypedDict, total=False):
     """Internal type definition for an official object returned by the API."""
+
     personid: int
     fornamn: str
     efternamn: str
@@ -74,6 +80,7 @@ class InternalEventDict(TypedDict, total=False):
 
     This class uses the original field names expected by the FOGIS server.
     """
+
     matchhandelseid: int
     matchid: int
     matchhandelsetypid: int
@@ -103,6 +110,7 @@ class InternalEventDict(TypedDict, total=False):
 
 class InternalMatchResultItem(TypedDict):
     """Internal type definition for a single match result item in the nested format."""
+
     matchid: int
     matchresultattypid: int  # 1=fulltime, 2=halftime
     matchlag1mal: int
@@ -114,11 +122,13 @@ class InternalMatchResultItem(TypedDict):
 
 class InternalMatchResultDict(TypedDict):
     """Internal type definition for a match result object in the nested format."""
+
     matchresultatListaJSON: List[InternalMatchResultItem]
 
 
 class InternalOfficialActionDict(TypedDict, total=False):
     """Internal type definition for a team official action used in reporting."""
+
     matchid: int
     matchlagid: int
     matchlagledareid: int
@@ -128,6 +138,7 @@ class InternalOfficialActionDict(TypedDict, total=False):
 
 class InternalMatchParticipantDict(TypedDict, total=False):
     """Internal type definition for a match participant update used in reporting."""
+
     matchdeltagareid: int
     trojnummer: int
     lagdelid: int
@@ -140,5 +151,6 @@ class InternalMatchParticipantDict(TypedDict, total=False):
 
 class InternalCookieDict(TypedDict, total=False):
     """Internal type definition for session cookies."""
+
     FogisMobilDomarKlient_ASPXAUTH: str
     ASP_NET_SessionId: str

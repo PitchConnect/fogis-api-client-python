@@ -3,6 +3,7 @@ Authentication module for the FOGIS API client.
 
 This module handles authentication with the FOGIS API server.
 """
+
 import logging
 from typing import cast
 
@@ -35,14 +36,19 @@ def authenticate(session: requests.Session, username: str, password: str, base_u
     logger.debug(f"Authenticating with {login_url}")
 
     # Set browser-like headers to avoid being blocked
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'sv-SE,sv;q=0.9,en;q=0.8',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-    })
+    session.headers.update(
+        {
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "sv-SE,sv;q=0.9,en;q=0.8",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+        }
+    )
 
     # Get the login page to extract all form tokens
     response = session.get(login_url, timeout=(10, 30))
@@ -71,11 +77,13 @@ def authenticate(session: requests.Session, username: str, password: str, base_u
 
     # Prepare the login payload with all form fields
     login_payload = form_data.copy()
-    login_payload.update({
-        "ctl00$MainContent$UserName": username,
-        "ctl00$MainContent$Password": password,
-        "ctl00$MainContent$LoginButton": "Logga in",
-    })
+    login_payload.update(
+        {
+            "ctl00$MainContent$UserName": username,
+            "ctl00$MainContent$Password": password,
+            "ctl00$MainContent$LoginButton": "Logga in",
+        }
+    )
 
     # Submit the login form
     response = session.post(login_url, data=login_payload, allow_redirects=True, timeout=(10, 30))

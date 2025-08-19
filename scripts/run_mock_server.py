@@ -18,11 +18,10 @@ import logging
 import os
 import sys
 
+from integration_tests.mock_fogis_server import MockFogisServer
+
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-# Import the mock server
-from integration_tests.mock_fogis_server import MockFogisServer
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -32,12 +31,8 @@ logger = logging.getLogger(__name__)
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Run the mock FOGIS API server")
-    parser.add_argument(
-        "--host", default="localhost", help="Host to bind the server to (default: localhost)"
-    )
-    parser.add_argument(
-        "--port", type=int, default=5001, help="Port to run the server on (default: 5001)"
-    )
+    parser.add_argument("--host", default="localhost", help="Host to bind the server to (default: localhost)")
+    parser.add_argument("--port", type=int, default=5001, help="Port to run the server on (default: 5001)")
     return parser.parse_args()
 
 
@@ -45,7 +40,7 @@ def main():
     """Run the mock server."""
     args = parse_args()
     logger.info(f"Starting mock FOGIS server on {args.host}:{args.port}")
-    
+
     # Create and run the server
     server = MockFogisServer(host=args.host, port=args.port)
     server.run()

@@ -116,7 +116,7 @@ from fogis_api_client.enums import MatchStatus
 
 # Available statuses:
 # MatchStatus.COMPLETED - "genomford" (finished matches)
-# MatchStatus.CANCELLED - "installd" (cancelled matches)  
+# MatchStatus.CANCELLED - "installd" (cancelled matches)
 # MatchStatus.POSTPONED - "uppskjuten" (postponed matches)
 # MatchStatus.INTERRUPTED - "avbruten" (interrupted matches)
 # MatchStatus.NOT_STARTED - "ej_startad" (not yet started)
@@ -161,7 +161,7 @@ from fogis_api_client.enums import AgeCategory
 
 # Available age categories:
 # AgeCategory.CHILDREN (2)
-# AgeCategory.YOUTH (3) 
+# AgeCategory.YOUTH (3)
 # AgeCategory.SENIOR (4)
 # AgeCategory.VETERANS (5)
 # AgeCategory.UNDEFINED (1)
@@ -295,13 +295,13 @@ print(f"Completed {len(completed_2023)} matches in 2023")
 def get_monthly_matches(year, month, client):
     """Get all matches for a specific month."""
     import calendar
-    
+
     # Get the last day of the month
     last_day = calendar.monthrange(year, month)[1]
-    
+
     start_date = f"{year}-{month:02d}-01"
     end_date = f"{year}-{month:02d}-{last_day}"
-    
+
     return (MatchListFilter()
         .start_date(start_date)
         .end_date(end_date)
@@ -355,20 +355,20 @@ def process_matches_in_batches(start_date, end_date, client, batch_days=7):
     """Process matches in weekly batches for large date ranges."""
     current_date = datetime.strptime(start_date, '%Y-%m-%d')
     end_date_obj = datetime.strptime(end_date, '%Y-%m-%d')
-    
+
     all_matches = []
-    
+
     while current_date <= end_date_obj:
         batch_end = min(current_date + timedelta(days=batch_days), end_date_obj)
-        
+
         batch_matches = (MatchListFilter()
             .start_date(current_date.strftime('%Y-%m-%d'))
             .end_date(batch_end.strftime('%Y-%m-%d'))
             .fetch_filtered_matches(client))
-        
+
         all_matches.extend(batch_matches)
         current_date = batch_end + timedelta(days=1)
-    
+
     return all_matches
 
 # Process a full year in weekly batches

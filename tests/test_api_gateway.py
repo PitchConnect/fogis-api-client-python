@@ -39,18 +39,10 @@ class TestApiGateway(unittest.TestCase):
             "home_score": 2,
             "away_score": 1,
         }
-        self.mock_fogis_client.fetch_match_events_json.return_value = [
-            {"id": "1", "type": "goal", "player": "John Doe"}
-        ]
-        self.mock_fogis_client.fetch_match_officials_json.return_value = [
-            {"id": "1", "name": "Jane Smith", "role": "Referee"}
-        ]
-        self.mock_fogis_client.fetch_team_players_json.return_value = [
-            {"id": "1", "name": "John Doe", "position": "Forward"}
-        ]
-        self.mock_fogis_client.fetch_team_officials_json.return_value = [
-            {"id": "1", "name": "Coach Smith", "role": "Coach"}
-        ]
+        self.mock_fogis_client.fetch_match_events_json.return_value = [{"id": "1", "type": "goal", "player": "John Doe"}]
+        self.mock_fogis_client.fetch_match_officials_json.return_value = [{"id": "1", "name": "Jane Smith", "role": "Referee"}]
+        self.mock_fogis_client.fetch_team_players_json.return_value = [{"id": "1", "name": "John Doe", "position": "Forward"}]
+        self.mock_fogis_client.fetch_team_officials_json.return_value = [{"id": "1", "name": "Coach Smith", "role": "Coach"}]
         self.mock_fogis_client.report_match_event.return_value = {"status": "success"}
         self.mock_fogis_client.clear_match_events.return_value = {"status": "success"}
         self.mock_fogis_client.mark_reporting_finished.return_value = {"success": True}
