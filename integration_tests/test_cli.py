@@ -19,17 +19,29 @@ class TestCli(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test case."""
-        # Start the mock server directly
-        cls.server = MockFogisServer(host="localhost", port=5001)
+        # Start the mock server directly (bind explicitly to IPv4 to avoid localhost/IPv6 issues)
+        cls.server = MockFogisServer(host="127.0.0.1", port=5001)
 
         # Start the server in a separate thread
         cls.server_thread = cls.server.run(threaded=True)
 
-        # Wait for the server to start
-        time.sleep(2)
+        # Wait for the server to start by polling /health
+        base_url = "http://127.0.0.1:5001"
+        for _ in range(20):
+            try:
+                resp = requests.get(f"{base_url}/health", timeout=0.5)
+                if resp.status_code == 200:
+                    break
+            except requests.exceptions.RequestException:
+                pass
+            time.sleep(0.3)
 
-        # Create an API client
-        cls.client = MockServerApiClient()
+        # Create an API client after readiness confirmed (target explicit IPv4)
+        cls.client = MockServerApiClient(host="127.0.0.1", port=5001)
+
+        # Ensure CLI /api/cli/status endpoint is ready as well
+        cls.client.wait_for_server(timeout=5)
+
 
     @classmethod
     def tearDownClass(cls):
@@ -48,7 +60,7 @@ class TestCli(unittest.TestCase):
 
         # Check the result
         self.assertEqual(status["status"], "running")
-        self.assertEqual(status["host"], "localhost")
+        self.assertEqual(status["host"], "127.0.0.1")
         self.assertEqual(status["port"], 5001)
 
     def test_history_command(self):
@@ -58,7 +70,7 @@ class TestCli(unittest.TestCase):
         self.assertEqual(response["status"], "success")
 
         # Make a request to the server
-        requests.get("http://localhost:5001/mdk/Login.aspx")
+        requests.get("http://127.0.0.1:5001/mdk/Login.aspx")
 
         # View the history
         history = self.client.get_history()

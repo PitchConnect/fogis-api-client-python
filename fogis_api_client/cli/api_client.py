@@ -41,7 +41,16 @@ class MockServerApiClient:
             Dict[str, Any]: The server status
         """
         try:
-            response = requests.get(f"{self.base_url}/api/cli/status")
+            # brief readiness polling in case server is just starting
+            for _ in range(10):
+                try:
+                    response = requests.get(f"{self.base_url}/api/cli/status", timeout=0.8)
+                    response.raise_for_status()
+                    return response.json()
+                except requests.exceptions.RequestException:
+                    time.sleep(0.2)
+            # final attempt to capture the concrete error
+            response = requests.get(f"{self.base_url}/api/cli/status", timeout=1.5)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -71,7 +80,14 @@ class MockServerApiClient:
             Dict[str, Any]: The response from the server
         """
         try:
-            response = requests.delete(f"{self.base_url}/api/cli/history")
+            for _ in range(5):
+                try:
+                    response = requests.delete(f"{self.base_url}/api/cli/history", timeout=1)
+                    response.raise_for_status()
+                    return response.json()
+                except requests.exceptions.RequestException:
+                    time.sleep(0.2)
+            response = requests.delete(f"{self.base_url}/api/cli/history", timeout=2)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
@@ -86,7 +102,14 @@ class MockServerApiClient:
             bool: True if validation is enabled, False otherwise
         """
         try:
-            response = requests.get(f"{self.base_url}/api/cli/validation")
+            for _ in range(5):
+                try:
+                    response = requests.get(f"{self.base_url}/api/cli/validation", timeout=1)
+                    response.raise_for_status()
+                    return response.json().get("validation_enabled", True)
+                except requests.exceptions.RequestException:
+                    time.sleep(0.2)
+            response = requests.get(f"{self.base_url}/api/cli/validation", timeout=2)
             response.raise_for_status()
             return response.json().get("validation_enabled", True)
         except requests.exceptions.RequestException as e:
@@ -104,9 +127,21 @@ class MockServerApiClient:
             Dict[str, Any]: The response from the server
         """
         try:
+            for _ in range(5):
+                try:
+                    response = requests.post(
+                        f"{self.base_url}/api/cli/validation",
+                        json={"enabled": enabled},
+                        timeout=1,
+                    )
+                    response.raise_for_status()
+                    return response.json()
+                except requests.exceptions.RequestException:
+                    time.sleep(0.2)
             response = requests.post(
                 f"{self.base_url}/api/cli/validation",
                 json={"enabled": enabled},
+                timeout=2,
             )
             response.raise_for_status()
             return response.json()
