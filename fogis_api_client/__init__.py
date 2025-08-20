@@ -3,14 +3,15 @@
 This package provides a client for interacting with the FOGIS API.
 """
 
-from fogis_api_client.api_contracts import (
-    ValidationConfig,
-    convert_flat_to_nested_match_result,
-    validate_request,
-    validate_response,
+from .fogis_api_client import (
+    FogisApiClient,
+    FogisApiError,
+    FogisLoginError,
+    FogisAPIRequestError,
+    FogisDataError,
 )
-from fogis_api_client.event_types import EVENT_TYPES
-from fogis_api_client.logging_config import (
+from .event_types import EVENT_TYPES
+from .logging_config import (
     SensitiveFilter,
     add_sensitive_filter,
     configure_logging,
@@ -18,12 +19,8 @@ from fogis_api_client.logging_config import (
     get_logger,
     set_log_level,
 )
-from fogis_api_client.match_list_filter import MatchListFilter
-
-# Import from the public API client for backward compatibility
-from fogis_api_client.public_api_client import FogisAPIRequestError, FogisDataError, FogisLoginError
-from fogis_api_client.public_api_client import PublicApiClient as FogisApiClient
-from fogis_api_client.types import (
+from .match_list_filter import MatchListFilter
+from .types import (
     CookieDict,
     EventDict,
     MatchDict,
@@ -40,6 +37,7 @@ __all__ = [
     # API Client
     "FogisApiClient",
     "MatchListFilter",
+    "FogisApiError",
     "FogisLoginError",
     "FogisAPIRequestError",
     "FogisDataError",
@@ -62,9 +60,4 @@ __all__ = [
     "get_log_levels",
     "add_sensitive_filter",
     "SensitiveFilter",
-    # Validation utilities
-    "ValidationConfig",
-    "validate_request",
-    "validate_response",
-    "convert_flat_to_nested_match_result",
 ]

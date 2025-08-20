@@ -8,17 +8,17 @@ to enhance its capabilities and make it more comprehensive.
 from fogis_api_client import FogisApiClient
 
 
-def test_fetch_match_officials(fogis_test_client: FogisApiClient, clear_request_history):
+def test_fetch_match_officials(fogis_test_client_auto: FogisApiClient, clear_request_history):
     """Test fetching match officials data."""
     # Get a random match ID
-    matches = fogis_test_client.fetch_matches_list_json()
+    matches = fogis_test_client_auto.fetch_matches_list_json()
     assert matches is not None
     assert "matchlista" in matches
     assert len(matches["matchlista"]) > 0
     match_id = matches["matchlista"][0]["matchid"]
 
     # Call the endpoint method
-    result = fogis_test_client.fetch_match_json(match_id)
+    result = fogis_test_client_auto.fetch_match_json(match_id)
 
     # Verify the result
     assert result is not None
@@ -26,17 +26,17 @@ def test_fetch_match_officials(fogis_test_client: FogisApiClient, clear_request_
     assert "bortalag" in result
 
 
-def test_fetch_match_result(fogis_test_client: FogisApiClient, clear_request_history):
+def test_fetch_match_result(fogis_test_client_auto: FogisApiClient, clear_request_history):
     """Test fetching match result data."""
     # Get a random match ID
-    matches = fogis_test_client.fetch_matches_list_json()
+    matches = fogis_test_client_auto.fetch_matches_list_json()
     assert matches is not None
     assert "matchlista" in matches
     assert len(matches["matchlista"]) > 0
     match_id = matches["matchlista"][0]["matchid"]
 
     # Call the endpoint method
-    result = fogis_test_client.fetch_match_result_json(match_id)
+    result = fogis_test_client_auto.fetch_match_result_json(match_id)
 
     # Verify the result
     assert result is not None
@@ -47,23 +47,23 @@ def test_fetch_match_result(fogis_test_client: FogisApiClient, clear_request_his
         assert any(key in result for key in ["matchresultattypid", "hemmamal", "bortamal"])
 
 
-def test_delete_match_event(fogis_test_client: FogisApiClient, clear_request_history):
+def test_delete_match_event(fogis_test_client_auto: FogisApiClient, clear_request_history):
     """Test deleting a match event."""
     # Get a random match ID
-    matches = fogis_test_client.fetch_matches_list_json()
+    matches = fogis_test_client_auto.fetch_matches_list_json()
     assert matches is not None
     assert "matchlista" in matches
     assert len(matches["matchlista"]) > 0
     match_id = matches["matchlista"][0]["matchid"]
 
     # Get events for the match
-    events = fogis_test_client.fetch_match_events_json(match_id)
+    events = fogis_test_client_auto.fetch_match_events_json(match_id)
     assert events is not None
     assert len(events) > 0
 
     # Delete the first event
     event_id = events[0]["matchhandelseid"]
-    result = fogis_test_client.delete_match_event(event_id)
+    result = fogis_test_client_auto.delete_match_event(event_id)
 
     # Verify the result
     assert result is not None
@@ -71,17 +71,17 @@ def test_delete_match_event(fogis_test_client: FogisApiClient, clear_request_his
     assert result.get("success") is True
 
 
-def test_team_official_action(fogis_test_client: FogisApiClient, clear_request_history):
+def test_team_official_action(fogis_test_client_auto: FogisApiClient, clear_request_history):
     """Test reporting a team official action."""
     # Get a random match ID
-    matches = fogis_test_client.fetch_matches_list_json()
+    matches = fogis_test_client_auto.fetch_matches_list_json()
     assert matches is not None
     assert "matchlista" in matches
     assert len(matches["matchlista"]) > 0
     match_id = matches["matchlista"][0]["matchid"]
 
     # Get team IDs
-    match_details = fogis_test_client.fetch_match_json(match_id)
+    match_details = fogis_test_client_auto.fetch_match_json(match_id)
     assert match_details is not None
     team_id = match_details["hemmalagid"]
 
@@ -94,7 +94,7 @@ def test_team_official_action(fogis_test_client: FogisApiClient, clear_request_h
     }
 
     # Report the action
-    result = fogis_test_client.report_team_official_action(action)
+    result = fogis_test_client_auto.report_team_official_action(action)
 
     # Verify the result
     assert result is not None

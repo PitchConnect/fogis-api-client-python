@@ -32,7 +32,6 @@ import requests
 
 # Import the API clients
 from fogis_api_client import FogisApiClient
-from fogis_api_client.internal.api_client import InternalApiClient
 
 # Import the mock server
 from integration_tests.mock_fogis_server import MockFogisServer
@@ -238,11 +237,9 @@ class MockServerPlugin:
         """
         # Store original base URLs
         original_base_url = FogisApiClient.BASE_URL
-        original_internal_base_url = InternalApiClient.BASE_URL
 
         # Override base URLs to use the mock server
         FogisApiClient.BASE_URL = f"{mock_server_auto['base_url']}/mdk"
-        InternalApiClient.BASE_URL = f"{mock_server_auto['base_url']}/mdk"
 
         # Clear request history at the beginning of each test for better isolation
         manager = MockServerManager.get_instance()
@@ -254,7 +251,6 @@ class MockServerPlugin:
         finally:
             # Restore original base URLs
             FogisApiClient.BASE_URL = original_base_url
-            InternalApiClient.BASE_URL = original_internal_base_url
 
     @pytest.fixture
     def clear_request_history_auto(self, mock_server_auto: Dict[str, str]) -> Generator[None, None, None]:

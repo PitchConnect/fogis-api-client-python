@@ -31,10 +31,10 @@ def test_mock_server(mock_fogis_server):
     assert data["status"] == "healthy"
 
 
-def test_mock_api_urls(mock_fogis_server, mock_api_urls):
-    """Test that the mock_api_urls fixture works correctly."""
+def test_mock_api_urls(mock_server_auto, mock_api_urls_auto):
+    """Test that the mock_api_urls_auto fixture works correctly."""
     # Verify that the API URLs are overridden
-    assert FogisApiClient.BASE_URL.startswith(mock_fogis_server["base_url"])
+    assert FogisApiClient.BASE_URL.startswith(mock_server_auto["base_url"])
 
     # Create a client
     client = FogisApiClient(
@@ -50,20 +50,20 @@ def test_mock_api_urls(mock_fogis_server, mock_api_urls):
     assert any(k for k in cookies if k.startswith("FogisMobilDomarKlient"))
 
 
-def test_fogis_test_client(fogis_test_client):
-    """Test that the fogis_test_client fixture works correctly."""
+def test_fogis_test_client(fogis_test_client_auto):
+    """Test that the fogis_test_client_auto fixture works correctly."""
     # Verify that the client is configured correctly
-    assert fogis_test_client is not None
+    assert fogis_test_client_auto is not None
 
     # Try to login
-    cookies = fogis_test_client.login()
+    cookies = fogis_test_client_auto.login()
 
     # Verify that login was successful
     assert cookies is not None
     assert any(k for k in cookies if k.startswith("FogisMobilDomarKlient"))
 
     # Try to fetch matches
-    matches = fogis_test_client.fetch_matches_list_json()
+    matches = fogis_test_client_auto.fetch_matches_list_json()
 
     # Verify that matches were fetched
     assert matches is not None

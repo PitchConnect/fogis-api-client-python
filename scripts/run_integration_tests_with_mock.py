@@ -61,7 +61,7 @@ def build_pytest_command(args: argparse.Namespace) -> List[str]:
         List[str]: The pytest command as a list of strings
     """
     # Use the current Python interpreter to avoid 'python' vs 'python3' inconsistencies
-    command = [sys.executable, "-m", "pytest"]
+    command = [sys.executable, "-m", "pytest", "-p", "integration_tests.pytest_plugin"]
 
     # Add verbosity
     if args.verbose:
