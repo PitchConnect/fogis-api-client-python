@@ -18,7 +18,7 @@ class TestMatchListFilterIntegration:
     """Integration tests for MatchListFilter.fetch_filtered_matches method."""
 
     def test_fetch_filtered_matches_basic_functionality(
-        self, fogis_test_client: FogisApiClient
+        self, fogis_test_client_auto: FogisApiClient
     ):
         """Test basic functionality of fetch_filtered_matches with mock server."""
         # Create a simple filter
@@ -26,7 +26,7 @@ class TestMatchListFilterIntegration:
 
         # This should work without throwing TypeError
         try:
-            matches = filter_obj.fetch_filtered_matches(fogis_test_client)
+            matches = filter_obj.fetch_filtered_matches(fogis_test_client_auto)
 
             # Verify we get a list (even if empty)
             assert isinstance(matches, list)
@@ -48,7 +48,7 @@ class TestMatchListFilterIntegration:
             raise
 
     def test_fetch_filtered_matches_with_date_range(
-        self, fogis_test_client: FogisApiClient
+        self, fogis_test_client_auto: FogisApiClient
     ):
         """Test fetch_filtered_matches with date range filtering."""
         # Create filter with date range
@@ -59,7 +59,7 @@ class TestMatchListFilterIntegration:
 
         # This should work without throwing TypeError
         try:
-            matches = filter_obj.fetch_filtered_matches(fogis_test_client)
+            matches = filter_obj.fetch_filtered_matches(fogis_test_client_auto)
 
             # Verify we get a list
             assert isinstance(matches, list)
@@ -71,7 +71,7 @@ class TestMatchListFilterIntegration:
             raise
 
     def test_fetch_filtered_matches_with_status_filter(
-        self, fogis_test_client: FogisApiClient
+        self, fogis_test_client_auto: FogisApiClient
     ):
         """Test fetch_filtered_matches with status filtering."""
         # Create filter with status
@@ -79,7 +79,7 @@ class TestMatchListFilterIntegration:
 
         # This should work without throwing TypeError
         try:
-            matches = filter_obj.fetch_filtered_matches(fogis_test_client)
+            matches = filter_obj.fetch_filtered_matches(fogis_test_client_auto)
 
             # Verify we get a list
             assert isinstance(matches, list)
@@ -91,7 +91,7 @@ class TestMatchListFilterIntegration:
             raise
 
     def test_fetch_filtered_matches_complex_filter(
-        self, fogis_test_client: FogisApiClient
+        self, fogis_test_client_auto: FogisApiClient
     ):
         """Test fetch_filtered_matches with complex multi-criteria filter."""
         # Create complex filter as shown in the issue
@@ -109,7 +109,7 @@ class TestMatchListFilterIntegration:
 
         # This should work without throwing TypeError
         try:
-            matches = filter_obj.fetch_filtered_matches(fogis_test_client)
+            matches = filter_obj.fetch_filtered_matches(fogis_test_client_auto)
 
             # Verify we get a list
             assert isinstance(matches, list)
@@ -129,7 +129,7 @@ class TestMatchListFilterIntegration:
             raise
 
     def test_fetch_filtered_matches_reproduces_issue_249_example(
-        self, fogis_test_client: FogisApiClient
+        self, fogis_test_client_auto: FogisApiClient
     ):
         """Test the exact example from issue #249 to ensure it's fixed."""
         # This is the exact code from the issue that was failing
@@ -139,7 +139,7 @@ class TestMatchListFilterIntegration:
 
         # This should work according to documentation but was failing before the fix
         try:
-            historic_matches = filter_obj.fetch_filtered_matches(fogis_test_client)
+            historic_matches = filter_obj.fetch_filtered_matches(fogis_test_client_auto)
 
             # Should not throw TypeError anymore
             assert isinstance(historic_matches, list)
@@ -158,7 +158,7 @@ class TestMatchListFilterIntegration:
             assert "unexpected keyword argument 'filter'" not in str(e)
 
     def test_fetch_filtered_matches_fallback_behavior(
-        self, fogis_test_client: FogisApiClient
+        self, fogis_test_client_auto: FogisApiClient
     ):
         """Test that fallback behavior works when server-side filtering fails."""
         # Create a filter that might cause server-side issues
@@ -166,7 +166,7 @@ class TestMatchListFilterIntegration:
 
         # This should either work or fail gracefully, but not with the original TypeError
         try:
-            matches = filter_obj.fetch_filtered_matches(fogis_test_client)
+            matches = filter_obj.fetch_filtered_matches(fogis_test_client_auto)
             assert isinstance(matches, list)
 
         except Exception as e:

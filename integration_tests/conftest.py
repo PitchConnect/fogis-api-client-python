@@ -13,7 +13,6 @@ import requests
 
 # Import the API clients
 from fogis_api_client import FogisApiClient
-from fogis_api_client.internal.api_client import InternalApiClient
 
 # Import the mock server
 from integration_tests.mock_fogis_server import MockFogisServer
@@ -153,65 +152,5 @@ def clear_request_history(mock_fogis_server: Dict[str, str]) -> None:
     requests.post(f"{mock_fogis_server['base_url']}/clear-request-history")
 
 
-@pytest.fixture
-def mock_api_urls(mock_fogis_server: Dict[str, str]) -> None:
-    """
-    Temporarily override API URLs to point to mock server.
-
-    This fixture handles setting up and tearing down the API URLs for tests.
-    It ensures that the URLs are properly restored after the test completes,
-    even if the test fails.
-
-    Args:
-        mock_fogis_server: The mock server fixture
-
-    Yields:
-        None
-    """
-    # Store original base URLs
-    original_base_url = FogisApiClient.BASE_URL
-    original_internal_base_url = InternalApiClient.BASE_URL
-
-    # Override base URLs to use the mock server
-    FogisApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-    InternalApiClient.BASE_URL = f"{mock_fogis_server['base_url']}/mdk"
-
-    # Clear request history at the beginning of each test for better isolation
-    try:
-        requests.post(f"{mock_fogis_server['base_url']}/clear-request-history")
-    except requests.exceptions.RequestException as e:
-        logger.warning(f"Failed to clear request history: {e}")
-
-    try:
-        # Yield control to the test
-        yield
-    finally:
-        # Restore original URLs, even if the test fails
-        FogisApiClient.BASE_URL = original_base_url
-        InternalApiClient.BASE_URL = original_internal_base_url
 
 
-@pytest.fixture
-def fogis_test_client(mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls) -> FogisApiClient:
-    """
-    Fixture that provides a configured FogisApiClient for testing.
-
-    This fixture combines the mock_fogis_server, test_credentials, and mock_api_urls fixtures
-    to create a properly configured client for testing. It reduces code duplication by
-    handling the common pattern of creating a client with test credentials.
-
-    Args:
-        mock_fogis_server: The mock server fixture
-        test_credentials: The test credentials fixture
-        mock_api_urls: The fixture that temporarily overrides API URLs
-
-    Returns:
-        A configured FogisApiClient instance
-    """
-    # Create a client with test credentials
-    client = FogisApiClient(
-        username=test_credentials["username"],
-        password=test_credentials["password"],
-    )
-
-    return client

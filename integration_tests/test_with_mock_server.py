@@ -41,8 +41,8 @@ class TestFogisApiClientWithMockServer:
     )
     def test_login(
         self,
-        mock_fogis_server: Dict[str, str],
-        mock_api_urls,
+        mock_server_auto: Dict[str, str],
+        mock_api_urls_auto,
         clear_request_history,
         scenario: str,
         credentials: Dict[str, str],
@@ -86,7 +86,7 @@ class TestFogisApiClientWithMockServer:
             assert error_message_contains in error_message.lower(), f"Error message should contain '{error_message_contains}'"
 
     def test_fetch_matches_list(
-        self, mock_fogis_server: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls, clear_request_history
+        self, mock_server_auto: Dict[str, str], test_credentials: Dict[str, str], mock_api_urls_auto, clear_request_history
     ):
         """Test fetching the match list."""
 
@@ -156,7 +156,7 @@ class TestFogisApiClientWithMockServer:
     )
     def test_fetch_match_data(
         self,
-        fogis_test_client: FogisApiClient,
+        fogis_test_client_auto: FogisApiClient,
         clear_request_history,
         fetch_method: str,
         expected_fields: list,
@@ -165,14 +165,14 @@ class TestFogisApiClientWithMockServer:
         """Test fetching various match-related data.
 
         Args:
-            fogis_test_client: The API client fixture
+            fogis_test_client_auto: The API client fixture
             clear_request_history: Fixture to clear request history
             fetch_method: The method name to call on the client
             expected_fields: Fields expected in the response
             entity_fields: Fields expected in the entities (players, officials)
         """
         # Get the method from the client
-        client_method = getattr(fogis_test_client, fetch_method)
+        client_method = getattr(fogis_test_client_auto, fetch_method)
 
         # Fetch the data
         match_id = 12345
@@ -197,12 +197,12 @@ class TestFogisApiClientWithMockServer:
             for field in entity_fields:
                 assert field in home_entity
 
-    def test_fetch_match_events(self, fogis_test_client: FogisApiClient, clear_request_history):
+    def test_fetch_match_events(self, fogis_test_client_auto: FogisApiClient, clear_request_history):
         """Test fetching match events."""
 
         # Fetch match events
         match_id = 12345
-        events = fogis_test_client.fetch_match_events_json(match_id)
+        events = fogis_test_client_auto.fetch_match_events_json(match_id)
 
         # Verify the response
         assert isinstance(events, list)
@@ -217,12 +217,12 @@ class TestFogisApiClientWithMockServer:
         assert "matchminut" in event  # New field name
         assert "matchlagid" in event  # New field name
 
-    def test_fetch_match_result(self, fogis_test_client: FogisApiClient, clear_request_history):
+    def test_fetch_match_result(self, fogis_test_client_auto: FogisApiClient, clear_request_history):
         """Test fetching match result."""
 
         # Fetch match result
         match_id = 12345
-        result = fogis_test_client.fetch_match_result_json(match_id)
+        result = fogis_test_client_auto.fetch_match_result_json(match_id)
 
         # Verify the response
         # The client can return either a dict or a list depending on the API response
@@ -238,7 +238,7 @@ class TestFogisApiClientWithMockServer:
             assert "matchlag1mal" in result[0]
             assert "matchlag2mal" in result[0]
 
-    def test_report_match_result(self, fogis_test_client: FogisApiClient, clear_request_history):
+    def test_report_match_result(self, fogis_test_client_auto: FogisApiClient, clear_request_history):
         """Test reporting match results."""
 
         # Create match result data
@@ -255,7 +255,7 @@ class TestFogisApiClientWithMockServer:
         )
 
         # Report the match result
-        response = fogis_test_client.report_match_result(result_data)
+        response = fogis_test_client_auto.report_match_result(result_data)
 
         # Verify the response
         assert isinstance(response, dict)
@@ -264,7 +264,7 @@ class TestFogisApiClientWithMockServer:
 
         # No need to restore base URLs - the fixture will handle that
 
-    def test_report_match_event(self, fogis_test_client: FogisApiClient, clear_request_history):
+    def test_report_match_event(self, fogis_test_client_auto: FogisApiClient, clear_request_history):
         """Test reporting a match event."""
 
         # Create an event to report
@@ -288,31 +288,31 @@ class TestFogisApiClientWithMockServer:
         )
 
         # Report the event
-        response = fogis_test_client.report_match_event(event_data)
+        response = fogis_test_client_auto.report_match_event(event_data)
 
         # Verify the response
         assert isinstance(response, dict)
         assert "success" in response
         assert response["success"] is True
 
-    def test_clear_match_events(self, fogis_test_client: FogisApiClient, clear_request_history):
+    def test_clear_match_events(self, fogis_test_client_auto: FogisApiClient, clear_request_history):
         """Test clearing match events."""
 
         # Clear events for a match
         match_id = 12345
-        response = fogis_test_client.clear_match_events(match_id)
+        response = fogis_test_client_auto.clear_match_events(match_id)
 
         # Verify the response
         assert isinstance(response, dict)
         assert "success" in response
         assert response["success"] is True
 
-    def test_mark_reporting_finished(self, fogis_test_client: FogisApiClient, clear_request_history):
+    def test_mark_reporting_finished(self, fogis_test_client_auto: FogisApiClient, clear_request_history):
         """Test marking reporting as finished."""
 
         # Mark reporting as finished
         match_id = 12345
-        response = fogis_test_client.mark_reporting_finished(match_id)
+        response = fogis_test_client_auto.mark_reporting_finished(match_id)
 
         # Verify the response
         assert isinstance(response, dict)
@@ -321,11 +321,11 @@ class TestFogisApiClientWithMockServer:
 
         # No need to restore base URLs - the fixture will handle that
 
-    def test_hello_world(self, fogis_test_client: FogisApiClient, clear_request_history):
+    def test_hello_world(self, fogis_test_client_auto: FogisApiClient, clear_request_history):
         """Test the hello_world method."""
 
         # Call the hello_world method
-        message = fogis_test_client.hello_world()
+        message = fogis_test_client_auto.hello_world()
 
         # Verify the response
         assert message == "Hello, brave new world!"
@@ -352,7 +352,7 @@ class TestFogisApiClientWithMockServer:
     )
     def test_fetch_team_data(
         self,
-        fogis_test_client: FogisApiClient,
+        fogis_test_client_auto: FogisApiClient,
         clear_request_history,
         fetch_method: str,
         response_type: type,
@@ -363,7 +363,7 @@ class TestFogisApiClientWithMockServer:
         """Test fetching various team-related data.
 
         Args:
-            fogis_test_client: The API client fixture
+            fogis_test_client_auto: The API client fixture
             clear_request_history: Fixture to clear request history
             fetch_method: The method name to call on the client
             response_type: Expected type of the response (dict or list)
@@ -372,7 +372,7 @@ class TestFogisApiClientWithMockServer:
             id_field: Field that should match the team_id
         """
         # Get the method from the client
-        client_method = getattr(fogis_test_client, fetch_method)
+        client_method = getattr(fogis_test_client_auto, fetch_method)
 
         # Fetch the data
         team_id = 12345
@@ -400,7 +400,7 @@ class TestFogisApiClientWithMockServer:
         # Check that the ID field matches the team_id
         assert entity[id_field] == team_id  # type: ignore
 
-    def test_cookie_authentication(self, mock_fogis_server: Dict[str, str], mock_api_urls, clear_request_history):
+    def test_cookie_authentication(self, mock_server_auto: Dict[str, str], mock_api_urls_auto, clear_request_history):
         """Test authentication using cookies."""
 
         # Create a client with cookies - use the cookie name the client expects
@@ -426,11 +426,11 @@ class TestFogisApiClientWithMockServer:
 
         # No need to restore base URLs - the fixture will handle that
 
-    def test_save_match_participant(self, fogis_test_client: FogisApiClient, clear_request_history):
+    def test_save_match_participant(self, fogis_test_client_auto: FogisApiClient, clear_request_history):
         """Test saving match participant information."""
 
         # Login to get cookies
-        fogis_test_client.login()
+        fogis_test_client_auto.login()
 
         # Create participant data to update
         participant_data = {
@@ -445,7 +445,7 @@ class TestFogisApiClientWithMockServer:
         }
 
         # Save match participant
-        response = fogis_test_client.save_match_participant(participant_data)
+        response = fogis_test_client_auto.save_match_participant(participant_data)
 
         # Verify the response structure
         assert isinstance(response, dict)
