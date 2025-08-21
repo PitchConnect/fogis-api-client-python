@@ -5,20 +5,28 @@ set -e
 echo "===== Updating pre-commit hooks to match CI/CD ====="
 
 # Check if Python is installed
-if ! command -v python &> /dev/null; then
-    echo "Error: Python is required but not installed."
+if command -v python3 &> /dev/null; then
+    PY=python3
+elif command -v python &> /dev/null; then
+    PY=python
+else
+    echo "Error: Python (python3) is required but not installed."
     exit 1
 fi
 
 # Check if pip is installed
-if ! command -v pip &> /dev/null; then
-    echo "Error: pip is required but not installed."
+if ! command -v pip3 &> /dev/null && ! command -v pip &> /dev/null; then
+    echo "Error: pip/pip3 is required but not installed."
     exit 1
 fi
 
 # Install required dependencies
 echo "Installing required dependencies..."
-pip install google-generativeai pyyaml python-dotenv --quiet
+if command -v pip3 &> /dev/null; then
+    pip3 install google-generativeai pyyaml python-dotenv --quiet
+else
+    pip install google-generativeai pyyaml python-dotenv --quiet
+fi
 
 # Check if GOOGLE_GEMINI_API_KEY is set
 if [ -z "$GOOGLE_GEMINI_API_KEY" ]; then
@@ -31,7 +39,7 @@ fi
 
 # Run the dynamic pre-commit hook generator
 echo "Running dynamic pre-commit hook generator..."
-python scripts/dynamic_precommit_generator.py --install
+$PY scripts/dynamic_precommit_generator.py --install
 
 echo ""
 echo "===== Pre-commit hooks updated successfully ====="

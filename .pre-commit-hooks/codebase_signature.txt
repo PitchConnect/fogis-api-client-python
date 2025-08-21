@@ -46,3 +46,6 @@ tests/test_swagger.py:5022b97de422ead246f7b249bc16e430
 setup.py:a23648bc94cf7e0a5311644a1bdda439
 pyproject.toml:a5062581fb0d18ee37c2287c9e73e8de
 requirements.txt:da5df18b3e433014644484dac1ee4327
+
+fogis_api_client/public_api_client.py:UPDATED
+fogis_api_client/fogis_api_client.py:UPDATED

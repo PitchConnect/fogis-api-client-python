@@ -17,7 +17,10 @@ COPY . .
 # Install dependencies
 RUN pip install --no-cache-dir marshmallow>=3.26.0 jsonschema
 RUN pip install --no-cache-dir -e .
-RUN pip install --no-cache-dir pytest pytest-cov requests flask-swagger-ui apispec>=6.0.0 docker
+RUN pip install --no-cache-dir pytest pytest-cov requests flask-swagger-ui apispec>=6.0.0 docker jsonschema
+
+# Ensure jsonschema explicitly present for tooling checks
+RUN python -c "import jsonschema; print('jsonschema OK')"
 
 # Create directory for test results
 RUN mkdir -p /app/test-results
