@@ -12,6 +12,7 @@ Cookie key normalization utilities for the FOGIS API client.
 
 This module provides helpers to convert between the two representations.
 """
+
 from __future__ import annotations
 
 from typing import Dict, Mapping
@@ -78,4 +79,3 @@ def to_server_cookie_keys(cookies: Mapping[str, str]) -> Dict[str, str]:
         result[SERVER_SESSION] = cookies[SERVER_SESSION]
 
     return result
-

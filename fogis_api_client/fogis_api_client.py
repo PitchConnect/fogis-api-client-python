@@ -9,6 +9,7 @@ Deprecated: Import `FogisApiClient` from `fogis_api_client` top-level to get
 an alias to `PublicApiClient`. This shim exists solely for codebases that
 still import from `fogis_api_client.fogis_api_client`.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -66,6 +67,7 @@ class FogisApiClient:
     def cookies(self) -> CookieDict | None:  # type: ignore[override]
         # Backward-compat: expose server-style cookie keys for legacy tests/consumers
         from fogis_api_client.cookies import to_server_cookie_keys
+
         return to_server_cookie_keys(self._impl.cookies or {}) if self._impl.cookies else None
 
     @cookies.setter
@@ -76,6 +78,7 @@ class FogisApiClient:
             self._has_any_cookies = False
             return
         from fogis_api_client.cookies import normalize_public_cookie_keys, to_server_cookie_keys
+
         self._impl.cookies = normalize_public_cookie_keys(value)
         for k, v in to_server_cookie_keys(self._impl.cookies).items():
             self._impl.session.cookies.set(k, v)
@@ -108,70 +111,78 @@ class FogisApiClient:
         # Perform minimal observable GET then POST to satisfy tests
         login_url = f"{self.BASE_URL}/Login.aspx?ReturnUrl=%2fmdk%2f"
         try:
-            # Initial page load
-            first = self.session.get(login_url, timeout=(10, 30))
-            # Submit credentials
-            post_resp = self.session.post(
-                login_url,
-                data={
-                    "ctl00$MainContent$UserName": self._impl.username,
-                    "ctl00$MainContent$Password": self._impl.password,
-                    "ctl00$MainContent$LoginButton": "Logga in",
-                },
-                allow_redirects=True,
-                timeout=(10, 30),
-            )
-            # Explicitly follow redirect with a GET so tests see two GET calls in total
-            loc = getattr(post_resp, "headers", {}).get("Location") if post_resp is not None else None
-            if isinstance(loc, str) and loc:
-                redirect_url = loc if loc.startswith("http") else f"{self.BASE_URL}{loc}"
-                try:
-                    self.session.get(redirect_url, timeout=(10, 30))
-                except Exception:
-                    pass
+            self._login_sequence(login_url)
         except requests.exceptions.RequestException as e:
             import logging
+
             logging.getLogger("fogis_api_client.api").error("Login request failed: %s", e)
             # Surface a FogisAPIRequestError like PublicApiClient would, but through shim
             raise FogisAPIRequestError(f"Login failed: {e}") from e
 
-        # Check cookies on session for server auth key
-        cookies_obj = getattr(self.session, "cookies", {})
-        has_auth = False
-        try:
-            has_auth = "FogisMobilDomarKlient.ASPXAUTH" in cookies_obj  # supports MagicMock with __contains__
-        except Exception:
-            has_auth = False
-
-        if has_auth:
-            # Build a mapping from items() when available
-            try:
-                cookie_map = dict(cookies_obj.items())  # type: ignore[attr-defined]
-            except Exception:
-                cookie_map = dict(cookies_obj) if isinstance(cookies_obj, dict) else {}
-
-            # Store in impl as normalized public keys, and set on session as server keys
-            self._impl.cookies = normalize_public_cookie_keys(cookie_map)
-            server_keys = to_server_cookie_keys(self._impl.cookies)
-            if hasattr(self.session.cookies, "set"):
-                for k, v in server_keys.items():
-                    self.session.cookies.set(k, v)
+        # Persist cookies when present
+        server_keys = self._persist_session_cookies(normalize_public_cookie_keys, to_server_cookie_keys)
+        if server_keys:
             return server_keys
 
         # Otherwise, fail like PublicApiClient.login would (message inspected by tests)
         raise FogisLoginError("Login failed: Authentication failed: Invalid credentials or login form changed")
 
+    def _login_sequence(self, login_url: str) -> None:
+        """Execute GET+POST(+redirect GET) login flow. Extracted to reduce complexity."""
+        # Initial page load
+        self.session.get(login_url, timeout=(10, 30))
+        # Submit credentials
+        post_resp = self.session.post(
+            login_url,
+            data={
+                "ctl00$MainContent$UserName": self._impl.username,
+                "ctl00$MainContent$Password": self._impl.password,
+                "ctl00$MainContent$LoginButton": "Logga in",
+            },
+            allow_redirects=True,
+            timeout=(10, 30),
+        )
+        # Explicitly follow redirect with a GET so tests see two GET calls in total
+        loc = getattr(post_resp, "headers", {}).get("Location") if post_resp is not None else None
+        if isinstance(loc, str) and loc:
+            redirect_url = loc if loc.startswith("http") else f"{self.BASE_URL}{loc}"
+            try:
+                self.session.get(redirect_url, timeout=(10, 30))
+            except Exception:
+                pass
+
+    def _persist_session_cookies(self, normalize_public_cookie_keys, to_server_cookie_keys):
+        """Persist cookies from session onto impl and session; return server keys or None."""
+        cookies_obj = getattr(self.session, "cookies", {})
+        try:
+            has_auth = "FogisMobilDomarKlient.ASPXAUTH" in cookies_obj
+        except Exception:
+            has_auth = False
+        if not has_auth:
+            return None
+        try:
+            cookie_map = dict(cookies_obj.items())  # type: ignore[attr-defined]
+        except Exception:
+            cookie_map = dict(cookies_obj) if isinstance(cookies_obj, dict) else {}
+        self._impl.cookies = normalize_public_cookie_keys(cookie_map)
+        server_keys = to_server_cookie_keys(self._impl.cookies)
+        if hasattr(self.session.cookies, "set"):
+            for k, v in server_keys.items():
+                self.session.cookies.set(k, v)
+        return server_keys
+
     # Legacy private request used by many tests via patching
     def _api_request(self, url: str, payload: dict | None = None, method: str = "POST"):
-        import json
+        import logging
+
         import requests
+
         from fogis_api_client.api_contracts import (
             ValidationConfig,
             extract_endpoint_from_url,
             validate_request,
         )
         from fogis_api_client.cookies import to_server_cookie_keys
-        import logging
 
         # Extract endpoint and validate HTTP method early (before schema validation)
         endpoint = extract_endpoint_from_url(url)
@@ -180,24 +191,45 @@ class FogisApiClient:
             raise ValueError(f"Unsupported HTTP method: {method}")
 
         # Validate request BEFORE coercion or field access to surface schema errors
+        self._validate_request_if_enabled(ValidationConfig, validate_request, endpoint, payload)
+
+        # Lazy login and headers/cookies
+        self._ensure_logged_in()
+        headers = self._build_headers(to_server_cookie_keys)
+
+        try:
+            resp = self._dispatch_http(method, url, payload, headers)
+            resp.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            logging.getLogger("fogis_api_client.api").error("API request failed")
+            raise FogisAPIRequestError(f"API request failed: {e}") from e
+
+        # Parse JSON response
+        return self._parse_json_response(resp)
+
+    def _validate_request_if_enabled(self, ValidationConfig, validate_request, endpoint: str, payload: dict | None) -> None:
+        """Validate request payload against schema when enabled."""
         if ValidationConfig.enable_validation:
             from jsonschema import ValidationError as _JSValidationError
+
             try:
                 validate_request(endpoint, payload or {})
             except _JSValidationError as e:
-                # Wrap per legacy expectations for shim API
                 raise FogisDataError(f"Request validation failed: {e}") from e
             except ValueError:
-                # No schema defined for this endpoint; continue without validation
+                # No schema
                 pass
 
-        # Lazy login behavior: treat any existing cookie dict as sufficient
+    def _ensure_logged_in(self) -> None:
+        """Perform lazy login if neither shim cookies nor impl cookies are present."""
         has_any = getattr(self, "_has_any_cookies", False)
         if not (has_any or (self.cookies and len(self.cookies) > 0)):
             cookies = self.login()
             if not cookies:
                 raise FogisLoginError("Automatic login failed: No cookies available after login")
 
+    def _build_headers(self, to_server_cookie_keys):
+        """Build common request headers including Cookie header when available."""
         headers = {
             "Content-Type": "application/json; charset=UTF-8",
             "Accept": "application/json, text/javascript, */*; q=0.01",
@@ -205,31 +237,26 @@ class FogisApiClient:
             "Referer": f"{self.BASE_URL}/",
             "X-Requested-With": "XMLHttpRequest",
         }
-        # Attach cookies using server keys
         cookie_header = "; ".join(f"{k}={v}" for k, v in to_server_cookie_keys(self.cookies or {}).items())
         if cookie_header:
             headers["Cookie"] = cookie_header
+        return headers
 
-        try:
-            if method.upper() == "POST":
-                resp = self.session.post(url, json=payload, headers=headers)
-            elif method.upper() == "GET":
-                resp = self.session.get(url, params=payload, headers=headers)
-            else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
-            resp.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            logging.getLogger("fogis_api_client.api").error("API request failed")
-            raise FogisAPIRequestError(f"API request failed: {e}") from e
+    def _dispatch_http(self, method: str, url: str, payload: dict | None, headers: dict):
+        m = method.upper()
+        if m == "POST":
+            return self.session.post(url, json=payload, headers=headers)
+        if m == "GET":
+            return self.session.get(url, params=payload, headers=headers)
+        raise ValueError(f"Unsupported HTTP method: {method}")
 
-        # Parse JSON response
+    def _parse_json_response(self, resp):
+        import json
+
         try:
             data = resp.json()
         except Exception as e:
-            # Some tests expect FogisDataError when invalid json
             raise FogisDataError("Failed to parse API response: Invalid JSON") from e
-
-        # Unwrap server format {"d": "<json>"}
         if isinstance(data, dict) and "d" in data:
             try:
                 return json.loads(data["d"]) if isinstance(data["d"], str) else data["d"]
@@ -240,6 +267,7 @@ class FogisApiClient:
     def fetch_matches_list_json(self, filter: dict[str, Any] | None = None):  # noqa: A002 - keep legacy arg name
         url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatcherAttRapportera"
         from datetime import datetime, timedelta
+
         today = datetime.now().strftime("%Y-%m-%d")
         next_week = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
         default_filter = {
@@ -285,13 +313,16 @@ class FogisApiClient:
         url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchhandelse"
         # Validate here so patched _api_request isn't responsible in tests
         from fogis_api_client.api_contracts import validate_request
+
         validate_request("/MatchWebMetoder.aspx/SparaMatchhandelse", event_data)
 
         payload = dict(event_data)
         # After validation, coerce types as legacy expected integers, removing None
         payload = {
             "matchid": int(payload["matchid"]) if isinstance(payload.get("matchid"), str) else payload.get("matchid"),
-            "matchhandelsetypid": int(payload["matchhandelsetypid"]) if payload.get("matchhandelsetypid") is not None else None,
+            "matchhandelsetypid": (
+                int(payload["matchhandelsetypid"]) if payload.get("matchhandelsetypid") is not None else None
+            ),
             "matchminut": int(payload["matchminut"]) if payload.get("matchminut") is not None else None,
             "matchlagid": int(payload["matchlagid"]) if payload.get("matchlagid") is not None else None,
             "spelareid": int(payload.get("spelareid")) if payload.get("spelareid") is not None else None,
@@ -311,6 +342,7 @@ class FogisApiClient:
             flat = dict(result_data)
             # Convert using the internal helper to mirror API contracts
             from fogis_api_client.internal.api_contracts import convert_flat_to_nested_match_result
+
             nested = convert_flat_to_nested_match_result(flat)
         url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista"
         return self._api_request(url, nested)
@@ -324,14 +356,24 @@ class FogisApiClient:
         # Legacy path uses lagid (not matchlagid) and integer coercion
         url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchlagledare"
         payload = {
-            "matchid": int(action_data["matchid"]) if isinstance(action_data.get("matchid"), str) else action_data.get("matchid"),
+            "matchid": (
+                int(action_data["matchid"]) if isinstance(action_data.get("matchid"), str) else action_data.get("matchid")
+            ),
             "lagid": int(action_data["lagid"]) if isinstance(action_data.get("lagid"), str) else action_data.get("lagid"),
-            "personid": int(action_data["personid"]) if isinstance(action_data.get("personid"), str) else action_data.get("personid"),
-            "matchlagledaretypid": int(action_data["matchlagledaretypid"]) if isinstance(action_data.get("matchlagledaretypid"), str) else action_data.get("matchlagledaretypid"),
+            "personid": (
+                int(action_data["personid"]) if isinstance(action_data.get("personid"), str) else action_data.get("personid")
+            ),
+            "matchlagledaretypid": (
+                int(action_data["matchlagledaretypid"])
+                if isinstance(action_data.get("matchlagledaretypid"), str)
+                else action_data.get("matchlagledaretypid")
+            ),
         }
         # Optional minute
         if action_data.get("minut") is not None:
-            payload["minut"] = int(action_data["minut"]) if isinstance(action_data.get("minut"), str) else action_data.get("minut")
+            payload["minut"] = (
+                int(action_data["minut"]) if isinstance(action_data.get("minut"), str) else action_data.get("minut")
+            )
         return self._api_request(url, payload)
 
     def fetch_team_officials_json(self, team_id: int | str):
@@ -410,6 +452,7 @@ class FogisApiClient:
     def get_cookies(self):
         # Backward-compat: return server-style cookie keys expected by legacy tests
         from fogis_api_client.cookies import to_server_cookie_keys
+
         cookies = self._impl.get_cookies()
         return to_server_cookie_keys(cookies) if cookies else None
 
@@ -428,4 +471,3 @@ class FogisApiClient:
     # Fallback for any other attributes/methods that may exist
     def __getattr__(self, name: str):  # pragma: no cover - exercised implicitly
         return getattr(self._impl, name)
-

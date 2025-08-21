@@ -6,7 +6,6 @@ It uses the internal API layer to communicate with the server,
 but presents a simpler, more user-friendly interface.
 """
 
-import json
 import logging
 import os
 from datetime import datetime, timedelta
@@ -14,6 +13,7 @@ from typing import Any, Dict, List, Optional, Union, cast
 
 import requests
 
+import fogis_api_client.internal.auth as _internal_auth
 from fogis_api_client.internal.adapters import (
     convert_event_to_internal,
     convert_internal_to_event,
@@ -26,12 +26,14 @@ from fogis_api_client.internal.adapters import (
     convert_official_action_to_internal,
 )
 from fogis_api_client.internal.api_client import InternalApiClient, InternalApiError
-import fogis_api_client.internal.auth as _internal_auth
+
 # Backward-compat alias so tests can patch fogis_api_client.public_api_client.authenticate
 # Implement as a thin wrapper so patching either this alias OR internal.auth.authenticate works
 
+
 def authenticate(session, username, password, base_url):  # pragma: no cover - trivial passthrough
     return _internal_auth.authenticate(session, username, password, base_url)
+
 
 from fogis_api_client.types import (
     CookieDict,
@@ -116,12 +118,13 @@ class PublicApiClient:
         # Resolve effective base URL at instantiation to honor runtime env overrides
         self.BASE_URL = os.environ.get("FOGIS_API_BASE_URL", type(self).BASE_URL)
 
-        # Initialize the internal API client, passing base_url for consistency
+        # Initialize the internal API client, passing base_url for consistency with tests
         self.internal_client = InternalApiClient(self.session, base_url=self.BASE_URL)
 
         # Set cookies if provided
         if cookies:
-            from fogis_api_client.cookies import to_server_cookie_keys, normalize_public_cookie_keys
+            from fogis_api_client.cookies import normalize_public_cookie_keys, to_server_cookie_keys
+
             self.logger.debug("Using provided cookies for authentication")
             # Normalize and store public cookie shape
             self.cookies = normalize_public_cookie_keys(cookies)
@@ -162,6 +165,7 @@ class PublicApiClient:
             raw_cookies = authenticate(self.session, self.username, self.password, self.BASE_URL)
             # Normalize to public shape and set on session as server keys
             from fogis_api_client.cookies import normalize_public_cookie_keys, to_server_cookie_keys
+
             self.cookies = normalize_public_cookie_keys(raw_cookies)
             for k, v in to_server_cookie_keys(self.cookies).items():
                 self.session.cookies.set(k, v)
@@ -727,6 +731,7 @@ class PublicApiClient:
         # Ensure session has server-style cookies set (idempotent)
         try:
             from fogis_api_client.cookies import to_server_cookie_keys
+
             for key, val in to_server_cookie_keys(self.cookies).items():
                 self.session.cookies.set(key, val)
 

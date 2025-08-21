@@ -45,14 +45,17 @@ class InternalApiClient:
     BASE_URL: str = "https://fogis.svenskfotboll.se/mdk"
     logger: logging.Logger = logging.getLogger("fogis_api_client.internal.api")
 
-    def __init__(self, session: requests.Session) -> None:
+    def __init__(self, session: requests.Session, base_url: str | None = None) -> None:
         """
         Initialize the internal API client.
 
         Args:
             session: The requests session to use for API calls
+            base_url: Optional base URL override (propagated from environment)
         """
         self.session = session
+        if base_url:
+            type(self).BASE_URL = base_url
 
     def api_request(self, url: str, payload: Dict[str, Any]) -> Any:
         """
@@ -409,7 +412,6 @@ class InternalApiClient:
             raise InternalApiError(error_msg)
 
         return response_data
-
 
     def save_match_participant(self, participant_data: InternalMatchParticipantDict) -> Dict[str, Any]:
         """
