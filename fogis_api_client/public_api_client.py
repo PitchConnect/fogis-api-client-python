@@ -8,6 +8,7 @@ but presents a simpler, more user-friendly interface.
 
 import json
 import logging
+import os
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union, cast
 
@@ -25,7 +26,13 @@ from fogis_api_client.internal.adapters import (
     convert_official_action_to_internal,
 )
 from fogis_api_client.internal.api_client import InternalApiClient, InternalApiError
-from fogis_api_client.internal.auth import authenticate
+import fogis_api_client.internal.auth as _internal_auth
+# Backward-compat alias so tests can patch fogis_api_client.public_api_client.authenticate
+# Implement as a thin wrapper so patching either this alias OR internal.auth.authenticate works
+
+def authenticate(session, username, password, base_url):  # pragma: no cover - trivial passthrough
+    return _internal_auth.authenticate(session, username, password, base_url)
+
 from fogis_api_client.types import (
     CookieDict,
     EventDict,
@@ -74,12 +81,7 @@ class PublicApiClient:
         internal_client (InternalApiClient): Internal API client for server communication
     """
 
-    BASE_URL: str = "https://fogis.svenskfotboll.se/mdk"
-    # For tests, this can be overridden with an environment variable
-    import os
-
-    if os.environ.get("FOGIS_API_BASE_URL"):
-        BASE_URL = os.environ.get("FOGIS_API_BASE_URL")
+    BASE_URL: str = os.environ.get("FOGIS_API_BASE_URL", "https://fogis.svenskfotboll.se/mdk")
     logger: logging.Logger = logging.getLogger("fogis_api_client.api")
 
     def __init__(
@@ -111,15 +113,20 @@ class PublicApiClient:
         self.session: requests.Session = requests.Session()
         self.cookies: Optional[CookieDict] = None
 
-        # Initialize the internal API client
-        self.internal_client = InternalApiClient(self.session)
+        # Resolve effective base URL at instantiation to honor runtime env overrides
+        self.BASE_URL = os.environ.get("FOGIS_API_BASE_URL", type(self).BASE_URL)
+
+        # Initialize the internal API client, passing base_url for consistency
+        self.internal_client = InternalApiClient(self.session, base_url=self.BASE_URL)
 
         # Set cookies if provided
         if cookies:
+            from fogis_api_client.cookies import to_server_cookie_keys, normalize_public_cookie_keys
             self.logger.debug("Using provided cookies for authentication")
-            self.cookies = cookies
-            # Set cookies in the session
-            for key, value in cookies.items():
+            # Normalize and store public cookie shape
+            self.cookies = normalize_public_cookie_keys(cookies)
+            # Set cookies in the session using server cookie names
+            for key, value in to_server_cookie_keys(self.cookies).items():
                 self.session.cookies.set(key, value)
         elif not (username and password):
             error_msg = "Either username and password or cookies must be provided"
@@ -134,7 +141,7 @@ class PublicApiClient:
         explicitly if you want to pre-authenticate.
 
         Returns:
-            CookieDict: The session cookies for authentication
+            CookieDict: The session cookies for authentication (normalized underscore keys)
 
         Raises:
             FogisLoginError: If login fails
@@ -151,8 +158,13 @@ class PublicApiClient:
             raise FogisLoginError(error_msg)
 
         try:
-            # Authenticate with the FOGIS API
-            self.cookies = authenticate(self.session, self.username, self.password, self.BASE_URL)
+            # Authenticate with the FOGIS API via module-level alias to support different patch styles
+            raw_cookies = authenticate(self.session, self.username, self.password, self.BASE_URL)
+            # Normalize to public shape and set on session as server keys
+            from fogis_api_client.cookies import normalize_public_cookie_keys, to_server_cookie_keys
+            self.cookies = normalize_public_cookie_keys(raw_cookies)
+            for k, v in to_server_cookie_keys(self.cookies).items():
+                self.session.cookies.set(k, v)
             return self.cookies
         except (requests.exceptions.RequestException, ValueError) as e:
             error_msg = f"Login failed: {e}"
@@ -691,6 +703,43 @@ class PublicApiClient:
         """
         self.logger.debug("Hello world method called")
         return "Hello, brave new world!"
+
+    def validate_cookies(self) -> bool:
+        """
+        Validate if current cookies are still valid (session active).
+
+        Makes a lightweight GET request to BASE_URL root and checks for login markers.
+        Returns True if session appears authenticated, False otherwise.
+        """
+        if not self.cookies:
+            self.logger.debug("No cookies to validate")
+            return False
+
+        headers = {
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+            ),
+            "Referer": f"{self.BASE_URL}/",
+        }
+
+        # Ensure session has server-style cookies set (idempotent)
+        try:
+            from fogis_api_client.cookies import to_server_cookie_keys
+            for key, val in to_server_cookie_keys(self.cookies).items():
+                self.session.cookies.set(key, val)
+
+            self.logger.debug(f"Validating cookies with GET {self.BASE_URL}/")
+            resp = self.session.get(f"{self.BASE_URL}/", headers=headers, timeout=(10, 30))
+            resp.raise_for_status()
+            url_lower = getattr(resp, "url", "").lower()
+            text = getattr(resp, "text", "")
+            if "logga in" in text or "login" in url_lower:
+                return False
+            return True
+        except requests.exceptions.RequestException:
+            return False
 
     def mark_reporting_finished(self, match_id: Union[int, str]) -> Dict[str, bool]:
         """
