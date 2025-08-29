@@ -115,7 +115,7 @@ class HistoryCommand(Command):
             print(json.dumps(history, indent=2))
         else:
             for i, request in enumerate(history):
-                print(f"Request {i+1}:")
+                print(f"Request {i + 1}:")
                 print(f"  Timestamp: {request.get('timestamp')}")
                 print(f"  Method: {request.get('method')}")
                 print(f"  Endpoint: {request.get('endpoint')}")

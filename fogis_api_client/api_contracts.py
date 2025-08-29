@@ -44,6 +44,8 @@ from fogis_api_client.internal.api_contracts import (
     convert_flat_to_nested_match_result,
     validate_request,
     validate_response,
+    extract_endpoint_from_url,
+    get_schema_for_endpoint,
 )
 
 # Configure logging
@@ -66,6 +68,8 @@ __all__ = [
     "convert_flat_to_nested_match_result",
     "validate_request",
     "validate_response",
+    "extract_endpoint_from_url",
+    "get_schema_for_endpoint",
 ]
 
 

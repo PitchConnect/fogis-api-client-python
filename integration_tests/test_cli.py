@@ -19,27 +19,55 @@ class TestCli(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Set up the test case."""
-        # Start the mock server directly
-        cls.server = MockFogisServer(host="localhost", port=5001)
+        # Prefer reusing an existing server (e.g., when run via pytest plugin/script)
+        base_urls = ["http://127.0.0.1:5001", "http://localhost:5001"]
+        detected_base = None
+        for base in base_urls:
+            try:
+                resp = requests.get(f"{base}/health", timeout=0.3)
+                if resp.status_code == 200:
+                    detected_base = base
+                    break
+            except requests.exceptions.RequestException:
+                pass
+        if detected_base is None:
+            # Start the mock server directly (bind explicitly to IPv4 to avoid IPv6 issues)
+            cls.server = MockFogisServer(host="127.0.0.1", port=5001)
+            cls.server_thread = cls.server.run(threaded=True)
+            detected_base = "http://127.0.0.1:5001"
+            # Wait for server readiness
+            for _ in range(20):
+                try:
+                    resp = requests.get(f"{detected_base}/health", timeout=0.5)
+                    if resp.status_code == 200:
+                        break
+                except requests.exceptions.RequestException:
+                    pass
+                time.sleep(0.3)
+        else:
+            cls.server = None
+            cls.server_thread = None
+        # Create an API client after readiness confirmed
+        from urllib.parse import urlparse
+        parsed = urlparse(detected_base)
+        host = parsed.hostname or "127.0.0.1"
+        port = parsed.port or 5001
+        cls.client = MockServerApiClient(host=host, port=port)
+        # Ensure CLI /api/cli/status endpoint is ready as well
+        cls.client.wait_for_server(timeout=5)
+        cls._expected_host = host
 
-        # Start the server in a separate thread
-        cls.server_thread = cls.server.run(threaded=True)
-
-        # Wait for the server to start
-        time.sleep(2)
-
-        # Create an API client
-        cls.client = MockServerApiClient()
 
     @classmethod
     def tearDownClass(cls):
         """Tear down the test case."""
-        # Stop the mock server
-        try:
-            cls.server.shutdown()
-            time.sleep(1)  # Give it a moment to shut down
-        except Exception as e:
-            print(f"Error shutting down server: {e}")
+        # Stop the mock server only if we started it here
+        if getattr(cls, "server", None) is not None:
+            try:
+                cls.server.shutdown()
+                time.sleep(0.5)
+            except Exception as e:
+                print(f"Error shutting down server: {e}")
 
     def test_status_command(self):
         """Test the status command."""
@@ -48,7 +76,8 @@ class TestCli(unittest.TestCase):
 
         # Check the result
         self.assertEqual(status["status"], "running")
-        self.assertEqual(status["host"], "localhost")
+        # Accept either localhost or 127.0.0.1 depending on who started the server
+        self.assertIn(status["host"], ("127.0.0.1", "localhost"))
         self.assertEqual(status["port"], 5001)
 
     def test_history_command(self):
@@ -58,7 +87,7 @@ class TestCli(unittest.TestCase):
         self.assertEqual(response["status"], "success")
 
         # Make a request to the server
-        requests.get("http://localhost:5001/mdk/Login.aspx")
+        requests.get("http://127.0.0.1:5001/mdk/Login.aspx")
 
         # View the history
         history = self.client.get_history()
