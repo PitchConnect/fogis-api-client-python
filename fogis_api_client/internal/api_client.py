@@ -17,6 +17,7 @@ from fogis_api_client.internal.types import (
     InternalEventDict,
     InternalMatchDict,
     InternalMatchListResponse,
+    InternalMatchParticipantDict,
     InternalMatchResultDict,
     InternalOfficialActionDict,
     InternalOfficialDict,
