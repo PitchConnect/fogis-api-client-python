@@ -141,7 +141,13 @@ def matches():
             filter_data["datumTill"] = to_date
 
         # Fetch matches with server-side filtering
-        matches_list = client.fetch_matches_list_json(filter=filter_data)
+        matches_response = client.fetch_matches_list_json(filter_params=filter_data)
+
+        # Extract the actual match list from the response
+        if isinstance(matches_response, dict) and "matchlista" in matches_response:
+            matches_list = matches_response["matchlista"]
+        else:
+            matches_list = matches_response
 
         # Apply client-side sorting
         if sort_by and sort_by in ["datum", "hemmalag", "bortalag", "tavling"]:

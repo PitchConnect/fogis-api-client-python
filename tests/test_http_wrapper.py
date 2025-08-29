@@ -73,13 +73,15 @@ class TestHttpWrapper(unittest.TestCase):
     @patch("fogis_api_client_http_wrapper.client.fetch_matches_list_json")
     def test_matches_endpoint_with_query_params(self, mock_fetch):
         """Test the /matches endpoint with query parameters."""
-        # Set up the mock
-        mock_fetch.return_value = [{"id": "1", "home_team": "Team A", "away_team": "Team B", "datum": "2023-01-01"}]
+        # Set up the mock - return response in the format that the API actually returns
+        mock_fetch.return_value = {
+            "matchlista": [{"id": "1", "home_team": "Team A", "away_team": "Team B", "datum": "2023-01-01"}]
+        }
 
         # Test with date range parameters
         response = self.client.get("/matches?from_date=2023-01-01&to_date=2023-12-31")
         self.assertEqual(response.status_code, 200)
-        mock_fetch.assert_called_with(filter={"datumFran": "2023-01-01", "datumTill": "2023-12-31"})
+        mock_fetch.assert_called_with(filter_params={"datumFran": "2023-01-01", "datumTill": "2023-12-31"})
 
         # Reset mock for next test
         mock_fetch.reset_mock()
@@ -87,7 +89,7 @@ class TestHttpWrapper(unittest.TestCase):
         # Test with pagination parameters
         response = self.client.get("/matches?limit=10&offset=5")
         self.assertEqual(response.status_code, 200)
-        mock_fetch.assert_called_with(filter={})
+        mock_fetch.assert_called_with(filter_params={})
 
         # Reset mock for next test
         mock_fetch.reset_mock()
@@ -95,7 +97,7 @@ class TestHttpWrapper(unittest.TestCase):
         # Test with sorting parameters
         response = self.client.get("/matches?sort_by=datum&order=desc")
         self.assertEqual(response.status_code, 200)
-        mock_fetch.assert_called_with(filter={})
+        mock_fetch.assert_called_with(filter_params={})
 
     @patch("fogis_api_client_http_wrapper.client.fetch_match_json")
     def test_match_details_endpoint(self, mock_fetch):
