@@ -52,7 +52,7 @@ def report_match_result(self, result_data: Dict[str, Any]) -> Dict[str, Any]:
     # AI-CRITICAL-SECTION-START
     # ...
     # AI-CRITICAL-SECTION-END
-    
+
     # Process result data
     response_data = self._api_request(url, result_data_copy)
     return response_data
@@ -62,7 +62,7 @@ def report_match_result(self, result_data: Dict[str, Any]) -> Dict[str, Any]:
     # AI-CRITICAL-SECTION-START
     # ...
     # AI-CRITICAL-SECTION-END
-    
+
     # Process result data
     self.logger.info(f"Reporting match result for match ID: {result_data.get('matchid')}")
     response_data = self._api_request(url, result_data_copy)
@@ -77,7 +77,7 @@ def report_match_result(self, result_data: Dict[str, Any]) -> Dict[str, Any]:
     # AI-CRITICAL-SECTION-START
     # ...
     # AI-CRITICAL-SECTION-END
-    
+
     # Convert flat structure to nested structure
     result_data_copy = {
         "matchresultatListaJSON": [
@@ -93,7 +93,7 @@ def report_match_result(self, result_data: Dict[str, Any]) -> Dict[str, Any]:
             # ...
         ]
     }
-    
+
     response_data = self._api_request(url, result_data_copy)
     return response_data
 
@@ -102,7 +102,7 @@ def report_match_result(self, result_data: Dict[str, Any]) -> Dict[str, Any]:
     # AI-CRITICAL-SECTION-START
     # ...
     # AI-CRITICAL-SECTION-END
-    
+
     # Convert flat structure to a different structure (BREAKING CHANGE!)
     result_data_copy = {
         "matchResults": [  # Changed field name from matchresultatListaJSON
@@ -117,7 +117,7 @@ def report_match_result(self, result_data: Dict[str, Any]) -> Dict[str, Any]:
             # ...
         ]
     }
-    
+
     response_data = self._api_request(url, result_data_copy)
     return response_data
 ```

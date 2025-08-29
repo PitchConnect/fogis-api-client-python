@@ -33,13 +33,13 @@ class ValidationCommand(Command):
         subparsers = parser.add_subparsers(dest="validation_command", help="Validation command")
 
         # Get validation status
-        status_parser = subparsers.add_parser("status", help="Get the validation status")
+        subparsers.add_parser("status", help="Get the validation status")
 
         # Enable validation
-        enable_parser = subparsers.add_parser("enable", help="Enable request validation")
+        subparsers.add_parser("enable", help="Enable request validation")
 
         # Disable validation
-        disable_parser = subparsers.add_parser("disable", help="Disable request validation")
+        subparsers.add_parser("disable", help="Disable request validation")
 
     def execute(self, args: argparse.Namespace) -> int:
         """

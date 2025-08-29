@@ -60,7 +60,8 @@ def build_pytest_command(args: argparse.Namespace) -> List[str]:
     Returns:
         List[str]: The pytest command as a list of strings
     """
-    command = ["python", "-m", "pytest"]
+    # Use the current Python interpreter to avoid 'python' vs 'python3' inconsistencies
+    command = [sys.executable, "-m", "pytest"]
 
     # Add verbosity
     if args.verbose:
@@ -79,8 +80,9 @@ def build_pytest_command(args: argparse.Namespace) -> List[str]:
                 logger.error(f"Test file not found: {args.test_file}")
                 sys.exit(1)
     else:
-        # Run all integration tests by default
+        # Run all integration tests by default, excluding external API endpoint tests
         command.append("integration_tests")
+        command.extend(["-k", "not api_endpoints"])
 
     # Add test name if specified
     if args.test_name:

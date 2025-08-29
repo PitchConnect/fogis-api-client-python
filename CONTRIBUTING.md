@@ -200,6 +200,67 @@ The mock server provides a simulated FOGIS API environment for development and t
    python -m fogis_api_client.cli.mock_server stop
    ```
 
+#### Running Integration Tests with the Mock Server (recommended)
+
+To run the full integration test suite reliably without external dependencies, use the provided helper script. It automatically starts the mock server (if not already running), uses the current Python interpreter (sys.executable), and excludes external API endpoint tests by default.
+
+- Run all integration tests against the mock server (excluding external api_endpoints):
+  ```bash
+  python3 scripts/run_integration_tests_with_mock.py
+  ```
+
+- Increase verbosity:
+  ```bash
+  python3 scripts/run_integration_tests_with_mock.py -v
+  ```
+
+- Run a specific integration test file:
+  ```bash
+  python3 scripts/run_integration_tests_with_mock.py --test-file integration_tests/test_cli.py
+  ```
+
+- Run a specific test by name (pattern):
+  ```bash
+  python3 scripts/run_integration_tests_with_mock.py --test-name TestCli::test_status_command
+  ```
+
+Notes:
+- The script excludes tests marked as `api_endpoints` by default when running with the mock server. Those tests expect access to an external service and are not suitable for offline/mock runs.
+- You can still run tests directly with pytest if preferred; ensure the mock server is running and consider `-k 'not api_endpoints'` to skip external endpoint tests.
+
+5. **When adding new API endpoints**:
+
+#### Running Integration Tests with the Mock Server (recommended)
+
+To run the full integration test suite reliably without external dependencies, use the provided helper script. It automatically starts the mock server (if not already running), uses the current Python interpreter (sys.executable), and excludes external API endpoint tests by default.
+
+- Run all integration tests against the mock server (excluding external api_endpoints):
+  ```bash
+  python3 scripts/run_integration_tests_with_mock.py
+  ```
+
+- Increase verbosity:
+  ```bash
+  python3 scripts/run_integration_tests_with_mock.py -v
+  ```
+
+- Run a specific integration test file:
+  ```bash
+  python3 scripts/run_integration_tests_with_mock.py --test-file integration_tests/test_cli.py
+  ```
+
+- Run a specific test by name (pattern):
+  ```bash
+  python3 scripts/run_integration_tests_with_mock.py --test-name TestCli::test_status_command
+  ```
+
+Notes:
+- The script excludes tests marked as `api_endpoints` by default when running with the mock server. Those tests expect access to an external service and are not suitable for offline/mock runs.
+- You can still run tests directly with pytest if preferred; ensure the mock server is running and consider `-k 'not api_endpoints'` to skip external endpoint tests.
+
+   python -m fogis_api_client.cli.mock_server stop
+   ```
+
 5. **When adding new API endpoints**:
    - Add the endpoint to the mock server in `integration_tests/mock_fogis_server.py`
    - Add a request schema in `integration_tests/schemas/` for validation

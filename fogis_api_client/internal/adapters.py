@@ -5,8 +5,9 @@ This module contains functions for converting between the public API data format
 (what users of the library work with) and the internal API data formats
 (what the FOGIS API server expects).
 """
+
 import json
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Union, cast
 
 from fogis_api_client.types import (
     CookieDict,
@@ -23,21 +24,13 @@ from fogis_api_client.types import (
 from .types import (
     InternalCookieDict,
     InternalEventDict,
-    InternalMatchDict,
-    InternalMatchListResponse,
     InternalMatchParticipantDict,
     InternalMatchResultDict,
-    InternalMatchResultItem,
     InternalOfficialActionDict,
-    InternalOfficialDict,
-    InternalPlayerDict,
-    InternalTeamPlayersResponse,
 )
 
 
-def convert_match_result_to_internal(
-    result_data: Union[MatchResultDict, Dict[str, Any]]
-) -> InternalMatchResultDict:
+def convert_match_result_to_internal(result_data: Union[MatchResultDict, Dict[str, Any]]) -> InternalMatchResultDict:
     """
     Converts a public match result to the internal format expected by the API.
 
@@ -73,11 +66,19 @@ def convert_match_result_to_internal(
     # Half-time scores are optional
     halftime_home = 0
     if "halvtidHemmamal" in result_data and result_data["halvtidHemmamal"] is not None:
-        halftime_home = int(result_data["halvtidHemmamal"]) if isinstance(result_data["halvtidHemmamal"], str) else result_data["halvtidHemmamal"]
+        halftime_home = (
+            int(result_data["halvtidHemmamal"])
+            if isinstance(result_data["halvtidHemmamal"], str)
+            else result_data["halvtidHemmamal"]
+        )
 
     halftime_away = 0
     if "halvtidBortamal" in result_data and result_data["halvtidBortamal"] is not None:
-        halftime_away = int(result_data["halvtidBortamal"]) if isinstance(result_data["halvtidBortamal"], str) else result_data["halvtidBortamal"]
+        halftime_away = (
+            int(result_data["halvtidBortamal"])
+            if isinstance(result_data["halvtidBortamal"], str)
+            else result_data["halvtidBortamal"]
+        )
 
     # Create the nested structure
     nested_data: InternalMatchResultDict = {
@@ -106,9 +107,7 @@ def convert_match_result_to_internal(
     return nested_data
 
 
-def convert_internal_to_match_result(
-    internal_result: Union[Dict[str, Any], List[Dict[str, Any]]]
-) -> MatchResultDict:
+def convert_internal_to_match_result(internal_result: Union[Dict[str, Any], List[Dict[str, Any]]]) -> MatchResultDict:
     """
     Converts an internal match result to the public format.
 
@@ -292,9 +291,7 @@ def convert_internal_to_official(internal_official: Dict[str, Any]) -> OfficialD
     return cast(OfficialDict, internal_official)
 
 
-def convert_official_action_to_internal(
-    action_data: OfficialActionDict
-) -> InternalOfficialActionDict:
+def convert_official_action_to_internal(action_data: OfficialActionDict) -> InternalOfficialActionDict:
     """
     Converts a public official action to the internal format expected by the API.
 
@@ -307,7 +304,6 @@ def convert_official_action_to_internal(
     # Create a copy to avoid modifying the original
     action_data_copy = dict(action_data)
 
-
     # Ensure IDs are integers
     for key in ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid", "matchminut"]:
         if key in action_data_copy and action_data_copy[key] is not None:
@@ -318,9 +314,7 @@ def convert_official_action_to_internal(
     return cast(InternalOfficialActionDict, action_data_copy)
 
 
-def convert_match_participant_to_internal(
-    participant_data: MatchParticipantDict
-) -> InternalMatchParticipantDict:
+def convert_match_participant_to_internal(participant_data: MatchParticipantDict) -> InternalMatchParticipantDict:
     """
     Converts a public match participant to the internal format expected by the API.
 
@@ -378,9 +372,7 @@ def convert_internal_to_cookies(internal_cookies: Dict[str, str]) -> CookieDict:
     return cast(CookieDict, internal_cookies)
 
 
-def convert_internal_to_team_players(
-    internal_response: Dict[str, Any]
-) -> TeamPlayersResponse:
+def convert_internal_to_team_players(internal_response: Dict[str, Any]) -> TeamPlayersResponse:
     """
     Converts an internal team players response to the public format.
 

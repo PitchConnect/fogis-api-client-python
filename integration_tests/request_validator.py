@@ -17,8 +17,6 @@ logger = logging.getLogger(__name__)
 class RequestValidationError(Exception):
     """Exception raised when a request fails validation."""
 
-    pass
-
 
 class RequestValidator:
     """Validator for API requests to ensure they match the expected structure."""
@@ -65,13 +63,9 @@ class RequestValidator:
             "required_fields": ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid"]
         },
         # Match participant endpoints
-        "/MatchWebMetoder.aspx/SparaMatchdeltagare": {
-            "required_fields": ["matchdeltagareid", "trojnummer"]
-        },
+        "/MatchWebMetoder.aspx/SparaMatchdeltagare": {"required_fields": ["matchdeltagareid", "trojnummer"]},
         # Match reporting endpoints
-        "/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport": {
-            "required_fields": ["matchid"]
-        },
+        "/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport": {"required_fields": ["matchid"]},
         # Match fetch endpoints
         "/MatchWebMetoder.aspx/GetMatch": {
             "required_fields": ["matchid"],

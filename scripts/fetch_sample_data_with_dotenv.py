@@ -9,6 +9,7 @@ Usage:
 
 The script will read credentials from the .env file in the project root.
 """
+
 import json
 import logging
 import os
@@ -272,9 +273,7 @@ def fetch_and_anonymize_data():
     return sample_data
 
 
-def generate_python_file(
-    data: Dict[str, Any], output_file: str = "integration_tests/sample_data.py"
-):
+def generate_python_file(data: Dict[str, Any], output_file: str = "integration_tests/sample_data.py"):
     """
     Generate a Python file with the sample data.
 

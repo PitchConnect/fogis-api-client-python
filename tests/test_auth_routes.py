@@ -52,9 +52,7 @@ class TestAuthRoutes(unittest.TestCase):
         self.assertEqual(data["token"], self.test_cookies)
 
         # Verify the mock was called correctly
-        mock_fogis_client.assert_called_once_with(
-            username=self.test_username, password=self.test_password
-        )
+        mock_fogis_client.assert_called_once_with(username=self.test_username, password=self.test_password)
         mock_instance.login.assert_called_once()
 
     @patch("auth_routes.FogisApiClient")
@@ -78,9 +76,7 @@ class TestAuthRoutes(unittest.TestCase):
         self.assertIn("error", data)
 
         # Verify the mock was called correctly
-        mock_fogis_client.assert_called_once_with(
-            username=self.test_username, password=self.test_password
-        )
+        mock_fogis_client.assert_called_once_with(username=self.test_username, password=self.test_password)
         mock_instance.login.assert_called_once()
 
     def test_login_missing_fields(self):
@@ -102,9 +98,7 @@ class TestAuthRoutes(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
         # Test with empty request
-        response = self.client.post(
-            "/auth/login", data=json.dumps({}), content_type="application/json"
-        )
+        response = self.client.post("/auth/login", data=json.dumps({}), content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
     def test_login_wrong_content_type(self):
@@ -166,9 +160,7 @@ class TestAuthRoutes(unittest.TestCase):
 
     def test_validate_missing_token(self):
         """Test token validation with missing token."""
-        response = self.client.post(
-            "/auth/validate", data=json.dumps({}), content_type="application/json"
-        )
+        response = self.client.post("/auth/validate", data=json.dumps({}), content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
     @patch("auth_routes.FogisApiClient")
@@ -221,9 +213,7 @@ class TestAuthRoutes(unittest.TestCase):
 
     def test_refresh_missing_token(self):
         """Test token refresh with missing token."""
-        response = self.client.post(
-            "/auth/refresh", data=json.dumps({}), content_type="application/json"
-        )
+        response = self.client.post("/auth/refresh", data=json.dumps({}), content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
     def test_logout_success(self):
@@ -243,9 +233,7 @@ class TestAuthRoutes(unittest.TestCase):
 
     def test_logout_missing_token(self):
         """Test logout with missing token."""
-        response = self.client.post(
-            "/auth/logout", data=json.dumps({}), content_type="application/json"
-        )
+        response = self.client.post("/auth/logout", data=json.dumps({}), content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
 

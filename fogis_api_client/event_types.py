@@ -3,6 +3,7 @@ Event types definitions for FOGIS API client.
 
 This module contains the definitions of event types used in match reporting.
 """
+
 from typing import Any, Dict
 
 # Event types dictionary for match events

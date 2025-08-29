@@ -134,7 +134,7 @@ client.report_match_event(substitution_event)
 
 **Problem:** Changing the structure of data sent to the API can break functionality.
 
-**Solution:** 
+**Solution:**
 - Always use the client library's methods rather than direct API calls
 - If you need to modify API-related code, consult the API contracts documentation first
 - Look for `AI-CRITICAL-SECTION` comments in the code

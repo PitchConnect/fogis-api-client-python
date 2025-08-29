@@ -4,6 +4,7 @@ Integration tests for match result reporting.
 These tests verify that the match result reporting functionality works correctly
 and that the client sends the correct data structure to the API.
 """
+
 import logging
 from typing import Any, Dict, Union, cast
 
@@ -137,19 +138,25 @@ class TestMatchResultReporting:
 
         # Check for specific error information based on the scenario
         if scenario == "missing_fields":
-            assert "hemmamal" in error_message.lower() or "bortamal" in error_message.lower(), \
-                "Error message should mention the missing fields"
+            assert (
+                "hemmamal" in error_message.lower() or "bortamal" in error_message.lower()
+            ), "Error message should mention the missing fields"
             assert "required" in error_message.lower(), "Error message should indicate fields are required"
             # Enhanced assertion to check for more specific error details
-            assert any(term in error_message.lower() for term in ["missing", "field", "parameter"]), \
-                "Error message should provide details about what is missing"
+            assert any(
+                term in error_message.lower() for term in ["missing", "field", "parameter"]
+            ), "Error message should provide details about what is missing"
         elif scenario == "invalid_nested_format":
-            assert "matchresultattypid" in error_message.lower() or "matchlag1mal" in error_message.lower() \
-                or "matchlag2mal" in error_message.lower(), "Error message should mention the missing fields"
+            assert (
+                "matchresultattypid" in error_message.lower()
+                or "matchlag1mal" in error_message.lower()
+                or "matchlag2mal" in error_message.lower()
+            ), "Error message should mention the missing fields"
             assert "required" in error_message.lower(), "Error message should indicate a required field is missing"
             # Enhanced assertion to check for more specific error details
-            assert any(term in error_message.lower() for term in ["invalid", "format", "structure", "schema"]), \
-                "Error message should provide details about the invalid format"
+            assert any(
+                term in error_message.lower() for term in ["invalid", "format", "structure", "schema"]
+            ), "Error message should provide details about the invalid format"
 
     @pytest.mark.parametrize(
         "scenario,result_data,expected_success",

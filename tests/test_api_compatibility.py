@@ -3,12 +3,10 @@ Tests for API compatibility.
 
 These tests verify that the new implementation is compatible with the existing API.
 """
-import pytest
-from unittest.mock import MagicMock, patch
 
-import requests
+from unittest.mock import patch
 
-from fogis_api_client import FogisApiClient, FogisAPIRequestError, FogisDataError, FogisLoginError
+from fogis_api_client import FogisApiClient
 
 
 def test_api_compatibility():

@@ -3,6 +3,7 @@ Tests for the API validation layer.
 
 This module contains tests for the API validation functionality.
 """
+
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -12,7 +13,6 @@ from fogis_api_client.api_contracts import (
     ValidationConfig,
     extract_endpoint_from_url,
     validate_request,
-    validate_response,
 )
 from fogis_api_client.fogis_api_client import FogisApiClient, FogisDataError
 
@@ -148,14 +148,14 @@ class TestValidationLayer(unittest.TestCase):
 
         # In non-strict mode, validation should not raise an exception
         ValidationConfig.strict_mode = False
-        
+
         # Mock the session's post method for non-strict mode test
         mock_session_instance = mock_session.return_value
         mock_response = MagicMock()
         mock_response.json.return_value = {"d": '{"matchid": 123456, "hemmalag": "Team A", "bortalag": "Team B"}'}
         mock_response.raise_for_status.return_value = None
         mock_session_instance.post.return_value = mock_response
-        
+
         # Request should succeed in non-strict mode
         response_data = client._api_request(url, payload)
         self.assertEqual(response_data, {"matchid": 123456, "hemmalag": "Team A", "bortalag": "Team B"})

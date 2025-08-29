@@ -173,9 +173,7 @@ class MatchListFilter:
                 )
             ]
         if self._status_exclude is not None:
-            status_filter_values = set(
-                status.value for status in self._status_exclude
-            )  # Use .value for Enum
+            status_filter_values = set(status.value for status in self._status_exclude)  # Use .value for Enum
             filtered_matches = [
                 match
                 for match in filtered_matches
@@ -197,9 +195,7 @@ class MatchListFilter:
             ]
 
         if self._alderskategori_include is not None:
-            allowed_categories = set(
-                cat.value for cat in self._alderskategori_include
-            )  # Use .value for Enum
+            allowed_categories = set(cat.value for cat in self._alderskategori_include)  # Use .value for Enum
             filtered_matches = [
                 match
                 for match in filtered_matches
@@ -207,9 +203,7 @@ class MatchListFilter:
                 in allowed_categories  # Inclusion logic
             ]
         if self._alderskategori_exclude is not None:
-            excluded_categories = set(
-                cat.value for cat in self._alderskategori_exclude
-            )  # Use .value for Enum
+            excluded_categories = set(cat.value for cat in self._alderskategori_exclude)  # Use .value for Enum
             filtered_matches = [
                 match
                 for match in filtered_matches
@@ -218,28 +212,18 @@ class MatchListFilter:
             ]
 
         if self._kon_include is not None:
-            allowed_genders = set(
-                gender.value for gender in self._kon_include
-            )  # Use .value for Enum
+            allowed_genders = set(gender.value for gender in self._kon_include)  # Use .value for Enum
             filtered_matches = [
-                match
-                for match in filtered_matches
-                if match.get("tavlingKonId") in allowed_genders  # Inclusion logic
+                match for match in filtered_matches if match.get("tavlingKonId") in allowed_genders  # Inclusion logic
             ]
         if self._kon_exclude is not None:
-            excluded_genders = set(
-                gender.value for gender in self._kon_exclude
-            )  # Use .value for Enum
+            excluded_genders = set(gender.value for gender in self._kon_exclude)  # Use .value for Enum
             filtered_matches = [
-                match
-                for match in filtered_matches
-                if match.get("tavlingKonId") not in excluded_genders  # Exclusion logic
+                match for match in filtered_matches if match.get("tavlingKonId") not in excluded_genders  # Exclusion logic
             ]
 
         if self._fotbollstypid_include is not None:
-            allowed_football_types = set(
-                ftype.value for ftype in self._fotbollstypid_include
-            )  # Use .value for Enum
+            allowed_football_types = set(ftype.value for ftype in self._fotbollstypid_include)  # Use .value for Enum
             filtered_matches = [
                 match
                 for match in filtered_matches
@@ -247,9 +231,7 @@ class MatchListFilter:
                 in allowed_football_types  # Inclusion logic
             ]
         if self._fotbollstypid_exclude is not None:
-            excluded_football_types = set(
-                ftype.value for ftype in self._fotbollstypid_exclude
-            )  # Use .value for Enum
+            excluded_football_types = set(ftype.value for ftype in self._fotbollstypid_exclude)  # Use .value for Enum
             filtered_matches = [
                 match
                 for match in filtered_matches

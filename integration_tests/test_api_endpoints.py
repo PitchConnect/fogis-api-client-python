@@ -7,9 +7,7 @@ import requests
 from requests.exceptions import ConnectionError, Timeout
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -23,8 +21,7 @@ def retry_on_failure(max_retries=3, delay=2):
                 except (ConnectionError, Timeout, AssertionError) as e:
                     if attempt < max_retries - 1:
                         logger.warning(
-                            f"Test failed on attempt {attempt + 1}/{max_retries}: {e}. "
-                            f"Retrying in {delay} seconds..."
+                            f"Test failed on attempt {attempt + 1}/{max_retries}: {e}. " f"Retrying in {delay} seconds..."
                         )
                         time.sleep(delay)
                     else:
