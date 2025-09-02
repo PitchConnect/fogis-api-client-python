@@ -49,7 +49,7 @@ class TestLoggingConfig(unittest.TestCase):
     def test_configure_logging_file(self):
         """Test configure_logging with file output."""
         with patch("logging.FileHandler") as mock_file_handler:
-            configure_logging(log_to_file=True, log_file="test.log")
+            configure_logging(log_to_file=True, log_file="test.log", enable_enhanced=False)
             mock_file_handler.assert_called_once_with("test.log")
 
     def test_get_logger(self):
