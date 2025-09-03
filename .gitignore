@@ -44,3 +44,11 @@ credentials/
 !package-lock.json
 !**/tests/**/*.json
 !**/test_data/**/*.json
+
+# Coverage files (generated during testing)
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+.tox/
