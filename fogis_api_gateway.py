@@ -163,14 +163,10 @@ def debug():
 @app.route("/health")
 def health():
     """
-    Health check endpoint for Docker and monitoring systems.
-    This endpoint provides detailed health information about the service.
-    It should always return a 200 status code for Docker health checks to work,
-    but the response body will contain the actual health status.
+    Optimized health check endpoint with minimal logging.
+    This endpoint provides essential health information with reduced log verbosity.
     """
-    # Log request details for debugging
-    logger.info(f"Health check requested from {request.remote_addr}")
-    logger.info(f"Request headers: {dict(request.headers)}")
+    start_time = time.time()
 
     try:
         # Get current timestamp
@@ -179,64 +175,26 @@ def health():
         # Check if the client is initialized
         client_status = "available" if client_initialized else "unavailable"
 
-        # Get system information
-        import platform
-        import socket
-
-        import psutil
-
-        # Get network information
-        hostname = socket.gethostname()
-        ip_addresses = {}
-        try:
-            # Get all network interfaces
-            for interface, addrs in psutil.net_if_addrs().items():
-                ip_addresses[interface] = [addr.address for addr in addrs if addr.family == socket.AF_INET]
-        except Exception as net_err:
-            ip_addresses = {"error": str(net_err)}
-
-        # Try to get memory usage
-        memory_info = {}
-        try:
-            process = psutil.Process()
-            memory_info = {
-                "memory_percent": process.memory_percent(),
-                "memory_mb": process.memory_info().rss / (1024 * 1024),  # Convert to MB
-            }
-        except Exception as mem_err:
-            memory_info = {"error": str(mem_err)}
-
-        # Build health response
+        # Build minimal health response
         health_data = {
             "status": "healthy" if client_initialized else "degraded",
             "timestamp": current_time,
             "service": "fogis-api-client",
-            "version": "1.0.0",  # TODO: Get this from package version
-            "uptime": time.time() - process.create_time(),
-            "python": {
-                "version": platform.python_version(),
-                "implementation": platform.python_implementation(),
-            },
-            "system": {
-                "platform": platform.platform(),
-                "cpu_count": psutil.cpu_count(),
-                "hostname": hostname,
-                "ip_addresses": ip_addresses,
-            },
-            "process": memory_info,
+            "version": "1.0.0",
             "dependencies": {
                 "fogis_client": client_status,
             },
         }
 
-        # Log the response for debugging
-        logger.info(f"Health check response: {health_data}")
+        # Single optimized log entry
+        duration = time.time() - start_time
+        logger.info(f"✅ Health check OK ({duration:.3f}s)")
 
         return jsonify(health_data)
     except Exception as e:
-        # Log the error but still return a 200 status code
-        logger.error(f"Error in health check endpoint: {e}")
-        logger.exception("Health check exception details:")
+        # Single optimized error log entry
+        duration = time.time() - start_time
+        logger.error(f"❌ Health check FAILED ({duration:.3f}s): {str(e)}")
 
         # Return a simple response with the error
         return jsonify(

@@ -77,19 +77,25 @@ def index():
 @app.route("/health")
 def health():
     """
-    Health check endpoint for Docker and monitoring systems.
+    Optimized health check endpoint with minimal logging.
     This endpoint is intentionally simple and doesn't depend on external services.
-    It should always return a 200 status code, even if there's an error.
     """
+    start_time = time.time()
+
     try:
         # Get current timestamp
         current_time = datetime.now().isoformat()
 
+        # Single optimized log entry
+        duration = time.time() - start_time
+        logger.info(f"✅ Health check OK ({duration:.3f}s)")
+
         # Return a simple response
         return jsonify({"status": "healthy", "timestamp": current_time, "service": "fogis-api-client"})
     except Exception as e:
-        # Log the error but still return a 200 status code
-        logger.error(f"Error in health check endpoint: {e}")
+        # Single optimized error log entry
+        duration = time.time() - start_time
+        logger.error(f"❌ Health check FAILED ({duration:.3f}s): {str(e)}")
 
         # Return a simple response with the error
         return jsonify(
