@@ -2,6 +2,50 @@
 
 This directory contains utility scripts for the project.
 
+## Branch Synchronization Script
+
+The `sync-branches.sh` script provides comprehensive branch synchronization capabilities between main and develop branches with conflict detection and resolution.
+
+### Usage
+
+```bash
+# Check sync status (dry run)
+./scripts/sync-branches.sh --dry-run main develop
+
+# Sync with verbose output
+./scripts/sync-branches.sh --verbose main develop
+
+# Force sync despite conflicts (use with caution)
+./scripts/sync-branches.sh --force main develop
+
+# Check reverse sync status
+./scripts/sync-branches.sh --dry-run develop main
+```
+
+### Options
+
+- `-d, --dry-run`: Show what would be done without making changes
+- `-f, --force`: Force synchronization even if conflicts exist
+- `-v, --verbose`: Enable verbose output with commit details
+- `-h, --help`: Show help message
+
+### Features
+
+- **Conflict Detection**: Uses `git merge-tree` to detect conflicts before merging
+- **Dry Run Mode**: Safe testing without making actual changes
+- **Verbose Output**: Detailed information about commits and changes
+- **Force Sync**: Override conflicts when necessary (use with caution)
+- **Colored Output**: Easy-to-read status messages with emojis
+- **Logging**: Automatic logging to `logs/sync-branches.log`
+
+### Integration
+
+This script works in conjunction with the GitHub Actions workflows:
+- `sync-main-to-develop.yml`: Automatic synchronization
+- `auto-pr-develop-to-main.yml`: Automated pull request creation
+
+See [BRANCH_SYNCHRONIZATION_STRATEGY.md](../BRANCH_SYNCHRONIZATION_STRATEGY.md) for complete documentation.
+
 ## Dynamic Pre-commit Hook Generator
 
 The `dynamic_precommit_generator.py` script analyzes your CI/CD workflows and generates pre-commit hooks that match them. This ensures that checks that pass locally will also pass in CI.
