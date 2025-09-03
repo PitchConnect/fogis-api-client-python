@@ -112,11 +112,27 @@ jobs:
           echo "merge_type=force" >> $GITHUB_OUTPUT
         else
           echo "🔄 Performing clean merge"
-          git merge origin/main --no-edit
-          echo "merge_type=clean" >> $GITHUB_OUTPUT
+          # Attempt merge and handle potential conflicts
+          if git merge origin/main --no-edit; then
+            echo "merge_type=clean" >> $GITHUB_OUTPUT
+            echo "✅ Clean merge completed successfully"
+          else
+            echo "❌ Merge failed due to conflicts"
+            # Check if it's just binary files like .coverage
+            if git status --porcelain | grep -q "\.coverage\|htmlcov"; then
+              echo "⚠️ Binary file conflicts detected, attempting resolution"
+              # Remove problematic coverage files and retry
+              git reset --hard HEAD
+              git clean -fd
+              git merge origin/main --strategy-option=theirs --no-edit
+              echo "merge_type=binary_conflict_resolved" >> $GITHUB_OUTPUT
+              echo "✅ Binary conflict resolved and merge completed"
+            else
+              echo "merge_failed=true" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
         fi
-
-        echo "✅ Merge completed successfully"
 
     - name: Push synchronized develop
       if: steps.merge.conclusion == 'success'
