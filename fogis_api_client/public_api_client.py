@@ -25,7 +25,7 @@ from fogis_api_client.internal.adapters import (
     convert_official_action_to_internal,
 )
 from fogis_api_client.internal.api_client import InternalApiClient, InternalApiError
-from fogis_api_client.internal.auth import authenticate
+from fogis_api_client.internal.auth import authenticate, LoginFormNotFoundError, MissingHiddenInputError
 from fogis_api_client.types import (
     CookieDict,
     EventDict,
@@ -87,6 +87,10 @@ class PublicApiClient:
         username: Optional[str] = None,
         password: Optional[str] = None,
         cookies: Optional[CookieDict] = None,
+        login_form_selector: str = "form#aspnetForm",
+        username_field_selector: str = "input[name='ctl00$MainContent$UserName']",
+        viewstate_selector: str = "input[name='__VIEWSTATE']",
+        eventvalidation_selector: str = "input[name='__EVENTVALIDATION']",
     ) -> None:
         """
         Initializes the PublicApiClient with either login credentials or session cookies.
@@ -102,6 +106,10 @@ class PublicApiClient:
             password: FOGIS password. Required if cookies are not provided.
             cookies: Session cookies for authentication.
                 If provided, username and password are not required.
+            login_form_selector: The CSS selector for the login form.
+            username_field_selector: The CSS selector for the username input field.
+            viewstate_selector: The CSS selector for the __VIEWSTATE hidden input field.
+            eventvalidation_selector: The CSS selector for the __EVENTVALIDATION hidden input field.
 
         Raises:
             ValueError: If neither valid credentials nor cookies are provided
@@ -110,6 +118,10 @@ class PublicApiClient:
         self.password: Optional[str] = password
         self.session: requests.Session = requests.Session()
         self.cookies: Optional[CookieDict] = None
+        self.login_form_selector = login_form_selector
+        self.username_field_selector = username_field_selector
+        self.viewstate_selector = viewstate_selector
+        self.eventvalidation_selector = eventvalidation_selector
 
         # Initialize the internal API client
         self.internal_client = InternalApiClient(self.session)
@@ -152,9 +164,18 @@ class PublicApiClient:
 
         try:
             # Authenticate with the FOGIS API
-            self.cookies = authenticate(self.session, self.username, self.password, self.BASE_URL)
+            self.cookies = authenticate(
+                self.session,
+                self.username,
+                self.password,
+                self.BASE_URL,
+                login_form_selector=self.login_form_selector,
+                username_field_selector=self.username_field_selector,
+                viewstate_selector=self.viewstate_selector,
+                eventvalidation_selector=self.eventvalidation_selector,
+            )
             return self.cookies
-        except (requests.exceptions.RequestException, ValueError) as e:
+        except (requests.exceptions.RequestException, ValueError, LoginFormNotFoundError, MissingHiddenInputError) as e:
             error_msg = f"Login failed: {e}"
             self.logger.error(error_msg)
             raise FogisLoginError(error_msg) from e

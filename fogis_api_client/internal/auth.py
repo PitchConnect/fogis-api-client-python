@@ -15,7 +15,28 @@ from fogis_api_client.internal.types import InternalCookieDict
 logger = logging.getLogger(__name__)
 
 
-def authenticate(session: requests.Session, username: str, password: str, base_url: str) -> InternalCookieDict:
+class LoginFormNotFoundError(Exception):
+    """Raised when the login form is not found on the page."""
+
+    pass
+
+
+class MissingHiddenInputError(Exception):
+    """Raised when a required hidden input field is not found in the login form."""
+
+    pass
+
+
+def authenticate(
+    session: requests.Session,
+    username: str,
+    password: str,
+    base_url: str,
+    login_form_selector: str = "form#aspnetForm",
+    username_field_selector: str = "input[name='ctl00$MainContent$UserName']",
+    viewstate_selector: str = "input[name='__VIEWSTATE']",
+    eventvalidation_selector: str = "input[name='__EVENTVALIDATION']",
+) -> InternalCookieDict:
     """
     Authenticate with the FOGIS API server.
 
@@ -24,12 +45,18 @@ def authenticate(session: requests.Session, username: str, password: str, base_u
         username: The username to authenticate with
         password: The password to authenticate with
         base_url: The base URL of the FOGIS API server
+        login_form_selector: The CSS selector for the login form
+        username_field_selector: The CSS selector for the username input field
+        viewstate_selector: The CSS selector for the __VIEWSTATE hidden input field
+        eventvalidation_selector: The CSS selector for the __EVENTVALIDATION hidden input field
 
     Returns:
         InternalCookieDict: The session cookies for authentication
 
     Raises:
         requests.exceptions.RequestException: If the authentication request fails
+        LoginFormNotFoundError: If the login form is not found on the page
+        MissingHiddenInputError: If a required hidden input field is not found in the login form
         ValueError: If the authentication fails due to invalid credentials
     """
     login_url = f"{base_url}/Login.aspx?ReturnUrl=%2fmdk%2f"
@@ -57,9 +84,20 @@ def authenticate(session: requests.Session, username: str, password: str, base_u
     # Parse the HTML to extract all hidden form fields
     soup = BeautifulSoup(response.text, "html.parser")
 
+    # Find the login form
+    login_form = soup.select_one(login_form_selector)
+    if not login_form:
+        raise LoginFormNotFoundError(f"Could not find login form with selector: {login_form_selector}")
+
+    # Verify that the form contains the username field
+    if not login_form.select_one(username_field_selector):
+        raise LoginFormNotFoundError(
+            f"Could not find username field with selector: {username_field_selector} in login form"
+        )
+
     # Extract all hidden form fields
     form_data = {}
-    hidden_inputs = soup.find_all("input", {"type": "hidden"})
+    hidden_inputs = login_form.find_all("input", {"type": "hidden"})
     for inp in hidden_inputs:
         name = inp.get("name", "")
         value = inp.get("value", "")
@@ -67,13 +105,13 @@ def authenticate(session: requests.Session, username: str, password: str, base_u
             form_data[name] = value
 
     # Verify we have the required tokens
-    if "__VIEWSTATE" not in form_data:
-        logger.error("Failed to extract __VIEWSTATE token from login page")
-        raise ValueError("Failed to extract __VIEWSTATE token from login page")
+    if not login_form.select_one(viewstate_selector):
+        raise MissingHiddenInputError(f"Failed to extract __VIEWSTATE token with selector: {viewstate_selector}")
 
-    if "__EVENTVALIDATION" not in form_data:
-        logger.error("Failed to extract __EVENTVALIDATION token from login page")
-        raise ValueError("Failed to extract __EVENTVALIDATION token from login page")
+    if not login_form.select_one(eventvalidation_selector):
+        raise MissingHiddenInputError(
+            f"Failed to extract __EVENTVALIDATION token with selector: {eventvalidation_selector}"
+        )
 
     # Prepare the login payload with all form fields
     login_payload = form_data.copy()
