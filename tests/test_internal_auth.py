@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 
-from fogis_api_client.internal.auth import authenticate
+from fogis_api_client.internal.auth import authenticate, LoginFormNotFoundError, MissingHiddenInputError
 
 
 class TestInternalAuth:
@@ -26,7 +26,8 @@ class TestInternalAuth:
         login_response = Mock()
         login_response.text = '''
         <html>
-            <form>
+            <form id="aspnetForm">
+                <input name="ctl00$MainContent$UserName" type="text" value="" id="ctl00_MainContent_UserName" />
                 <input type="hidden" name="__VIEWSTATE" value="test_viewstate" />
                 <input type="hidden" name="__VIEWSTATEGENERATOR" value="test_generator" />
                 <input type="hidden" name="__EVENTVALIDATION" value="test_validation" />
@@ -79,12 +80,17 @@ class TestInternalAuth:
 
         # Mock login page response without __VIEWSTATE
         login_response = Mock()
-        login_response.text = '<html><form></form></html>'
+        login_response.text = '''
+        <html>
+            <form id="aspnetForm">
+                <input name="ctl00$MainContent$UserName" type="text" value="" id="ctl00_MainContent_UserName" />
+            </form>
+        </html>'''
         login_response.raise_for_status = Mock()
 
         mock_session.get.return_value = login_response
 
-        with pytest.raises(ValueError, match="Failed to extract __VIEWSTATE token"):
+        with pytest.raises(MissingHiddenInputError, match="Failed to extract __VIEWSTATE token"):
             authenticate(mock_session, "testuser", "testpass", "http://example.com")
 
     def test_authenticate_missing_eventvalidation(self):
@@ -96,7 +102,8 @@ class TestInternalAuth:
         login_response = Mock()
         login_response.text = '''
         <html>
-            <form>
+            <form id="aspnetForm">
+                <input name="ctl00$MainContent$UserName" type="text" value="" id="ctl00_MainContent_UserName" />
                 <input type="hidden" name="__VIEWSTATE" value="test_viewstate" />
             </form>
         </html>
@@ -105,7 +112,7 @@ class TestInternalAuth:
 
         mock_session.get.return_value = login_response
 
-        with pytest.raises(ValueError, match="Failed to extract __EVENTVALIDATION token"):
+        with pytest.raises(MissingHiddenInputError, match="Failed to extract __EVENTVALIDATION token"):
             authenticate(mock_session, "testuser", "testpass", "http://example.com")
 
     def test_authenticate_invalid_credentials(self):
@@ -117,7 +124,8 @@ class TestInternalAuth:
         login_response = Mock()
         login_response.text = '''
         <html>
-            <form>
+            <form id="aspnetForm">
+                <input name="ctl00$MainContent$UserName" type="text" value="" id="ctl00_MainContent_UserName" />
                 <input type="hidden" name="__VIEWSTATE" value="test_viewstate" />
                 <input type="hidden" name="__VIEWSTATEGENERATOR" value="test_generator" />
                 <input type="hidden" name="__EVENTVALIDATION" value="test_validation" />
@@ -147,7 +155,8 @@ class TestInternalAuth:
         login_response = Mock()
         login_response.text = '''
         <html>
-            <form>
+            <form id="aspnetForm">
+                <input name="ctl00$MainContent$UserName" type="text" value="" id="ctl00_MainContent_UserName" />
                 <input type="hidden" name="__VIEWSTATE" value="test" />
                 <input type="hidden" name="__VIEWSTATEGENERATOR" value="test" />
                 <input type="hidden" name="__EVENTVALIDATION" value="test" />
@@ -182,7 +191,8 @@ class TestInternalAuth:
         login_response = Mock()
         login_response.text = '''
         <html>
-            <form>
+            <form id="aspnetForm">
+                <input name="ctl00$MainContent$UserName" type="text" value="" id="ctl00_MainContent_UserName" />
                 <input type="hidden" name="__VIEWSTATE" value="test_viewstate" />
                 <input type="hidden" name="__VIEWSTATEGENERATOR" value="test_generator" />
                 <input type="hidden" name="__EVENTVALIDATION" value="test_validation" />
