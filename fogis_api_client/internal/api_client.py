@@ -7,7 +7,7 @@ ensuring that the data sent to and received from the server matches the expected
 
 import json
 import logging
-from typing import Any, Dict, List, Union, cast
+from typing import Any, Dict, List, Optional, Union, cast
 
 import requests
 from jsonschema import ValidationError
@@ -45,7 +45,7 @@ class InternalApiClient:
     BASE_URL: str = "https://fogis.svenskfotboll.se/mdk"
     logger: logging.Logger = logging.getLogger("fogis_api_client.internal.api")
 
-    def __init__(self, session: requests.Session, base_url: str | None = None) -> None:
+    def __init__(self, session: requests.Session, base_url: Optional[str] = None) -> None:
         """
         Initialize the internal API client.
 
