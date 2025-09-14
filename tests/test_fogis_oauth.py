@@ -4,16 +4,13 @@ Comprehensive test suite for FOGIS OAuth 2.0 PKCE authentication implementation.
 
 import base64
 import hashlib
-import json
 import unittest
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 import requests
 
 from fogis_api_client.internal.auth import (
-    FogisAuthenticationError,
-    FogisOAuthAuthenticationError,
     authenticate,
 )
 from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager

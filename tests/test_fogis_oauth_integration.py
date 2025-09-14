@@ -9,12 +9,10 @@ to verify that the authentication flow works correctly.
 import logging
 import os
 import sys
-from typing import Any, Dict
 
 # Add current directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from fogis_api_client.internal.auth import authenticate
 from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager
 from fogis_api_client.public_api_client import PublicApiClient
 
@@ -27,146 +25,113 @@ def test_oauth_url_generation():
     """Test OAuth authorization URL generation."""
     print("\n🔗 Testing OAuth URL Generation...")
 
-    try:
-        oauth_manager = FogisOAuthManager()
-        auth_url = oauth_manager.create_authorization_url()
+    oauth_manager = FogisOAuthManager()
+    auth_url = oauth_manager.create_authorization_url()
 
-        print(f"✅ Generated OAuth URL: {auth_url[:100]}...")
+    print(f"✅ Generated OAuth URL: {auth_url[:100]}...")
 
-        # Verify URL components
-        assert "auth.fogis.se" in auth_url
-        assert "client_id=fogis.mobildomarklient" in auth_url
-        assert "code_challenge=" in auth_url
-        assert "code_challenge_method=S256" in auth_url
+    # Verify URL components
+    assert "auth.fogis.se" in auth_url
+    assert "client_id=fogis.mobildomarklient" in auth_url
+    assert "code_challenge=" in auth_url
+    assert "code_challenge_method=S256" in auth_url
 
-        print("✅ OAuth URL validation passed")
-        return True
-
-    except Exception as e:
-        print(f"❌ OAuth URL generation failed: {e}")
-        return False
+    print("✅ OAuth URL validation passed")
 
 
 def test_pkce_challenge_generation():
     """Test PKCE code challenge generation."""
     print("\n🔐 Testing PKCE Challenge Generation...")
 
-    try:
-        oauth_manager = FogisOAuthManager()
-        code_verifier, code_challenge = oauth_manager.generate_pkce_challenge()
+    oauth_manager = FogisOAuthManager()
+    code_verifier, code_challenge = oauth_manager.generate_pkce_challenge()
 
-        print(f"✅ Code verifier length: {len(code_verifier)}")
-        print(f"✅ Code challenge length: {len(code_challenge)}")
+    print(f"✅ Code verifier length: {len(code_verifier)}")
+    print(f"✅ Code challenge length: {len(code_challenge)}")
 
-        # Verify PKCE requirements
-        assert 43 <= len(code_verifier) <= 128
-        assert len(code_challenge) > 0
+    # Verify PKCE requirements
+    assert 43 <= len(code_verifier) <= 128
+    assert len(code_challenge) > 0
 
-        print("✅ PKCE challenge validation passed")
-        return True
-
-    except Exception as e:
-        print(f"❌ PKCE challenge generation failed: {e}")
-        return False
+    print("✅ PKCE challenge validation passed")
 
 
 def test_authentication_flow_detection():
     """Test authentication flow detection (OAuth vs ASP.NET)."""
     print("\n🔍 Testing Authentication Flow Detection...")
 
-    try:
-        # Test with dummy credentials (won't actually authenticate)
-        import requests
+    # Test with dummy credentials (won't actually authenticate)
+    import requests
 
-        session = requests.Session()
+    session = requests.Session()
 
-        # This should detect the OAuth redirect
-        login_url = "https://fogis.svenskfotboll.se/mdk/Login.aspx?ReturnUrl=%2fmdk%2f"
+    # This should detect the OAuth redirect
+    login_url = "https://fogis.svenskfotboll.se/mdk/Login.aspx?ReturnUrl=%2fmdk%2f"
 
-        print(f"📡 Testing redirect detection for: {login_url}")
+    print(f"📡 Testing redirect detection for: {login_url}")
 
-        response = session.get(login_url, allow_redirects=True, timeout=10)
+    response = session.get(login_url, allow_redirects=True, timeout=10)
 
-        if "auth.fogis.se" in response.url:
-            print("✅ OAuth redirect detected successfully")
-            print(f"   Redirected to: {response.url[:80]}...")
-            return True
-        else:
-            print(f"ℹ️  No OAuth redirect detected, URL: {response.url}")
-            print("   This might indicate ASP.NET form authentication is still active")
-            return True  # This is also a valid result
-
-    except Exception as e:
-        print(f"❌ Authentication flow detection failed: {e}")
-        return False
+    if "auth.fogis.se" in response.url:
+        print("✅ OAuth redirect detected successfully")
+        print(f"   Redirected to: {response.url[:80]}...")
+    else:
+        print(f"ℹ️  No OAuth redirect detected, URL: {response.url}")
+        print("   This might indicate ASP.NET form authentication is still active")
 
 
 def test_client_initialization():
     """Test PublicApiClient initialization with different authentication methods."""
     print("\n🚀 Testing Client Initialization...")
 
-    try:
-        # Test OAuth token initialization
-        oauth_tokens = {
-            "access_token": "test_access_token",
-            "refresh_token": "test_refresh_token",
-            "expires_in": 3600,
-        }
+    # Test OAuth token initialization
+    oauth_tokens = {
+        "access_token": "test_access_token",
+        "refresh_token": "test_refresh_token",
+        "expires_in": 3600,
+    }
 
-        oauth_client = PublicApiClient(oauth_tokens=oauth_tokens)
-        assert oauth_client.authentication_method == "oauth"
-        assert oauth_client.is_authenticated()
-        print("✅ OAuth client initialization successful")
+    oauth_client = PublicApiClient(oauth_tokens=oauth_tokens)
+    assert oauth_client.authentication_method == "oauth"
+    assert oauth_client.is_authenticated()
+    print("✅ OAuth client initialization successful")
 
-        # Test ASP.NET cookie initialization
-        cookies = {
-            "FogisMobilDomarKlient.ASPXAUTH": "test_auth_cookie",
-            "ASP.NET_SessionId": "test_session_id",
-        }
+    # Test ASP.NET cookie initialization
+    cookies = {
+        "FogisMobilDomarKlient.ASPXAUTH": "test_auth_cookie",
+        "ASP.NET_SessionId": "test_session_id",
+    }
 
-        aspnet_client = PublicApiClient(cookies=cookies)
-        assert aspnet_client.authentication_method == "aspnet"
-        assert aspnet_client.is_authenticated()
-        print("✅ ASP.NET client initialization successful")
+    aspnet_client = PublicApiClient(cookies=cookies)
+    assert aspnet_client.authentication_method == "aspnet"
+    assert aspnet_client.is_authenticated()
+    print("✅ ASP.NET client initialization successful")
 
-        # Test credential-based initialization
-        cred_client = PublicApiClient(username="test", password="test")
-        assert not cred_client.is_authenticated()  # Not authenticated until login
-        print("✅ Credential-based client initialization successful")
-
-        return True
-
-    except Exception as e:
-        print(f"❌ Client initialization failed: {e}")
-        return False
+    # Test credential-based initialization
+    cred_client = PublicApiClient(username="test", password="test")
+    assert not cred_client.is_authenticated()  # Not authenticated until login
+    print("✅ Credential-based client initialization successful")
 
 
 def test_error_handling():
     """Test error handling for various failure scenarios."""
     print("\n⚠️  Testing Error Handling...")
 
+    # Test invalid OAuth redirect handling
+    oauth_manager = FogisOAuthManager()
+
+    # Test error in redirect URL
+    error_url = "https://fogis.svenskfotboll.se/mdk/signin-oidc?error=access_denied&error_description=User+denied+access"
+    auth_code = oauth_manager.handle_authorization_redirect(error_url)
+    assert auth_code is None
+    print("✅ OAuth error handling successful")
+
+    # Test invalid initialization
     try:
-        # Test invalid OAuth redirect handling
-        oauth_manager = FogisOAuthManager()
-
-        # Test error in redirect URL
-        error_url = "https://fogis.svenskfotboll.se/mdk/signin-oidc?error=access_denied&error_description=User+denied+access"
-        auth_code = oauth_manager.handle_authorization_redirect(error_url)
-        assert auth_code is None
-        print("✅ OAuth error handling successful")
-
-        # Test invalid initialization
-        try:
-            PublicApiClient()  # Should raise ValueError
-            assert False, "Should have raised ValueError"
-        except ValueError:
-            print("✅ Invalid initialization error handling successful")
-
-        return True
-
-    except Exception as e:
-        print(f"❌ Error handling test failed: {e}")
-        return False
+        PublicApiClient()  # Should raise ValueError
+        assert False, "Should have raised ValueError"
+    except ValueError:
+        print("✅ Invalid initialization error handling successful")
 
 
 def run_integration_tests():
@@ -187,21 +152,18 @@ def run_integration_tests():
 
     for test in tests:
         try:
-            if test():
-                passed += 1
-            else:
-                print(f"❌ Test {test.__name__} failed")
+            test()
+            passed += 1
+            print(f"✅ Test {test.__name__} passed")
         except Exception as e:
-            print(f"❌ Test {test.__name__} crashed: {e}")
+            print(f"❌ Test {test.__name__} failed: {e}")
 
     print(f"\n📊 Test Results: {passed}/{total} tests passed")
 
     if passed == total:
         print("🎉 All integration tests passed!")
-        return True
     else:
         print("⚠️  Some integration tests failed")
-        return False
 
 
 def test_with_real_credentials():
@@ -211,7 +173,7 @@ def test_with_real_credentials():
 
     if not (username and password):
         print("\n💡 To test with real credentials, set FOGIS_USERNAME and FOGIS_PASSWORD environment variables")
-        return True
+        return
 
     print(f"\n🔐 Testing with real credentials for user: {username}")
 
@@ -236,14 +198,13 @@ def test_with_real_credentials():
             except Exception as e:
                 print(f"⚠️  API call failed (expected if no matches endpoint): {e}")
 
-            return True
         else:
             print("❌ Authentication failed")
-            return False
+            assert False, "Authentication failed"
 
     except Exception as e:
         print(f"❌ Real credential test failed: {e}")
-        return False
+        raise
 
 
 if __name__ == "__main__":

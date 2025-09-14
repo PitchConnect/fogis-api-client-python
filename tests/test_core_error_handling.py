@@ -77,6 +77,7 @@ class TestHandleFogisOperations:
 
     def test_handle_fogis_operations_success(self):
         """Test decorator with successful function execution."""
+
         @handle_fogis_operations("test_operation")
         def test_function():
             return "success"
@@ -86,6 +87,7 @@ class TestHandleFogisOperations:
 
     def test_handle_fogis_operations_with_generic_exception(self):
         """Test decorator handling generic exceptions."""
+
         @handle_fogis_operations("test_operation")
         def test_function():
             raise ValueError("Generic error")
@@ -95,6 +97,7 @@ class TestHandleFogisOperations:
 
     def test_handle_fogis_operations_preserves_fogis_exceptions(self):
         """Test decorator preserves existing FOGIS exceptions."""
+
         @handle_fogis_operations("test_operation")
         def test_function():
             raise FogisValidationError("Validation failed")
@@ -108,6 +111,7 @@ class TestHandleApiErrors:
 
     def test_handle_api_errors_success(self):
         """Test decorator with successful function execution."""
+
         @handle_api_errors("test_operation")
         def test_function():
             return "success"
@@ -117,15 +121,13 @@ class TestHandleApiErrors:
 
     def test_handle_api_errors_with_exception(self):
         """Test decorator handling exceptions."""
+
         @handle_api_errors("test_operation")
         def test_function():
             raise ValueError("API error")
 
         with pytest.raises(ValueError):
             test_function()
-
-
-
 
 
 class TestFogisCircuitBreaker:

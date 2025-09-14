@@ -5,29 +5,16 @@ This module provides the main API client interface with support for both
 OAuth 2.0 PKCE authentication and ASP.NET form authentication fallback.
 """
 
-import json
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union
 
 import requests
-from jsonschema import ValidationError
 
-# Import the enhanced authentication module
-try:
-    # Try relative import first (when used as part of package)
-    from .internal.auth import (
-        FogisAuthenticationError,
-        FogisOAuthAuthenticationError,
-        authenticate,
-    )
-except ImportError:
-    # Fallback to direct import (when used standalone)
-    from fogis_auth_oauth import (
-        FogisAuthenticationError,
-        FogisOAuthAuthenticationError,
-        authenticate,
-    )
+from fogis_api_client.internal.auth import (
+    FogisAuthenticationError,
+    FogisOAuthAuthenticationError,
+    authenticate,
+)
 
 
 # Custom exceptions

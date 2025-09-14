@@ -24,7 +24,7 @@ class TestInternalAuth:
 
         # Mock login page response with proper hidden inputs
         login_response = Mock()
-        login_response.text = '''
+        login_response.text = """
         <html>
             <form>
                 <input type="hidden" name="__VIEWSTATE" value="test_viewstate" />
@@ -32,7 +32,7 @@ class TestInternalAuth:
                 <input type="hidden" name="__EVENTVALIDATION" value="test_validation" />
             </form>
         </html>
-        '''
+        """
         login_response.raise_for_status = Mock()
 
         # Mock authentication response
@@ -45,17 +45,17 @@ class TestInternalAuth:
         mock_session.post.return_value = auth_response
 
         # Mock cookies with the expected authentication cookie
-        mock_session.cookies = {'FogisMobilDomarKlient.ASPXAUTH': 'test_auth_token'}
+        mock_session.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "test_auth_token"}
 
         result = authenticate(mock_session, "testuser", "testpass", "http://example.com")
 
         # Verify the result contains the auth token
-        assert 'FogisMobilDomarKlient.ASPXAUTH' in result
-        assert result['FogisMobilDomarKlient.ASPXAUTH'] == 'test_auth_token'
+        assert "FogisMobilDomarKlient.ASPXAUTH" in result
+        assert result["FogisMobilDomarKlient.ASPXAUTH"] == "test_auth_token"
 
         # Verify session headers were set
-        assert 'User-Agent' in mock_session.headers
-        assert 'Mozilla' in mock_session.headers['User-Agent']
+        assert "User-Agent" in mock_session.headers
+        assert "Mozilla" in mock_session.headers["User-Agent"]
 
         # Verify login page was requested
         mock_session.get.assert_called_once()
@@ -79,7 +79,7 @@ class TestInternalAuth:
 
         # Mock login page response without __VIEWSTATE
         login_response = Mock()
-        login_response.text = '<html><form></form></html>'
+        login_response.text = "<html><form></form></html>"
         login_response.raise_for_status = Mock()
 
         mock_session.get.return_value = login_response
@@ -94,13 +94,13 @@ class TestInternalAuth:
 
         # Mock login page response with __VIEWSTATE but no __EVENTVALIDATION
         login_response = Mock()
-        login_response.text = '''
+        login_response.text = """
         <html>
             <form>
                 <input type="hidden" name="__VIEWSTATE" value="test_viewstate" />
             </form>
         </html>
-        '''
+        """
         login_response.raise_for_status = Mock()
 
         mock_session.get.return_value = login_response
@@ -115,7 +115,7 @@ class TestInternalAuth:
 
         # Mock login page response
         login_response = Mock()
-        login_response.text = '''
+        login_response.text = """
         <html>
             <form>
                 <input type="hidden" name="__VIEWSTATE" value="test_viewstate" />
@@ -123,7 +123,7 @@ class TestInternalAuth:
                 <input type="hidden" name="__EVENTVALIDATION" value="test_validation" />
             </form>
         </html>
-        '''
+        """
         login_response.raise_for_status = Mock()
 
         # Mock authentication response without the auth cookie
@@ -145,7 +145,7 @@ class TestInternalAuth:
 
         # Mock minimal successful flow
         login_response = Mock()
-        login_response.text = '''
+        login_response.text = """
         <html>
             <form>
                 <input type="hidden" name="__VIEWSTATE" value="test" />
@@ -153,7 +153,7 @@ class TestInternalAuth:
                 <input type="hidden" name="__EVENTVALIDATION" value="test" />
             </form>
         </html>
-        '''
+        """
         login_response.raise_for_status = Mock()
 
         auth_response = Mock()
@@ -162,16 +162,16 @@ class TestInternalAuth:
 
         mock_session.get.return_value = login_response
         mock_session.post.return_value = auth_response
-        mock_session.cookies = {'FogisMobilDomarKlient.ASPXAUTH': 'test_token'}
+        mock_session.cookies = {"FogisMobilDomarKlient.ASPXAUTH": "test_token"}
 
         authenticate(mock_session, "testuser", "testpass", "http://example.com")
 
         # Verify headers were set
         headers = mock_session.headers
-        assert 'User-Agent' in headers
-        assert 'Chrome' in headers['User-Agent']
-        assert headers['Accept-Language'] == 'sv-SE,sv;q=0.9,en;q=0.8'
-        assert headers['Connection'] == 'keep-alive'
+        assert "User-Agent" in headers
+        assert "Chrome" in headers["User-Agent"]
+        assert headers["Accept-Language"] == "sv-SE,sv;q=0.9,en;q=0.8"
+        assert headers["Connection"] == "keep-alive"
 
     def test_authenticate_post_request_failure(self):
         """Test authentication when POST request fails."""
@@ -180,7 +180,7 @@ class TestInternalAuth:
 
         # Mock successful login page response
         login_response = Mock()
-        login_response.text = '''
+        login_response.text = """
         <html>
             <form>
                 <input type="hidden" name="__VIEWSTATE" value="test_viewstate" />
@@ -188,7 +188,7 @@ class TestInternalAuth:
                 <input type="hidden" name="__EVENTVALIDATION" value="test_validation" />
             </form>
         </html>
-        '''
+        """
         login_response.raise_for_status = Mock()
 
         mock_session.get.return_value = login_response

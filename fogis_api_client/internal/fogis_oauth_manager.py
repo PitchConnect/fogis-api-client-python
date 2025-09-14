@@ -7,7 +7,6 @@ to replace the deprecated ASP.NET form authentication.
 
 import base64
 import hashlib
-import json
 import logging
 import secrets
 import urllib.parse
@@ -59,8 +58,12 @@ class FogisOAuthManager:
         # Set browser-like headers
         self.session.headers.update(
             {
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "User-Agent": (
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/131.0.0.0 Safari/537.36"
+                ),
+                "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9," "image/webp,*/*;q=0.8"),
                 "Accept-Language": "sv-SE,sv;q=0.9,en;q=0.8",
                 "Accept-Encoding": "gzip, deflate, br",
                 "Connection": "keep-alive",

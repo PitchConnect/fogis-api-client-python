@@ -30,14 +30,14 @@ class FogisAPIFormatter(logging.Formatter):
         service_name = "fogis-api-client"
 
         # Component context (from logger adapter or module name)
-        component = getattr(record, 'component', None)
+        component = getattr(record, "component", None)
         if not component:
             # Extract component from logger name
-            logger_parts = record.name.split('.')
+            logger_parts = record.name.split(".")
             if len(logger_parts) > 1:
                 component = logger_parts[-1]
             else:
-                component = 'api_client'
+                component = "api_client"
 
         # Location information
         location = f"{record.filename}:{record.funcName}:{record.lineno}"
@@ -47,8 +47,7 @@ class FogisAPIFormatter(logging.Formatter):
 
         if self.enable_structured:
             # Structured format: timestamp - service - component - level - location - message
-            return (f"{timestamp} - {service_name} - {component} - "
-                    f"{record.levelname} - {location} - {message}")
+            return f"{timestamp} - {service_name} - {component} - " f"{record.levelname} - {location} - {message}"
         else:
             # Simple format for console in development
             return f"[{record.levelname}] {component}:{record.funcName}:{record.lineno} - {message}"
@@ -57,25 +56,17 @@ class FogisAPIFormatter(logging.Formatter):
         """Filter sensitive information from log messages."""
         patterns = [
             # API keys and tokens
-            (r'(api[_-]?key|token|secret|password|pwd|client[_-]?secret)[\s=:]+[^\s&]+',
-             r'\1=[FILTERED]'),
-
+            (r"(api[_-]?key|token|secret|password|pwd|client[_-]?secret)[\s=:]+[^\s&]+", r"\1=[FILTERED]"),
             # Session cookies and authentication
-            (r'(session[_-]?id|auth[_-]?token|csrf[_-]?token)[\s=:]+[^\s&]+',
-             r'\1=[FILTERED]'),
-
+            (r"(session[_-]?id|auth[_-]?token|csrf[_-]?token)[\s=:]+[^\s&]+", r"\1=[FILTERED]"),
             # FOGIS specific credentials
-            (r'(username|user[_-]?id|login)[\s=:]+[^\s&]+', r'\1=[FILTERED]'),
-
+            (r"(username|user[_-]?id|login)[\s=:]+[^\s&]+", r"\1=[FILTERED]"),
             # URLs with sensitive parameters
-            (r'(\?|&)(key|token|secret|password|session|auth)=[^&\s]+', r'\1\2=[FILTERED]'),
-
+            (r"(\?|&)(key|token|secret|password|session|auth)=[^&\s]+", r"\1\2=[FILTERED]"),
             # Email addresses (keep domain for debugging)
-            (r'([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', r'***@\2'),
-
+            (r"([a-zA-Z0-9._%+-]+)@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})", r"***@\2"),
             # Phone numbers
-            (r'(\+?[0-9]{1,3}[-.\s]?)?(\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4})',
-             r'***-***-****'),
+            (r"(\+?[0-9]{1,3}[-.\s]?)?(\(?[0-9]{3}\)?[-.\s]?[0-9]{3}[-.\s]?[0-9]{4})", r"***-***-****"),
         ]
 
         filtered_message = message
@@ -100,18 +91,18 @@ def get_enhanced_logger(name: str, component: Optional[str] = None) -> logging.L
 
     # Add component context if provided
     if component:
-        logger = logging.LoggerAdapter(logger, {'component': component})
+        logger = logging.LoggerAdapter(logger, {"component": component})
 
     return logger
 
 
 def configure_enhanced_logging(
-    log_level: str = 'INFO',
+    log_level: str = "INFO",
     enable_console: bool = True,
     enable_file: bool = True,
     enable_structured: bool = True,
-    log_dir: str = 'logs',
-    log_file: str = 'fogis-api-client.log'
+    log_dir: str = "logs",
+    log_file: str = "fogis-api-client.log",
 ) -> None:
     """
     Configure enhanced logging for FOGIS API Client.
@@ -152,31 +143,28 @@ def configure_enhanced_logging(
     # File handler with rotation
     if enable_file:
         file_handler = logging.handlers.RotatingFileHandler(
-            os.path.join(log_dir, log_file),
-            maxBytes=10*1024*1024,  # 10MB
-            backupCount=5
+            os.path.join(log_dir, log_file), maxBytes=10 * 1024 * 1024, backupCount=5  # 10MB
         )
         file_handler.setLevel(numeric_level)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
 
     # Reduce verbosity of third-party libraries
-    logging.getLogger('requests').setLevel(logging.WARNING)
-    logging.getLogger('urllib3').setLevel(logging.WARNING)
-    logging.getLogger('bs4').setLevel(logging.WARNING)
-    logging.getLogger('jsonschema').setLevel(logging.WARNING)
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+    logging.getLogger("bs4").setLevel(logging.WARNING)
+    logging.getLogger("jsonschema").setLevel(logging.WARNING)
 
     # Log configuration success
-    logger = get_enhanced_logger(__name__, 'enhanced_logging_config')
-    logger.info(f"Enhanced logging configured: level={log_level}, console={enable_console}, "
-                f"file={enable_file}, structured={enable_structured}")
+    logger = get_enhanced_logger(__name__, "enhanced_logging_config")
+    logger.info(
+        f"Enhanced logging configured: level={log_level}, console={enable_console}, "
+        f"file={enable_file}, structured={enable_structured}"
+    )
 
 
 def log_error_context(
-    logger: logging.Logger,
-    error: Exception,
-    operation: str,
-    context: Optional[Dict[str, Any]] = None
+    logger: logging.Logger, error: Exception, operation: str, context: Optional[Dict[str, Any]] = None
 ) -> None:
     """
     Log error with comprehensive context information.
@@ -192,33 +180,25 @@ def log_error_context(
     # Filter sensitive information from context
     filtered_context = {}
     for key, value in context.items():
-        sensitive_keys = ['token', 'key', 'secret', 'password', 'session', 'auth', 'username']
+        sensitive_keys = ["token", "key", "secret", "password", "session", "auth", "username"]
         if any(sensitive in key.lower() for sensitive in sensitive_keys):
             if isinstance(value, str):
                 # Keep only first few characters for debugging
-                filtered_context[key] = f"{value[:4]}***" if len(value) > 4 else '[FILTERED]'
+                filtered_context[key] = f"{value[:4]}***" if len(value) > 4 else "[FILTERED]"
             else:
-                filtered_context[key] = '[FILTERED]'
+                filtered_context[key] = "[FILTERED]"
         else:
             filtered_context[key] = value
 
     logger.error(
         f"Error in {operation}: {error.__class__.__name__}: {str(error)}",
-        extra={
-            'operation': operation,
-            'error_type': error.__class__.__name__,
-            'context': filtered_context
-        },
-        exc_info=True
+        extra={"operation": operation, "error_type": error.__class__.__name__, "context": filtered_context},
+        exc_info=True,
     )
 
 
 def log_fogis_metrics(
-    logger: logging.Logger,
-    operation: str,
-    processing_time: float,
-    api_info: Dict[str, Any],
-    success: bool = True
+    logger: logging.Logger, operation: str, processing_time: float, api_info: Dict[str, Any], success: bool = True
 ) -> None:
     """
     Log FOGIS API operation metrics and performance information.
@@ -235,22 +215,17 @@ def log_fogis_metrics(
     # Filter sensitive information from api_info
     filtered_info = {}
     for key, value in api_info.items():
-        sensitive_keys = ['token', 'key', 'secret', 'password', 'session', 'auth', 'username']
+        sensitive_keys = ["token", "key", "secret", "password", "session", "auth", "username"]
         if any(sensitive in key.lower() for sensitive in sensitive_keys):
             # Keep only first few characters for debugging
             if isinstance(value, str):
-                filtered_info[key] = f"{value[:4]}***" if len(value) > 4 else '[FILTERED]'
+                filtered_info[key] = f"{value[:4]}***" if len(value) > 4 else "[FILTERED]"
             else:
-                filtered_info[key] = '[FILTERED]'
+                filtered_info[key] = "[FILTERED]"
         else:
             filtered_info[key] = value
 
     logger.info(
         f"FOGIS API operation {status}: {operation} completed in {processing_time:.3f}s",
-        extra={
-            'operation': operation,
-            'processing_time': processing_time,
-            'api_info': filtered_info,
-            'success': success
-        }
+        extra={"operation": operation, "processing_time": processing_time, "api_info": filtered_info, "success": success},
     )

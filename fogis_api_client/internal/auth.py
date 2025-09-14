@@ -6,8 +6,7 @@ OAuth 2.0 PKCE flow (new) and ASP.NET form authentication (legacy fallback).
 """
 
 import logging
-import re
-from typing import Any, Dict, Optional, cast
+from typing import Any, Dict
 from urllib.parse import urlparse
 
 import requests
@@ -54,8 +53,12 @@ def authenticate(session: requests.Session, username: str, password: str, base_u
     # Set browser-like headers to avoid being blocked
     session.headers.update(
         {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Accept": ("text/html,application/xhtml+xml,application/xml;q=0.9," "image/webp,*/*;q=0.8"),
             "Accept-Language": "sv-SE,sv;q=0.9,en;q=0.8",
             "Accept-Encoding": "gzip, deflate, br",
             "Connection": "keep-alive",
@@ -134,6 +137,67 @@ def _handle_oauth_authentication(session: requests.Session, username: str, passw
         raise FogisOAuthAuthenticationError(f"OAuth authentication failed: {e}")
 
 
+def _get_oauth_login_page(session: requests.Session) -> requests.Response:
+    """Get the OAuth login page response."""
+    current_url = session.url if hasattr(session, "url") else None
+    if not current_url:
+        login_url = "https://fogis.svenskfotboll.se/mdk/Login.aspx?ReturnUrl=%2fmdk%2f"
+        return session.get(login_url, allow_redirects=True, timeout=10)
+    else:
+        return session.get(current_url, timeout=10)
+
+
+def _extract_form_data(soup: BeautifulSoup, username: str, password: str) -> tuple[str, str, Dict[str, str]]:
+    """Extract form data from OAuth login page."""
+    form = soup.find("form")
+    if not form:
+        raise FogisOAuthAuthenticationError("No login form found on OAuth login page")
+
+    form_action = form.get("action", "")
+    form_method = form.get("method", "post").lower()
+
+    # Build the form submission URL
+    if form_action.startswith("/"):
+        form_url = f"https://auth.fogis.se{form_action}"
+    elif form_action.startswith("http"):
+        form_url = form_action
+    else:
+        form_url = "https://auth.fogis.se/Account/Login"
+
+    # Extract all form fields
+    form_data = {}
+    for input_field in form.find_all("input"):
+        field_name = input_field.get("name")
+        field_value = input_field.get("value", "")
+        if field_name:
+            form_data[field_name] = field_value
+
+    # Set credentials
+    form_data["Username"] = username
+    form_data["Password"] = password
+    if "RememberMe" not in form_data:
+        form_data["RememberMe"] = "false"
+
+    return form_url, form_method, form_data
+
+
+def _extract_session_cookies(session: requests.Session) -> Dict[str, Any]:
+    """Extract ASP.NET session cookies from OAuth session."""
+    cookies = {}
+    for cookie in session.cookies:
+        if any(name in cookie.name for name in [".AspNet.Cookies", "ASPXAUTH", "SessionId", "Identity"]):
+            cookies[cookie.name] = cookie.value
+
+    if cookies:
+        logger.info(f"OAuth authentication completed successfully with {len(cookies)} session cookies")
+        result = cookies.copy()
+        result["oauth_authenticated"] = True
+        result["authentication_method"] = "oauth_hybrid"
+        return result
+    else:
+        raise FogisOAuthAuthenticationError("OAuth login successful but no session cookies established")
+
+
 def _handle_oauth_login_form(session: requests.Session, username: str, password: str, oauth_manager) -> Dict[str, Any]:
     """
     Handle the OAuth login form submission.
@@ -148,58 +212,10 @@ def _handle_oauth_login_form(session: requests.Session, username: str, password:
         Dict containing OAuth tokens
     """
     try:
-        # Get the current page content (should be the login form)
-        # We're already at the OAuth login page from the redirect
-        current_url = session.url if hasattr(session, "url") else None
-        if not current_url:
-            # If we don't have the current URL, we need to get it from the session history
-            # For now, let's make a request to get the current page
-            login_url = "https://fogis.svenskfotboll.se/mdk/Login.aspx?ReturnUrl=%2fmdk%2f"
-            current_response = session.get(login_url, allow_redirects=True, timeout=10)
-        else:
-            current_response = session.get(current_url, timeout=10)
-
-        # Parse the login form
+        current_response = _get_oauth_login_page(session)
         soup = BeautifulSoup(current_response.text, "html.parser")
+        form_url, form_method, form_data = _extract_form_data(soup, username, password)
 
-        # Find the login form
-        form = soup.find("form")
-        if not form:
-            # Debug: Show what we actually got
-            logger.error(f"No form found. Page content snippet: {current_response.text[:500]}")
-            raise FogisOAuthAuthenticationError("No login form found on OAuth login page")
-
-        # Extract form action and method
-        form_action = form.get("action", "")
-        form_method = form.get("method", "post").lower()
-
-        # Build the form submission URL
-        if form_action.startswith("/"):
-            form_url = f"https://auth.fogis.se{form_action}"
-        elif form_action.startswith("http"):
-            form_url = form_action
-        else:
-            # Default to the OAuth login endpoint
-            form_url = f"https://auth.fogis.se/Account/Login"
-
-        # Extract all form fields
-        form_data = {}
-        for input_field in form.find_all("input"):
-            field_name = input_field.get("name")
-            field_value = input_field.get("value", "")
-            if field_name:
-                form_data[field_name] = field_value
-
-        # Set username and password
-        # Based on the actual FOGIS OAuth form structure
-        form_data["Username"] = username
-        form_data["Password"] = password
-
-        # Ensure RememberMe is set correctly (it has both checkbox and hidden field)
-        if "RememberMe" not in form_data:
-            form_data["RememberMe"] = "false"
-
-        # Submit the login form
         logger.debug(f"Submitting OAuth login form to {form_url}")
 
         if form_method == "post":
@@ -212,33 +228,11 @@ def _handle_oauth_login_form(session: requests.Session, username: str, password:
         # Check if we were redirected back to FOGIS (successful login)
         if "fogis.svenskfotboll.se" in login_response.url:
             logger.info("OAuth login successful - redirected back to FOGIS")
-
-            # FOGIS uses a hybrid approach: OAuth for login, then ASP.NET cookies for API access
-            # Extract the session cookies that were established
-            cookies = {}
-
-            for cookie in session.cookies:
-                # Look for ASP.NET authentication cookies
-                if any(name in cookie.name for name in [".AspNet.Cookies", "ASPXAUTH", "SessionId", "Identity"]):
-                    cookies[cookie.name] = cookie.value
-
-            if cookies:
-                logger.info(f"OAuth authentication completed successfully with {len(cookies)} session cookies")
-
-                # Return cookie information in a format compatible with existing code
-                # Mark this as OAuth-initiated but using ASP.NET session cookies
-                result = cookies.copy()
-                result["oauth_authenticated"] = True
-                result["authentication_method"] = "oauth_hybrid"
-                return result
-            else:
-                raise FogisOAuthAuthenticationError("OAuth login successful but no session cookies established")
+            return _extract_session_cookies(session)
 
         # Check if we're still at the OAuth login page (login failed)
         elif "auth.fogis.se" in login_response.url:
             logger.error("OAuth login failed - still at login page")
-
-            # Check for error messages in the response
             error_soup = BeautifulSoup(login_response.text, "html.parser")
             error_elements = error_soup.find_all(
                 ["div", "span"],
@@ -328,7 +322,7 @@ def _handle_aspnet_authentication(
     cookies = {
         "FogisMobilDomarKlient.ASPXAUTH": session.cookies.get("FogisMobilDomarKlient.ASPXAUTH"),
         "ASP.NET_SessionId": session.cookies.get("ASP.NET_SessionId"),
-        "aspnet_authenticated": True,
+        "aspnet_authenticated": "true",
     }
 
     logger.debug("ASP.NET authentication successful")
