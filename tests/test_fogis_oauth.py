@@ -324,6 +324,101 @@ class TestPublicApiClient(unittest.TestCase):
         self.assertEqual(client.authentication_method, "aspnet")
 
 
+class TestOAuthManagerErrorCases(unittest.TestCase):
+    """Test error cases and edge paths in OAuth manager."""
+
+    def setUp(self):
+        """Set up test fixtures."""
+        self.oauth_manager = FogisOAuthManager()
+
+    def test_handle_authorization_redirect_no_code(self):
+        """Test handling redirect without authorization code."""
+        redirect_url = "https://example.com/callback?error=access_denied"
+        result = self.oauth_manager.handle_authorization_redirect(redirect_url)
+        self.assertIsNone(result)
+
+    def test_handle_authorization_redirect_exception(self):
+        """Test handling redirect with malformed URL."""
+        redirect_url = "not-a-valid-url"
+        result = self.oauth_manager.handle_authorization_redirect(redirect_url)
+        self.assertIsNone(result)
+
+    @patch("requests.Session.post")
+    def test_exchange_code_for_tokens_http_error(self, mock_post):
+        """Test token exchange with HTTP error."""
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.text = "Bad Request"
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError()
+        mock_post.return_value = mock_response
+
+        result = self.oauth_manager.exchange_code_for_tokens("test_code")
+        self.assertFalse(result)
+
+    @patch("requests.Session.post")
+    def test_exchange_code_for_tokens_exception(self, mock_post):
+        """Test token exchange with network exception."""
+        mock_post.side_effect = requests.exceptions.RequestException("Network error")
+
+        result = self.oauth_manager.exchange_code_for_tokens("test_code")
+        self.assertFalse(result)
+
+    def test_refresh_access_token_no_refresh_token(self):
+        """Test refresh when no refresh token is available."""
+        self.oauth_manager.refresh_token = None
+        result = self.oauth_manager.refresh_access_token()
+        self.assertFalse(result)
+
+    @patch("requests.Session.post")
+    def test_refresh_access_token_http_error(self, mock_post):
+        """Test refresh token with HTTP error."""
+        self.oauth_manager.refresh_token = "test_refresh_token"
+
+        mock_response = Mock()
+        mock_response.status_code = 400
+        mock_response.text = "Invalid refresh token"
+        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError()
+        mock_post.return_value = mock_response
+
+        result = self.oauth_manager.refresh_access_token()
+        self.assertFalse(result)
+
+    @patch("requests.Session.post")
+    def test_refresh_access_token_exception(self, mock_post):
+        """Test refresh token with network exception."""
+        self.oauth_manager.refresh_token = "test_refresh_token"
+        mock_post.side_effect = requests.exceptions.RequestException("Network error")
+
+        result = self.oauth_manager.refresh_access_token()
+        self.assertFalse(result)
+
+    def test_get_token_info(self):
+        """Test getting token information."""
+        # Test with no tokens
+        info = self.oauth_manager.get_token_info()
+        expected = {
+            "has_access_token": False,
+            "has_refresh_token": False,
+            "expires_in": None,
+            "authenticated": False,
+        }
+        self.assertEqual(info, expected)
+
+        # Test with tokens
+        self.oauth_manager.access_token = "test_access_token"
+        self.oauth_manager.refresh_token = "test_refresh_token"
+        self.oauth_manager.token_expires_in = 3600
+
+        info = self.oauth_manager.get_token_info()
+        expected = {
+            "has_access_token": True,
+            "has_refresh_token": True,
+            "expires_in": 3600,
+            "authenticated": True,
+        }
+        self.assertEqual(info, expected)
+
+
 if __name__ == "__main__":
     # Run the test suite
     unittest.main(verbosity=2)

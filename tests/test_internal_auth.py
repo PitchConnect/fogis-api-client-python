@@ -5,7 +5,7 @@ This module tests the authentication functionality to improve
 code coverage for the internal auth components.
 """
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 import requests
@@ -202,3 +202,79 @@ class TestInternalAuth:
 
         with pytest.raises(FogisAuthenticationError, match="Network error during authentication"):
             authenticate(mock_session, "testuser", "testpass", "http://example.com")
+
+
+class TestOAuthAuthenticationPaths:
+    """Test OAuth authentication paths in auth module."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.session = requests.Session()
+        self.username = "test_user"
+        self.password = "test_password"
+
+    @patch("fogis_api_client.internal.auth._handle_oauth_login_form")
+    def test_handle_oauth_authentication_authorize_endpoint(self, mock_login_form):
+        """Test OAuth authentication at authorize endpoint."""
+        from fogis_api_client.internal.auth import _handle_oauth_authentication
+
+        oauth_url = "https://auth.fogis.se/connect/authorize?client_id=test"
+        mock_login_form.return_value = {"oauth_authenticated": True}
+
+        result = _handle_oauth_authentication(self.session, self.username, self.password, oauth_url)
+
+        assert result == {"oauth_authenticated": True}
+        mock_login_form.assert_called_once()
+
+    @patch("fogis_api_client.internal.auth._handle_oauth_login_form")
+    def test_handle_oauth_authentication_login_endpoint(self, mock_login_form):
+        """Test OAuth authentication at login endpoint."""
+        from fogis_api_client.internal.auth import _handle_oauth_authentication
+
+        oauth_url = "https://auth.fogis.se/Account/LogIn?returnUrl=test"
+        mock_login_form.return_value = {"oauth_authenticated": True}
+
+        result = _handle_oauth_authentication(self.session, self.username, self.password, oauth_url)
+
+        assert result == {"oauth_authenticated": True}
+        mock_login_form.assert_called_once()
+
+    def test_handle_oauth_authentication_unexpected_url(self):
+        """Test OAuth authentication with unexpected URL."""
+        from fogis_api_client.internal.auth import FogisOAuthAuthenticationError, _handle_oauth_authentication
+
+        oauth_url = "https://example.com/unexpected"
+
+        with pytest.raises(FogisOAuthAuthenticationError):
+            _handle_oauth_authentication(self.session, oauth_url, self.username, self.password)
+
+    def test_handle_oauth_authentication_exception(self):
+        """Test OAuth authentication with general exception."""
+        from fogis_api_client.internal.auth import FogisOAuthAuthenticationError, _handle_oauth_authentication
+
+        # Pass invalid session to trigger exception
+        with pytest.raises(FogisOAuthAuthenticationError):
+            _handle_oauth_authentication(None, "https://auth.fogis.se/connect/authorize", self.username, self.password)
+
+    @patch("requests.Session.get")
+    def test_get_oauth_login_page_success(self, mock_get):
+        """Test getting OAuth login page successfully."""
+        from fogis_api_client.internal.auth import _get_oauth_login_page
+
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.text = "<html>Login form</html>"
+        mock_get.return_value = mock_response
+
+        result = _get_oauth_login_page(self.session)
+        assert result == mock_response
+
+    @patch("requests.Session.get")
+    def test_get_oauth_login_page_failure(self, mock_get):
+        """Test getting OAuth login page with failure."""
+        from fogis_api_client.internal.auth import _get_oauth_login_page
+
+        mock_get.side_effect = requests.exceptions.RequestException("Network error")
+
+        with pytest.raises(requests.exceptions.RequestException):
+            _get_oauth_login_page(self.session)
