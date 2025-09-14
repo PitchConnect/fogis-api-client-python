@@ -106,7 +106,7 @@ def _handle_oauth_authentication(session: requests.Session, username: str, passw
     """
     try:
         # Import OAuth manager dynamically to avoid circular imports
-        from fogis_oauth_manager import FogisOAuthManager
+        from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager
 
         # Initialize OAuth manager
         oauth_manager = FogisOAuthManager(session)

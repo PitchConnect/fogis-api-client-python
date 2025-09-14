@@ -213,7 +213,7 @@ class TestFogisAuthentication(unittest.TestCase):
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        with patch("fogis_auth_oauth._handle_oauth_authentication") as mock_oauth:
+        with patch("fogis_api_client.internal.auth._handle_oauth_authentication") as mock_oauth:
             mock_oauth.return_value = {
                 "access_token": "test_token",
                 "oauth_authenticated": True,
@@ -235,7 +235,7 @@ class TestFogisAuthentication(unittest.TestCase):
         mock_response.raise_for_status.return_value = None
         mock_get.return_value = mock_response
 
-        with patch("fogis_auth_oauth._handle_aspnet_authentication") as mock_aspnet:
+        with patch("fogis_api_client.internal.auth._handle_aspnet_authentication") as mock_aspnet:
             mock_aspnet.return_value = {
                 "FogisMobilDomarKlient.ASPXAUTH": "test_cookie",
                 "aspnet_authenticated": True,
@@ -295,7 +295,7 @@ class TestPublicApiClient(unittest.TestCase):
         with self.assertRaises(ValueError):
             PublicApiClient()
 
-    @patch("fogis_public_api_client_oauth.authenticate")
+    @patch("fogis_api_client.public_api_client.authenticate")
     def test_login_oauth_success(self, mock_authenticate):
         """Test successful OAuth login."""
         mock_authenticate.return_value = {
@@ -309,7 +309,7 @@ class TestPublicApiClient(unittest.TestCase):
         self.assertIn("access_token", result)
         self.assertEqual(client.authentication_method, "oauth")
 
-    @patch("fogis_public_api_client_oauth.authenticate")
+    @patch("fogis_api_client.public_api_client.authenticate")
     def test_login_aspnet_success(self, mock_authenticate):
         """Test successful ASP.NET login."""
         mock_authenticate.return_value = {

@@ -5,12 +5,12 @@ This module tests the authentication functionality to improve
 code coverage for the internal auth components.
 """
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 import requests
 
-from fogis_api_client.internal.auth import authenticate
+from fogis_api_client.internal.auth import FogisAuthenticationError, authenticate
 
 
 class TestInternalAuth:
@@ -24,6 +24,7 @@ class TestInternalAuth:
 
         # Mock login page response with proper hidden inputs
         login_response = Mock()
+        login_response.url = "http://example.com/Login.aspx"  # ASP.NET URL, not OAuth
         login_response.text = """
         <html>
             <form>
@@ -69,7 +70,7 @@ class TestInternalAuth:
         mock_session.headers = {}
         mock_session.get.side_effect = requests.exceptions.RequestException("Connection failed")
 
-        with pytest.raises(requests.exceptions.RequestException):
+        with pytest.raises(FogisAuthenticationError, match="Network error during authentication"):
             authenticate(mock_session, "testuser", "testpass", "http://example.com")
 
     def test_authenticate_missing_viewstate(self):
@@ -79,12 +80,13 @@ class TestInternalAuth:
 
         # Mock login page response without __VIEWSTATE
         login_response = Mock()
+        login_response.url = "http://example.com/Login.aspx"  # ASP.NET URL, not OAuth
         login_response.text = "<html><form></form></html>"
         login_response.raise_for_status = Mock()
 
         mock_session.get.return_value = login_response
 
-        with pytest.raises(ValueError, match="Failed to extract __VIEWSTATE token"):
+        with pytest.raises(FogisAuthenticationError, match="Failed to extract __VIEWSTATE token"):
             authenticate(mock_session, "testuser", "testpass", "http://example.com")
 
     def test_authenticate_missing_eventvalidation(self):
@@ -94,6 +96,7 @@ class TestInternalAuth:
 
         # Mock login page response with __VIEWSTATE but no __EVENTVALIDATION
         login_response = Mock()
+        login_response.url = "http://example.com/Login.aspx"  # ASP.NET URL, not OAuth
         login_response.text = """
         <html>
             <form>
@@ -105,7 +108,7 @@ class TestInternalAuth:
 
         mock_session.get.return_value = login_response
 
-        with pytest.raises(ValueError, match="Failed to extract __EVENTVALIDATION token"):
+        with pytest.raises(FogisAuthenticationError, match="Failed to extract __EVENTVALIDATION token"):
             authenticate(mock_session, "testuser", "testpass", "http://example.com")
 
     def test_authenticate_invalid_credentials(self):
@@ -115,6 +118,7 @@ class TestInternalAuth:
 
         # Mock login page response
         login_response = Mock()
+        login_response.url = "http://example.com/Login.aspx"  # ASP.NET URL, not OAuth
         login_response.text = """
         <html>
             <form>
@@ -135,7 +139,7 @@ class TestInternalAuth:
         mock_session.post.return_value = auth_response
         mock_session.cookies = {}  # No auth cookie
 
-        with pytest.raises(ValueError, match="Authentication failed"):
+        with pytest.raises(FogisAuthenticationError, match="ASP.NET authentication failed"):
             authenticate(mock_session, "testuser", "wrongpass", "http://example.com")
 
     def test_authenticate_headers_configuration(self):
@@ -145,6 +149,7 @@ class TestInternalAuth:
 
         # Mock minimal successful flow
         login_response = Mock()
+        login_response.url = "http://example.com/Login.aspx"  # ASP.NET URL, not OAuth
         login_response.text = """
         <html>
             <form>
@@ -180,6 +185,7 @@ class TestInternalAuth:
 
         # Mock successful login page response
         login_response = Mock()
+        login_response.url = "http://example.com/Login.aspx"  # ASP.NET URL, not OAuth
         login_response.text = """
         <html>
             <form>
@@ -194,5 +200,5 @@ class TestInternalAuth:
         mock_session.get.return_value = login_response
         mock_session.post.side_effect = requests.exceptions.RequestException("Auth failed")
 
-        with pytest.raises(requests.exceptions.RequestException):
+        with pytest.raises(FogisAuthenticationError, match="Network error during authentication"):
             authenticate(mock_session, "testuser", "testpass", "http://example.com")

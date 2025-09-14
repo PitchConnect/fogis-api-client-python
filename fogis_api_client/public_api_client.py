@@ -73,6 +73,7 @@ class PublicApiClient:
         self.password = password
         self.session = requests.Session()
         self.logger = logging.getLogger("fogis_api_client.api")
+        self.base_url = self.BASE_URL
 
         # Authentication state
         self.cookies: Optional[Dict[str, str]] = None
@@ -100,6 +101,40 @@ class PublicApiClient:
         elif not (username and password):
             raise ValueError("Either username and password OR cookies/oauth_tokens must be provided")
 
+    def _check_existing_authentication(self) -> Optional[Union[Dict[str, str], Dict[str, Any]]]:
+        """Check if already authenticated and return existing credentials."""
+        if self.oauth_tokens and self.authentication_method == "oauth":
+            self.logger.debug("Already authenticated with OAuth, using existing tokens")
+            return self.oauth_tokens
+        elif self.cookies and self.authentication_method == "aspnet":
+            self.logger.debug("Already authenticated with ASP.NET, using existing cookies")
+            return self.cookies
+        return None
+
+    def _handle_oauth_authentication_result(self, auth_result: Dict[str, Any]) -> Union[Dict[str, str], Dict[str, Any]]:
+        """Handle OAuth authentication result."""
+        if auth_result.get("authentication_method") == "oauth_hybrid":
+            # OAuth hybrid: OAuth login but ASP.NET session cookies for API access
+            self.cookies = {
+                k: v
+                for k, v in auth_result.items()
+                if not k.startswith("oauth") and not k.startswith("authentication")
+            }
+            self.authentication_method = "oauth_hybrid"
+            self.logger.info("OAuth hybrid authentication successful (OAuth login + ASP.NET cookies)")
+
+            # Set cookies in session for API calls
+            for key, value in self.cookies.items():
+                self.session.cookies.set(key, value)
+
+            return self.cookies
+        else:
+            # Pure OAuth authentication with tokens
+            self.oauth_tokens = auth_result
+            self.authentication_method = "oauth"
+            self.logger.info("OAuth authentication successful")
+            return self.oauth_tokens
+
     def login(self) -> Union[Dict[str, str], Dict[str, Any]]:
         """
         Logs into the FOGIS API using OAuth 2.0 or ASP.NET authentication.
@@ -111,56 +146,30 @@ class PublicApiClient:
             FogisLoginError: If login fails
             FogisAPIRequestError: If there is an error during the login request
         """
-        # If already authenticated, return existing credentials
-        if self.oauth_tokens and self.authentication_method == "oauth":
-            self.logger.debug("Already authenticated with OAuth, using existing tokens")
-            return self.oauth_tokens
-        elif self.cookies and self.authentication_method == "aspnet":
-            self.logger.debug("Already authenticated with ASP.NET, using existing cookies")
-            return self.cookies
+        # Check if already authenticated
+        existing_auth = self._check_existing_authentication()
+        if existing_auth is not None:
+            return existing_auth
 
-        # If no username/password provided, we can't log in
+        # Validate credentials
         if not (self.username and self.password):
             error_msg = "Login failed: No credentials provided and no existing authentication available"
             self.logger.error(error_msg)
             raise FogisLoginError(error_msg)
 
         try:
-            # Attempt authentication using the enhanced auth module
+            # Attempt authentication
             auth_result = authenticate(self.session, self.username, self.password, self.BASE_URL)
 
-            # Determine authentication method based on result
+            # Process authentication result
             if "oauth_authenticated" in auth_result:
-                # Check if this is OAuth hybrid (OAuth login + ASP.NET cookies)
-                if auth_result.get("authentication_method") == "oauth_hybrid":
-                    # OAuth hybrid: OAuth login but ASP.NET session cookies for API access
-                    self.cookies = {
-                        k: v
-                        for k, v in auth_result.items()
-                        if not k.startswith("oauth") and not k.startswith("authentication")
-                    }
-                    self.authentication_method = "oauth_hybrid"
-                    self.logger.info("OAuth hybrid authentication successful (OAuth login + ASP.NET cookies)")
-
-                    # Set cookies in session for API calls
-                    for key, value in self.cookies.items():
-                        self.session.cookies.set(key, value)
-
-                    return self.cookies
-                else:
-                    # Pure OAuth authentication with tokens
-                    self.oauth_tokens = auth_result
-                    self.authentication_method = "oauth"
-                    self.logger.info("OAuth authentication successful")
-                    return self.oauth_tokens
-
+                return self._handle_oauth_authentication_result(auth_result)
             elif "aspnet_authenticated" in auth_result:
                 # Traditional ASP.NET authentication
                 self.cookies = {k: v for k, v in auth_result.items() if not k.startswith("aspnet")}
                 self.authentication_method = "aspnet"
                 self.logger.info("ASP.NET authentication successful")
                 return self.cookies
-
             else:
                 # Unknown authentication result
                 self.logger.error("Unknown authentication result format")
@@ -329,6 +338,44 @@ class PublicApiClient:
             return response.json()
         else:
             raise FogisAPIRequestError(f"Failed to fetch matches: {response.status_code}")
+
+    def hello_world(self) -> str:
+        """
+        Return a hello world message for API compatibility.
+
+        Returns:
+            str: Hello world message
+        """
+        return "Hello, brave new world!"
+
+    def fetch_match_json(self, match_id: Union[int, str]) -> Dict[str, Any]:
+        """
+        Fetch match details in JSON format.
+
+        Args:
+            match_id: The ID of the match to fetch
+
+        Returns:
+            Dict containing match details
+
+        Raises:
+            FogisAPIRequestError: If the API request fails
+        """
+        self.logger.info(f"Fetching match details for match ID: {match_id}")
+
+        # Ensure we're authenticated
+        if not self.is_authenticated():
+            self.logger.info("Not authenticated, performing automatic login...")
+            self.login()
+
+        # Make the API request
+        url = f"{self.base_url}/api/match/{match_id}"
+        response = self.session.get(url, timeout=(10, 30))
+
+        if response.status_code == 200:
+            return response.json()
+        else:
+            raise FogisAPIRequestError(f"Failed to fetch match: {response.status_code}")
 
 
 # Maintain backward compatibility

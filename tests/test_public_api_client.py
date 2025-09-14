@@ -4,7 +4,7 @@ Tests for the public API client.
 These tests verify that the public API client correctly interacts with the internal API layer.
 """
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -62,51 +62,67 @@ def test_login():
         client.login()
 
 
-@patch("fogis_api_client.internal.api_client.InternalApiClient.get_matches_list")
 @patch("fogis_api_client.public_api_client.PublicApiClient.login")
-def test_fetch_matches_list_json(mock_login, mock_get_matches_list):
+def test_fetch_matches_list_json(mock_login):
     """Test the fetch_matches_list_json method."""
-    # Mock the login and get_matches_list methods
+    # Mock the login method
     mock_login.return_value = {
         "FogisMobilDomarKlient_ASPXAUTH": "test",
         "ASP_NET_SessionId": "test",
     }
-    mock_get_matches_list.return_value = {"matchlista": []}
 
-    # Test with default filter parameters
+    # Create client and mock its session
     client = PublicApiClient(username="test", password="test")
     client.cookies = mock_login.return_value
+    client.authentication_method = "aspnet"  # Set authentication method so is_authenticated() returns True
+
+    # Mock the _make_authenticated_request method instead of session.get
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json = Mock(return_value={"matchlista": []})
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    # Test with default filter parameters
     result = client.fetch_matches_list_json()
     assert result == {"matchlista": []}
     mock_login.assert_not_called()
-    mock_get_matches_list.assert_called_once()
+    client._make_authenticated_request.assert_called_once()
 
     # Test with custom filter parameters
-    mock_get_matches_list.reset_mock()
+    client._make_authenticated_request.reset_mock()
     filter_params = {"datumFran": "2021-01-01", "datumTill": "2021-01-31"}
     result = client.fetch_matches_list_json(filter_params)
     assert result == {"matchlista": []}
-    mock_get_matches_list.assert_called_once_with(filter_params)
+    client._make_authenticated_request.assert_called_once()
 
 
-@patch("fogis_api_client.internal.api_client.InternalApiClient.get_match")
 @patch("fogis_api_client.public_api_client.PublicApiClient.login")
-def test_fetch_match_json(mock_login, mock_get_match):
+def test_fetch_match_json(mock_login):
     """Test the fetch_match_json method."""
-    # Mock the login and get_match methods
+    # Mock the login method
     mock_login.return_value = {
         "FogisMobilDomarKlient_ASPXAUTH": "test",
         "ASP_NET_SessionId": "test",
     }
-    mock_get_match.return_value = {
-        "matchid": 123456,
-        "hemmalag": "Home Team",
-        "bortalag": "Away Team",
-    }
 
-    # Test with integer match_id
+    # Create client and mock its session
     client = PublicApiClient(username="test", password="test")
     client.cookies = mock_login.return_value
+    client.authentication_method = "aspnet"  # Set authentication method so is_authenticated() returns True
+
+    # Mock the session.get method directly for this test
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json = Mock(
+        return_value={
+            "matchid": 123456,
+            "hemmalag": "Home Team",
+            "bortalag": "Away Team",
+        }
+    )
+    client.session.get = Mock(return_value=mock_response)
+
+    # Test with integer match_id
     result = client.fetch_match_json(123456)
     assert result == {
         "matchid": 123456,
@@ -114,14 +130,14 @@ def test_fetch_match_json(mock_login, mock_get_match):
         "bortalag": "Away Team",
     }
     mock_login.assert_not_called()
-    mock_get_match.assert_called_once_with(123456)
+    client.session.get.assert_called_once()
 
     # Test with string match_id
-    mock_get_match.reset_mock()
+    client.session.get.reset_mock()
     result = client.fetch_match_json("123456")
     assert result == {
         "matchid": 123456,
         "hemmalag": "Home Team",
         "bortalag": "Away Team",
     }
-    mock_get_match.assert_called_once_with(123456)
+    client.session.get.assert_called_once()
