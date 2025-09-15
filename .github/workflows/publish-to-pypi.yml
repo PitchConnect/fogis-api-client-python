@@ -66,10 +66,23 @@ jobs:
           echo "📦 Release trigger detected: $VERSION"
         elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
           echo "is_release=false" >> $GITHUB_OUTPUT
-          # Manual trigger - we'll bump version
+
+          # Check if triggered by automated release (look for recent release)
+          LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${{ github.repository }}/releases/latest" | python -c "import sys, json; data=json.load(sys.stdin); print(data.get('tag_name', '').lstrip('v'))" 2>/dev/null || echo "")
+          CURRENT_VERSION=$(python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(match.group(1) if match else 'unknown')" 2>/dev/null || echo "unknown")
+
+          if [[ -n "$LATEST_RELEASE" && "$LATEST_RELEASE" != "$CURRENT_VERSION" ]]; then
+            # Automated release trigger - use release version
+            echo "version=$LATEST_RELEASE" >> $GITHUB_OUTPUT
+            echo "📦 Automated release trigger detected: $LATEST_RELEASE (setup.py: $CURRENT_VERSION)"
+          else
+            # Manual trigger - use current version and bump it
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "🔧 Manual trigger detected: $CURRENT_VERSION"
+          fi
+
           echo "should_publish=true" >> $GITHUB_OUTPUT
           echo "version_changed=true" >> $GITHUB_OUTPUT
-          echo "🔧 Manual trigger detected"
         else
           echo "is_release=false" >> $GITHUB_OUTPUT
           # Push to main - check if version changed
@@ -146,10 +159,36 @@ jobs:
         echo "📦 Setting version to: $VERSION"
         sed -i "s/version=\".*\"/version=\"$VERSION\"/" setup.py
 
-    - name: Verify setup.py
+    - name: Synchronize version for automated release
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        VERSION=${{ needs.check-version.outputs.version }}
+        CURRENT_VERSION=$(python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(match.group(1) if match else 'unknown')")
+
+        if [[ "$VERSION" != "$CURRENT_VERSION" ]]; then
+          echo "🔄 Synchronizing setup.py version: $CURRENT_VERSION -> $VERSION"
+          sed -i "s/\"version\": \".*\"/\"version\": \"$VERSION\"/" setup.py
+        else
+          echo "✅ Version already synchronized: $VERSION"
+        fi
+
+    - name: Verify setup.py and validate version
       run: |
         echo "📋 Current setup.py version configuration:"
-        python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(f'Version: {match.group(1)}' if match else 'Version: unknown')"
+        SETUP_VERSION=$(python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(match.group(1) if match else 'unknown')")
+        TARGET_VERSION="${{ needs.check-version.outputs.version }}"
+
+        echo "Setup.py version: $SETUP_VERSION"
+        echo "Target version: $TARGET_VERSION"
+
+        if [[ "$SETUP_VERSION" != "$TARGET_VERSION" ]]; then
+          echo "❌ Version mismatch detected!"
+          echo "Setup.py shows: $SETUP_VERSION"
+          echo "Expected: $TARGET_VERSION"
+          exit 1
+        fi
+
+        echo "✅ Version validation passed: $SETUP_VERSION"
         python setup.py check
 
     - name: Build package
