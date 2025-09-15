@@ -10,11 +10,11 @@ import logging
 import os
 import sys
 
-# Add current directory to path for imports
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager
 from fogis_api_client.public_api_client import PublicApiClient
+
+# Add current directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -181,7 +181,7 @@ def test_with_real_credentials():
         client = PublicApiClient(username=username, password=password)
 
         print("🔄 Attempting authentication...")
-        auth_result = client.login()
+        client.login()
 
         if client.is_authenticated():
             print(f"✅ Authentication successful using {client.authentication_method}")

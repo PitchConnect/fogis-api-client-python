@@ -16,5 +16,5 @@ warn_unused_configs = true
 disallow_untyped_defs = true
 ignore_missing_imports = true
 exclude = [
-    "scripts/check_dependencies.py"
+    "scripts/dynamic_precommit_generator.py"
 ]

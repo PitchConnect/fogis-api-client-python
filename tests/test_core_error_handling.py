@@ -6,10 +6,8 @@ and exception classes to improve code coverage.
 """
 
 import time
-from unittest.mock import MagicMock, patch
 
 import pytest
-import requests
 
 from fogis_api_client.core.error_handling import (
     ConfigurationError,
