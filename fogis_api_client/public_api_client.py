@@ -116,9 +116,7 @@ class PublicApiClient:
         if auth_result.get("authentication_method") == "oauth_hybrid":
             # OAuth hybrid: OAuth login but ASP.NET session cookies for API access
             self.cookies = {
-                k: v
-                for k, v in auth_result.items()
-                if not k.startswith("oauth") and not k.startswith("authentication")
+                k: v for k, v in auth_result.items() if not k.startswith("oauth") and not k.startswith("authentication")
             }
             self.authentication_method = "oauth_hybrid"
             self.logger.info("OAuth hybrid authentication successful (OAuth login + ASP.NET cookies)")
@@ -200,7 +198,7 @@ class PublicApiClient:
         if self.authentication_method == "oauth" and self.oauth_tokens:
             # Try to refresh OAuth tokens
             try:
-                from fogis_oauth_manager import FogisOAuthManager
+                from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager
 
                 oauth_manager = FogisOAuthManager(self.session)
 

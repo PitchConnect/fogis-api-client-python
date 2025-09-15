@@ -19,7 +19,7 @@ RUN curl --version
 COPY . .
 
 # Install dependencies
-RUN pip install --no-cache-dir marshmallow>=3.26.0 jsonschema jsonschema
+RUN pip install --no-cache-dir marshmallow>=3.26.0 jsonschema
 RUN pip install --no-cache-dir -e .
 RUN pip install --no-cache-dir flask-cors pytest pytest-flask watchdog psutil
 

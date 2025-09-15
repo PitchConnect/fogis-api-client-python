@@ -6,7 +6,7 @@ OAuth 2.0 PKCE flow (new) and ASP.NET form authentication (legacy fallback).
 """
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -147,7 +147,7 @@ def _get_oauth_login_page(session: requests.Session) -> requests.Response:
         return session.get(current_url, timeout=10)
 
 
-def _extract_form_data(soup: BeautifulSoup, username: str, password: str) -> tuple[str, str, Dict[str, str]]:
+def _extract_form_data(soup: BeautifulSoup, username: str, password: str) -> Tuple[str, str, Dict[str, str]]:
     """Extract form data from OAuth login page."""
     form = soup.find("form")
     if not form:

@@ -75,16 +75,7 @@ jobs:
           echo "is_release=false" >> $GITHUB_OUTPUT
           # Push to main - check if version changed
           # Extract version from setup.py more reliably
-          CURRENT_VERSION=$(python -c "
-import re
-with open('setup.py', 'r') as f:
-    content = f.read()
-    match = re.search(r'\"version\":\s*\"([^\"]+)\"', content)
-    if match:
-        print(match.group(1))
-    else:
-        print('unknown')
-" 2>/dev/null || echo "unknown")
+          CURRENT_VERSION=$(python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(match.group(1) if match else 'unknown')" 2>/dev/null || echo "unknown")
 
           # Check if version exists on PyPI - use correct package name
           VERSION_CHANGED="false"
@@ -146,16 +137,7 @@ with open('setup.py', 'r') as f:
       run: |
         echo "🔢 Bumping version (${{ github.event.inputs.version_type }})"
         bump2version ${{ github.event.inputs.version_type }} --verbose
-        NEW_VERSION=$(python -c "
-import re
-with open('setup.py', 'r') as f:
-    content = f.read()
-    match = re.search(r'\"version\":\s*\"([^\"]+)\"', content)
-    if match:
-        print(match.group(1))
-    else:
-        print('unknown')
-")
+        NEW_VERSION=$(python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(match.group(1) if match else 'unknown')")
         echo "New version: $NEW_VERSION"
 
     - name: Update version for release
@@ -168,16 +150,7 @@ with open('setup.py', 'r') as f:
     - name: Verify setup.py
       run: |
         echo "📋 Current setup.py version configuration:"
-        python -c "
-import re
-with open('setup.py', 'r') as f:
-    content = f.read()
-    match = re.search(r'\"version\":\s*\"([^\"]+)\"', content)
-    if match:
-        print(f'Version: {match.group(1)}')
-    else:
-        print('Version: unknown')
-"
+        python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(f'Version: {match.group(1)}' if match else 'Version: unknown')"
         python setup.py check
 
     - name: Build package
