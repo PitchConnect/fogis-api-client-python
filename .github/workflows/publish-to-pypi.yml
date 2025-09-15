@@ -2,13 +2,7 @@ name: Publish Python Package
 
 on:
   release:
-    types: [created]
-  push:
-    branches: [main]
-    paths-ignore:
-      - '**.md'
-      - '.github/**'
-      - 'docs/**'
+    types: [created, published]
   workflow_dispatch:
     inputs:
       version_type:
@@ -25,13 +19,18 @@ on:
         required: false
         default: false
         type: boolean
+      force_publish:
+        description: 'Force publish even if version exists'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   check-version:
     name: Check Version and Changes
     runs-on: ubuntu-latest
-    # Only run on actual pushes to main, releases, or manual dispatch - not on pull requests
-    if: github.event_name != 'pull_request' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    # Only run on releases or manual dispatch
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     outputs:
       should_publish: ${{ steps.check.outputs.should_publish }}
       version: ${{ steps.check.outputs.version }}
@@ -75,16 +74,7 @@ jobs:
           echo "is_release=false" >> $GITHUB_OUTPUT
           # Push to main - check if version changed
           # Extract version from setup.py more reliably
-          CURRENT_VERSION=$(python -c "
-import re
-with open('setup.py', 'r') as f:
-    content = f.read()
-    match = re.search(r'\"version\":\s*\"([^\"]+)\"', content)
-    if match:
-        print(match.group(1))
-    else:
-        print('unknown')
-" 2>/dev/null || echo "unknown")
+          CURRENT_VERSION=$(python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(match.group(1) if match else 'unknown')" 2>/dev/null || echo "unknown")
 
           # Check if version exists on PyPI - use correct package name
           VERSION_CHANGED="false"
@@ -146,16 +136,7 @@ with open('setup.py', 'r') as f:
       run: |
         echo "🔢 Bumping version (${{ github.event.inputs.version_type }})"
         bump2version ${{ github.event.inputs.version_type }} --verbose
-        NEW_VERSION=$(python -c "
-import re
-with open('setup.py', 'r') as f:
-    content = f.read()
-    match = re.search(r'\"version\":\s*\"([^\"]+)\"', content)
-    if match:
-        print(match.group(1))
-    else:
-        print('unknown')
-")
+        NEW_VERSION=$(python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(match.group(1) if match else 'unknown')")
         echo "New version: $NEW_VERSION"
 
     - name: Update version for release
@@ -168,16 +149,7 @@ with open('setup.py', 'r') as f:
     - name: Verify setup.py
       run: |
         echo "📋 Current setup.py version configuration:"
-        python -c "
-import re
-with open('setup.py', 'r') as f:
-    content = f.read()
-    match = re.search(r'\"version\":\s*\"([^\"]+)\"', content)
-    if match:
-        print(f'Version: {match.group(1)}')
-    else:
-        print('Version: unknown')
-"
+        python -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(f'Version: {match.group(1)}' if match else 'Version: unknown')"
         python setup.py check
 
     - name: Build package
@@ -212,15 +184,15 @@ with open('setup.py', 'r') as f:
       with:
         script: |
           const version = await exec.getExecOutput('python', ['-c', `
-import re
-with open('setup.py', 'r') as f:
-    content = f.read()
-    match = re.search(r'"version":\\s*"([^"]+)"', content)
-    if match:
-        print(match.group(1))
-    else:
-        print('unknown')
-`]);
+          import re
+          with open('setup.py', 'r') as f:
+              content = f.read()
+              match = re.search(r'"version":\\s*"([^"]+)"', content)
+              if match:
+                  print(match.group(1))
+              else:
+                  print('unknown')
+          `]);
           const newVersion = version.stdout.trim();
 
           const { data: release } = await github.rest.repos.createRelease({

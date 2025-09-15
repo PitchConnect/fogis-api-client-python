@@ -1,0 +1,268 @@
+name: Hotfix Release Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      hotfix_branch:
+        description: 'Hotfix branch name (e.g., hotfix/critical-security-fix)'
+        required: true
+        type: string
+      severity:
+        description: 'Hotfix severity level'
+        required: true
+        default: 'high'
+        type: choice
+        options:
+          - critical
+          - high
+          - medium
+      skip_tests:
+        description: 'Skip tests (critical security fixes only)'
+        required: false
+        default: false
+        type: boolean
+      description:
+        description: 'Brief description of the hotfix'
+        required: true
+        type: string
+
+jobs:
+  validate-hotfix:
+    name: Validate Hotfix Branch
+    runs-on: ubuntu-latest
+    outputs:
+      branch_exists: ${{ steps.check.outputs.branch_exists }}
+      is_ahead_of_main: ${{ steps.check.outputs.is_ahead_of_main }}
+      commit_count: ${{ steps.check.outputs.commit_count }}
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check hotfix branch
+      id: check
+      run: |
+        HOTFIX_BRANCH="${{ github.event.inputs.hotfix_branch }}"
+
+        # Check if branch exists
+        if git show-ref --verify --quiet refs/remotes/origin/$HOTFIX_BRANCH; then
+          echo "branch_exists=true" >> $GITHUB_OUTPUT
+          echo "✅ Hotfix branch exists: $HOTFIX_BRANCH"
+
+          # Check if branch is ahead of main
+          git checkout $HOTFIX_BRANCH
+          AHEAD_COUNT=$(git rev-list --count origin/main..$HOTFIX_BRANCH)
+          echo "commit_count=$AHEAD_COUNT" >> $GITHUB_OUTPUT
+
+          if [ "$AHEAD_COUNT" -gt 0 ]; then
+            echo "is_ahead_of_main=true" >> $GITHUB_OUTPUT
+            echo "✅ Branch is $AHEAD_COUNT commits ahead of main"
+          else
+            echo "is_ahead_of_main=false" >> $GITHUB_OUTPUT
+            echo "❌ Branch is not ahead of main"
+          fi
+        else
+          echo "branch_exists=false" >> $GITHUB_OUTPUT
+          echo "❌ Hotfix branch does not exist: $HOTFIX_BRANCH"
+        fi
+
+  test-hotfix:
+    name: Test Hotfix
+    runs-on: ubuntu-latest
+    needs: validate-hotfix
+    if: needs.validate-hotfix.outputs.branch_exists == 'true' && needs.validate-hotfix.outputs.is_ahead_of_main == 'true' && github.event.inputs.skip_tests != 'true'
+
+    steps:
+    - name: Checkout hotfix branch
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.hotfix_branch }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m venv .venv
+        source ./.venv/bin/activate
+        python -m pip install --upgrade pip setuptools wheel
+        pip install -e .[dev]
+
+    - name: Run critical tests
+      run: |
+        source ./.venv/bin/activate
+        # Run only critical tests for hotfixes
+        pytest tests/ -m "not integration" --maxfail=1 -x
+        echo "✅ Critical tests passed"
+
+    - name: Security scan
+      if: github.event.inputs.severity == 'critical'
+      run: |
+        source ./.venv/bin/activate
+        pip install safety bandit
+        safety check
+        bandit -r fogis_api_client/ -f json -o security-report.json || true
+        echo "✅ Security scan completed"
+
+  create-hotfix-pr:
+    name: Create Hotfix PR to Main
+    runs-on: ubuntu-latest
+    needs: [validate-hotfix, test-hotfix]
+    if: always() && needs.validate-hotfix.outputs.branch_exists == 'true' && needs.validate-hotfix.outputs.is_ahead_of_main == 'true' && (needs.test-hotfix.result == 'success' || needs.test-hotfix.result == 'skipped')
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check for existing hotfix PR
+      id: check-pr
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const { data: prs } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            head: '${{ github.event.inputs.hotfix_branch }}',
+            base: 'main',
+            state: 'open'
+          });
+
+          const existingPR = prs.length > 0 ? prs[0] : null;
+          core.setOutput('existing_pr', existingPR ? existingPR.number : '');
+          core.setOutput('has_existing_pr', existingPR ? 'true' : 'false');
+
+    - name: Create hotfix PR
+      if: steps.check-pr.outputs.has_existing_pr == 'false'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const severity = '${{ github.event.inputs.severity }}';
+          const description = '${{ github.event.inputs.description }}';
+          const commitCount = '${{ needs.validate-hotfix.outputs.commit_count }}';
+          const skipTests = '${{ github.event.inputs.skip_tests }}';
+
+          const severityEmoji = {
+            'critical': '🚨',
+            'high': '⚠️',
+            'medium': '🔧'
+          };
+
+          const title = `${severityEmoji[severity]} HOTFIX: ${description}`;
+
+          const body = `## ${severityEmoji[severity]} Hotfix Release
+
+          **Severity**: ${severity.toUpperCase()}
+          **Description**: ${description}
+          **Commits**: ${commitCount}
+          **Tests Skipped**: ${skipTests}
+
+          ### 🚨 Hotfix Details
+          - **Branch**: \`${{ github.event.inputs.hotfix_branch }}\`
+          - **Target**: \`main\` (immediate release)
+          - **Severity**: ${severity}
+
+          ### ✅ Pre-merge Checklist
+          - [ ] Hotfix addresses the critical issue
+          - [ ] ${skipTests === 'true' ? '⚠️ Tests were skipped (critical fix)' : '✅ Tests passed'}
+          - [ ] Security implications reviewed
+          - [ ] Ready for immediate deployment
+
+          ### 🚀 Post-merge Actions
+          This hotfix will trigger:
+          1. 🏷️ Automatic patch version bump
+          2. 📦 PyPI release
+          3. 🐳 Container build and publish
+          4. 🔄 Branch synchronization to develop
+
+          ### ⚠️ Important Notes
+          ${severity === 'critical' ? '**CRITICAL**: This hotfix addresses a critical security or functionality issue.' : ''}
+          ${skipTests === 'true' ? '**WARNING**: Tests were skipped. Monitor deployment closely.' : ''}
+
+          ---
+
+          **Triggered by**: @${{ github.actor }}
+          **Workflow**: Hotfix Release Pipeline
+
+          _This PR was automatically created for hotfix deployment._`;
+
+          const { data: pr } = await github.rest.pulls.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: title,
+            body: body,
+            head: '${{ github.event.inputs.hotfix_branch }}',
+            base: 'main'
+          });
+
+          // Add appropriate labels
+          const labels = ['hotfix', `severity-${severity}`, 'auto-created'];
+          if (skipTests === 'true') {
+            labels.push('tests-skipped');
+          }
+
+          await github.rest.issues.addLabels({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: pr.number,
+            labels: labels
+          });
+
+          console.log(`Created hotfix PR #${pr.number}: ${pr.title}`);
+          core.setOutput('pr_number', pr.number);
+          core.setOutput('pr_url', pr.html_url);
+
+    - name: Auto-approve for critical hotfixes
+      if: github.event.inputs.severity == 'critical' && steps.check-pr.outputs.has_existing_pr == 'false'
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const prNumber = '${{ steps.create-pr.outputs.pr_number }}';
+
+          await github.rest.pulls.createReview({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: prNumber,
+            event: 'APPROVE',
+            body: '🚨 Auto-approved for critical hotfix. Manual review recommended post-deployment.'
+          });
+
+          console.log(`Auto-approved critical hotfix PR #${prNumber}`);
+
+    - name: Notify hotfix created
+      run: |
+        echo "🚨 Hotfix PR created successfully!"
+        echo "📋 PR: ${{ steps.create-pr.outputs.pr_url || 'Already exists' }}"
+        echo "🔧 Severity: ${{ github.event.inputs.severity }}"
+        echo "📝 Description: ${{ github.event.inputs.description }}"
+        echo ""
+        echo "⚡ Next steps:"
+        echo "1. Review and merge the hotfix PR"
+        echo "2. Automated release will trigger immediately"
+        echo "3. Monitor deployment and verify fix"
+
+  notify-validation-failure:
+    name: Notify Validation Failure
+    runs-on: ubuntu-latest
+    needs: validate-hotfix
+    if: needs.validate-hotfix.outputs.branch_exists == 'false' || needs.validate-hotfix.outputs.is_ahead_of_main == 'false'
+
+    steps:
+    - name: Validation failure notification
+      run: |
+        echo "❌ Hotfix validation failed!"
+        echo "Branch exists: ${{ needs.validate-hotfix.outputs.branch_exists }}"
+        echo "Is ahead of main: ${{ needs.validate-hotfix.outputs.is_ahead_of_main }}"
+        echo ""
+        echo "🔧 To fix:"
+        echo "1. Ensure the hotfix branch exists and is pushed to origin"
+        echo "2. Ensure the branch has commits ahead of main"
+        echo "3. Re-run this workflow with the correct branch name"
+        exit 1
