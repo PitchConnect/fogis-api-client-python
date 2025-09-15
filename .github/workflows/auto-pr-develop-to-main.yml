@@ -4,11 +4,17 @@ on:
   push:
     branches: [develop]
   workflow_run:
-    workflows: ["Tests", "Code Quality"]
+    workflows: ["Test and Publish", "Docker Build and Test"]
     branches: [develop]
     types: [completed]
   # Allow manual triggering for testing
   workflow_dispatch:
+    inputs:
+      force_create:
+        description: 'Force create PR even if tests are not passing'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   check-and-create-pr:
@@ -78,7 +84,7 @@ jobs:
             per_page: 100
           });
 
-          const requiredWorkflows = ['Tests', 'Code Quality'];
+          const requiredWorkflows = ['Test and Publish', 'Docker Build and Test'];
           const workflowResults = {};
 
           for (const workflow of workflows.workflow_runs) {
@@ -105,7 +111,7 @@ jobs:
 
     - name: Check for existing PR
       id: check-pr
-      if: steps.workflow-status.outputs.all_tests_passed == 'true'
+      if: steps.workflow-status.outputs.all_tests_passed == 'true' || github.event.inputs.force_create == 'true'
       uses: actions/github-script@v6
       with:
         script: |
