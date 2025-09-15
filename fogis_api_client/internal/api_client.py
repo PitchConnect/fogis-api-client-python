@@ -410,7 +410,6 @@ class InternalApiClient:
 
         return response_data
 
-
     def save_match_participant(self, participant_data: InternalMatchParticipantDict) -> Dict[str, Any]:
         """
         Save a match participant to the FOGIS API.

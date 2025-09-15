@@ -49,6 +49,7 @@ class TestCli(unittest.TestCase):
             cls.server_thread = None
         # Create an API client after readiness confirmed
         from urllib.parse import urlparse
+
         parsed = urlparse(detected_base)
         host = parsed.hostname or "127.0.0.1"
         port = parsed.port or 5001
@@ -56,7 +57,6 @@ class TestCli(unittest.TestCase):
         # Ensure CLI /api/cli/status endpoint is ready as well
         cls.client.wait_for_server(timeout=5)
         cls._expected_host = host
-
 
     @classmethod
     def tearDownClass(cls):

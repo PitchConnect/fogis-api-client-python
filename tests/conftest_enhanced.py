@@ -10,6 +10,7 @@ import pytest
 # Import enhanced logging components if available
 try:
     from fogis_api_client.core.error_handling import reset_circuit_breaker
+
     HAS_ENHANCED_LOGGING = True
 except ImportError:
     HAS_ENHANCED_LOGGING = False

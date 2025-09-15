@@ -71,14 +71,46 @@ class MockFogisServer:
         # Flag to enable/disable request validation
         self.validate_requests = True
 
+        # Generate consistent sample data for testing
+        self._initialize_sample_data()
+
         # Register routes
         self._register_routes()
+        self._register_convenience_method_routes()
 
         # Register before_request handler to track all requests
         @self.app.before_request
         def track_request():
             """Track all requests to the server."""
             self._track_request(request.path)
+
+    def _initialize_sample_data(self):
+        """Initialize consistent sample data for testing."""
+        # Generate a fixed set of matches for consistency
+        self.sample_matches = []
+        base_match_ids = [123456, 234567, 345678, 456789, 567890]
+
+        for i, match_id in enumerate(base_match_ids):
+            match = {
+                "matchid": match_id,
+                "matchnr": f"{100000 + i:06d}",
+                "lag1namn": f"Home Team {i+1}",
+                "lag2namn": f"Away Team {i+1}",
+                "lag1resultat": i if i < 3 else None,  # Some completed matches
+                "lag2resultat": (i + 1) % 3 if i < 3 else None,
+                "datum": "2025-01-15",
+                "tid": f"{19 + i % 3}:00",
+                "anlaggningnamn": f"Stadium {i+1}",
+                "status": "klar" if i < 3 else "ej_pabörjad",
+                "serienamn": f"Division {(i % 3) + 1}",
+                "matchlag1id": 1000 + i * 2,  # Team-specific IDs for players/officials
+                "matchlag2id": 1000 + i * 2 + 1,
+                "domaruppdraglista": [{"namn": f"Referee {i+1}", "roll": "Huvuddomare"}] if i % 2 == 0 else [],
+            }
+            self.sample_matches.append(match)
+
+        # Store the match list response
+        self.sample_match_list_response = {"matchlista": self.sample_matches}
 
     def _register_routes(self):
         """Register the API routes."""
@@ -176,21 +208,13 @@ class MockFogisServer:
             data = request.json or {}
             data.get("filter", {})
 
-            # Generate a fresh match list using the factory
-            match_list = MockDataFactory.generate_match_list()
-
-            # Extract the match list from the response and format it for the new API
-            # The match_list["d"] is already a JSON string, so we need to parse it
-            matches_data = json.loads(match_list["d"]) if isinstance(match_list["d"], str) else match_list["d"]
-
-            # Create a response in the format expected by the client
-            # The client expects a response with a matchlista field
+            # Use consistent sample match list data
             response_data = {
                 "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatcherAttRapportera",
                 "anvandare": None,
                 "anvandareforeningid": 0,
                 "anvandartyp": "Domare",
-                "matchlista": matches_data["matchlista"],  # This is what the client expects
+                "matchlista": self.sample_matches,  # Use consistent data
                 "success": True,
             }
 
@@ -208,8 +232,15 @@ class MockFogisServer:
             data = request.json or {}
             match_id = data.get("matchid")
 
-            # Generate match details using the factory
-            match_data = MockDataFactory.generate_match_details(match_id)
+            # Find match in consistent data or generate new one
+            match_data = None
+            for match in self.sample_matches:
+                if match["matchid"] == match_id:
+                    match_data = match
+                    break
+
+            if not match_data:
+                match_data = MockDataFactory.generate_match_details(match_id)
 
             return jsonify({"d": json.dumps(match_data)})
 
@@ -923,6 +954,61 @@ class MockFogisServer:
                 {
                     "status": "success",
                     "message": "Server shutting down",
+                }
+            )
+
+    def _register_convenience_method_routes(self):
+        """Register additional routes needed for convenience methods."""
+
+        # OAuth 2.0 endpoints for authentication
+        @self.app.route("/oauth/authorize", methods=["GET"])
+        def oauth_authorize():
+            """OAuth authorization endpoint."""
+            # Simulate OAuth redirect detection
+            return """
+            <html>
+            <head><title>FOGIS OAuth</title></head>
+            <body>
+                <h1>FOGIS OAuth Authorization</h1>
+                <p>Redirecting to OAuth provider...</p>
+                <script>
+                    // Simulate OAuth redirect
+                    window.location.href = '/oauth/callback?code=mock_auth_code&state=' +
+                        (new URLSearchParams(window.location.search).get('state') || 'mock_state');
+                </script>
+            </body>
+            </html>
+            """
+
+        @self.app.route("/oauth/callback", methods=["GET"])
+        def oauth_callback():
+            """OAuth callback endpoint."""
+            # Simulate successful OAuth callback
+            return """
+            <html>
+            <head><title>FOGIS OAuth Success</title></head>
+            <body>
+                <h1>OAuth Authentication Successful</h1>
+                <p>Redirecting back to FOGIS...</p>
+                <script>
+                    // Simulate redirect back to FOGIS
+                    window.location.href = '/mdk/';
+                </script>
+            </body>
+            </html>
+            """
+
+        @self.app.route("/oauth/token", methods=["POST"])
+        def oauth_token():
+            """OAuth token exchange endpoint."""
+            # Simulate token exchange
+            return jsonify(
+                {
+                    "access_token": "mock_access_token_12345",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                    "refresh_token": "mock_refresh_token_67890",
+                    "scope": "read write",
                 }
             )
 

@@ -1,12 +1,12 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Match Officials Schema",
-  "description": "Schema for FOGIS API match officials data",
+  "description": "Schema for team officials only (referees are in match_details.domaruppdraglista)",
   "type": "object",
   "properties": {
-    "hemmalag": {
+    "home": {
       "type": "array",
-      "description": "Officials for the home team",
+      "description": "Officials for the home team (standardized English name)",
       "items": {
         "type": "object",
         "properties": {
@@ -50,9 +50,9 @@
         ]
       }
     },
-    "bortalag": {
+    "away": {
       "type": "array",
-      "description": "Officials for the away team",
+      "description": "Officials for the away team (standardized English name)",
       "items": {
         "type": "object",
         "properties": {
@@ -98,7 +98,7 @@
     }
   },
   "required": [
-    "hemmalag",
-    "bortalag"
+    "home",
+    "away"
   ]
 }

@@ -1,731 +1,1346 @@
 """
-Public API client for the FOGIS API.
+Enhanced FOGIS Public API Client with OAuth 2.0 Support
 
-This module provides a client for interacting with the FOGIS API.
-It uses the internal API layer to communicate with the server,
-but presents a simpler, more user-friendly interface.
+This module provides the main API client interface with support for both
+OAuth 2.0 PKCE authentication and ASP.NET form authentication fallback.
 """
 
 import json
 import logging
-from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union, cast
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 
-from fogis_api_client.internal.adapters import (
-    convert_event_to_internal,
-    convert_internal_to_event,
-    convert_internal_to_match,
-    convert_internal_to_match_result,
-    convert_internal_to_official,
-    convert_internal_to_player,
-    convert_match_participant_to_internal,
-    convert_match_result_to_internal,
-    convert_official_action_to_internal,
-)
-from fogis_api_client.internal.api_client import InternalApiClient, InternalApiError
-from fogis_api_client.internal.auth import authenticate
-from fogis_api_client.types import (
-    CookieDict,
-    EventDict,
-    MatchDict,
-    MatchListResponse,
-    MatchParticipantDict,
-    MatchResultDict,
-    OfficialActionDict,
-    OfficialDict,
-    PlayerDict,
-    TeamPlayersResponse,
+from fogis_api_client.internal.auth import (
+    FogisAuthenticationError,
+    FogisOAuthAuthenticationError,
+    authenticate,
 )
 
 
-class FogisApiError(Exception):
-    """Base exception for all FOGIS API errors."""
+# Custom exceptions
+class FogisLoginError(Exception):
+    """Exception raised when login to FOGIS fails."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super().__init__(self.message)
 
 
-class FogisLoginError(FogisApiError):
-    """Exception raised when login fails."""
+class FogisAPIRequestError(Exception):
+    """Exception raised when an API request to FOGIS fails."""
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super().__init__(self.message)
 
 
-class FogisAPIRequestError(FogisApiError):
-    """Exception raised when an API request fails."""
+class FogisDataError(Exception):
+    """Exception raised when FOGIS returns invalid or unexpected data."""
 
-
-class FogisDataError(FogisApiError):
-    """Exception raised when data validation fails."""
+    def __init__(self, message: str) -> None:
+        self.message = message
+        super().__init__(self.message)
 
 
 class PublicApiClient:
     """
-    A client for interacting with the FOGIS API.
+    Enhanced FOGIS API client with OAuth 2.0 PKCE support.
 
-    This client implements lazy login, meaning it will automatically authenticate
-    when making API requests if not already logged in. You can also explicitly call
-    login() if you want to pre-authenticate.
-
-    Attributes:
-        BASE_URL (str): The base URL for the FOGIS API
-        logger (logging.Logger): Logger instance for this class
-        username (Optional[str]): FOGIS username if provided
-        password (Optional[str]): FOGIS password if provided
-        session (requests.Session): HTTP session for making requests
-        cookies (Optional[CookieDict]): Session cookies for authentication
-        internal_client (InternalApiClient): Internal API client for server communication
+    This client automatically handles both OAuth 2.0 and ASP.NET authentication
+    based on the server's response, providing seamless authentication regardless
+    of which method FOGIS is using.
     """
 
-    BASE_URL: str = "https://fogis.svenskfotboll.se/mdk"
-    # For tests, this can be overridden with an environment variable
-    import os
-
-    if os.environ.get("FOGIS_API_BASE_URL"):
-        BASE_URL = os.environ.get("FOGIS_API_BASE_URL")
-    logger: logging.Logger = logging.getLogger("fogis_api_client.api")
+    BASE_URL = "https://fogis.svenskfotboll.se/mdk"
 
     def __init__(
         self,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        cookies: Optional[CookieDict] = None,
-    ) -> None:
+        cookies: Optional[Dict[str, str]] = None,
+        oauth_tokens: Optional[Dict[str, Any]] = None,
+    ):
         """
-        Initializes the PublicApiClient with either login credentials or session cookies.
-
-        There are two ways to authenticate:
-        1. Username and password: Authentication happens automatically on the first
-           API request (lazy login),
-           or you can call login() explicitly if needed.
-        2. Session cookies: Provide cookies obtained from a previous session or external source.
+        Initialize the FOGIS API client.
 
         Args:
-            username: FOGIS username. Required if cookies are not provided.
-            password: FOGIS password. Required if cookies are not provided.
-            cookies: Session cookies for authentication.
-                If provided, username and password are not required.
-
-        Raises:
-            ValueError: If neither valid credentials nor cookies are provided
+            username: FOGIS username
+            password: FOGIS password
+            cookies: Optional pre-existing session cookies (ASP.NET)
+            oauth_tokens: Optional pre-existing OAuth tokens
         """
-        self.username: Optional[str] = username
-        self.password: Optional[str] = password
-        self.session: requests.Session = requests.Session()
-        self.cookies: Optional[CookieDict] = None
+        self.username = username
+        self.password = password
+        self.session = requests.Session()
+        self.logger = logging.getLogger("fogis_api_client.api")
+        self.base_url = self.BASE_URL
 
-        # Initialize the internal API client
-        self.internal_client = InternalApiClient(self.session)
+        # Authentication state
+        self.cookies: Optional[Dict[str, str]] = None
+        self.oauth_tokens: Optional[Dict[str, Any]] = None
+        self.authentication_method: Optional[str] = None  # 'oauth' or 'aspnet'
 
-        # Set cookies if provided
-        if cookies:
-            self.logger.debug("Using provided cookies for authentication")
+        # Initialize with provided authentication
+        if oauth_tokens:
+            self.oauth_tokens = oauth_tokens
+            self.authentication_method = "oauth"
+            # Set OAuth authorization header
+            if "access_token" in oauth_tokens:
+                self.session.headers["Authorization"] = f"Bearer {oauth_tokens['access_token']}"
+            self.logger.info("Initialized with OAuth tokens")
+
+        elif cookies:
             self.cookies = cookies
-            # Set cookies in the session
+            self.authentication_method = "aspnet"
+            # Add cookies to the session
             for key, value in cookies.items():
-                self.session.cookies.set(key, value)
+                if isinstance(value, str) and not key.startswith("oauth"):
+                    self.session.cookies.set(key, value)
+            self.logger.info("Initialized with ASP.NET cookies")
+
         elif not (username and password):
-            error_msg = "Either username and password or cookies must be provided"
-            self.logger.error(error_msg)
-            raise ValueError(error_msg)
+            raise ValueError("Either username and password OR cookies/oauth_tokens must be provided")
 
-    def login(self) -> CookieDict:
+    def _check_existing_authentication(self) -> Optional[Union[Dict[str, str], Dict[str, Any]]]:
+        """Check if already authenticated and return existing credentials."""
+        if self.oauth_tokens and self.authentication_method == "oauth":
+            self.logger.debug("Already authenticated with OAuth, using existing tokens")
+            return self.oauth_tokens
+        elif self.cookies and self.authentication_method == "aspnet":
+            self.logger.debug("Already authenticated with ASP.NET, using existing cookies")
+            return self.cookies
+        return None
+
+    def _handle_oauth_authentication_result(self, auth_result: Dict[str, Any]) -> Union[Dict[str, str], Dict[str, Any]]:
+        """Handle OAuth authentication result."""
+        if auth_result.get("authentication_method") == "oauth_hybrid":
+            # OAuth hybrid: OAuth login but ASP.NET session cookies for API access
+            self.cookies = {
+                k: v for k, v in auth_result.items() if not k.startswith("oauth") and not k.startswith("authentication")
+            }
+            self.authentication_method = "oauth_hybrid"
+            self.logger.info("OAuth hybrid authentication successful (OAuth login + ASP.NET cookies)")
+
+            # Set cookies in session for API calls
+            for key, value in self.cookies.items():
+                self.session.cookies.set(key, value)
+
+            return self.cookies
+        else:
+            # Pure OAuth authentication with tokens
+            self.oauth_tokens = auth_result
+            self.authentication_method = "oauth"
+            self.logger.info("OAuth authentication successful")
+            return self.oauth_tokens
+
+    def login(self) -> Union[Dict[str, str], Dict[str, Any]]:
         """
-        Authenticate with the FOGIS API.
-
-        This method is called automatically when needed, but you can also call it
-        explicitly if you want to pre-authenticate.
+        Logs into the FOGIS API using OAuth 2.0 or ASP.NET authentication.
 
         Returns:
-            CookieDict: The session cookies for authentication
+            Authentication tokens/cookies if login is successful
 
         Raises:
             FogisLoginError: If login fails
+            FogisAPIRequestError: If there is an error during the login request
         """
-        # If cookies are already set, return them without logging in again
-        if self.cookies:
-            self.logger.debug("Already authenticated, using existing cookies")
-            return self.cookies
+        # Check if already authenticated
+        existing_auth = self._check_existing_authentication()
+        if existing_auth is not None:
+            return existing_auth
 
-        # If no username/password provided, we can't log in
+        # Validate credentials
         if not (self.username and self.password):
-            error_msg = "Login failed: No credentials provided and no cookies available"
+            error_msg = "Login failed: No credentials provided and no existing authentication available"
             self.logger.error(error_msg)
             raise FogisLoginError(error_msg)
 
         try:
-            # Authenticate with the FOGIS API
-            self.cookies = authenticate(self.session, self.username, self.password, self.BASE_URL)
-            return self.cookies
-        except (requests.exceptions.RequestException, ValueError) as e:
-            error_msg = f"Login failed: {e}"
+            # Attempt authentication
+            auth_result = authenticate(self.session, self.username, self.password, self.BASE_URL)
+
+            # Process authentication result
+            if "oauth_authenticated" in auth_result:
+                return self._handle_oauth_authentication_result(auth_result)
+            elif "aspnet_authenticated" in auth_result:
+                # Traditional ASP.NET authentication
+                self.cookies = {k: v for k, v in auth_result.items() if not k.startswith("aspnet")}
+                self.authentication_method = "aspnet"
+                self.logger.info("ASP.NET authentication successful")
+                return self.cookies
+            else:
+                # Unknown authentication result
+                self.logger.error("Unknown authentication result format")
+                raise FogisLoginError("Authentication completed but result format is unknown")
+
+        except FogisOAuthAuthenticationError as e:
+            error_msg = f"OAuth authentication failed: {e}"
             self.logger.error(error_msg)
             raise FogisLoginError(error_msg) from e
 
-    def fetch_matches_list_json(self, filter_params: Optional[Dict[str, Any]] = None) -> MatchListResponse:
+        except FogisAuthenticationError as e:
+            error_msg = f"Authentication failed: {e}"
+            self.logger.error(error_msg)
+            raise FogisLoginError(error_msg) from e
+
+        except requests.exceptions.RequestException as e:
+            error_msg = f"Login request failed: {e}"
+            self.logger.error(error_msg)
+            raise FogisAPIRequestError(error_msg) from e
+
+    def refresh_authentication(self) -> bool:
+        """
+        Refresh authentication tokens/session.
+
+        Returns:
+            True if refresh was successful, False otherwise
+        """
+        if self.authentication_method == "oauth" and self.oauth_tokens:
+            # Try to refresh OAuth tokens
+            try:
+                from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager
+
+                oauth_manager = FogisOAuthManager(self.session)
+
+                # Set current tokens
+                oauth_manager.access_token = self.oauth_tokens.get("access_token")
+                oauth_manager.refresh_token = self.oauth_tokens.get("refresh_token")
+
+                # Attempt refresh
+                if oauth_manager.refresh_access_token():
+                    # Update stored tokens
+                    self.oauth_tokens.update(
+                        {
+                            "access_token": oauth_manager.access_token,
+                            "refresh_token": oauth_manager.refresh_token,
+                            "expires_in": oauth_manager.token_expires_in,
+                        }
+                    )
+                    self.logger.info("OAuth tokens refreshed successfully")
+                    return True
+                else:
+                    self.logger.error("OAuth token refresh failed")
+                    return False
+
+            except Exception as e:
+                self.logger.error(f"Error refreshing OAuth tokens: {e}")
+                return False
+
+        elif self.authentication_method == "aspnet":
+            # For ASP.NET, we need to re-authenticate
+            try:
+                self.cookies = None
+                self.login()
+                return True
+            except Exception as e:
+                self.logger.error(f"Error re-authenticating ASP.NET session: {e}")
+                return False
+
+        return False
+
+    def is_authenticated(self) -> bool:
+        """
+        Check if the client is currently authenticated.
+
+        Returns:
+            True if authenticated, False otherwise
+        """
+        if self.authentication_method == "oauth":
+            return self.oauth_tokens is not None and "access_token" in self.oauth_tokens
+        elif self.authentication_method in ["aspnet", "oauth_hybrid"]:
+            return self.cookies is not None and len(self.cookies) > 0
+        return False
+
+    def get_authentication_info(self) -> Dict[str, Any]:
+        """
+        Get information about the current authentication state.
+
+        Returns:
+            Dictionary with authentication information
+        """
+        return {
+            "method": self.authentication_method,
+            "authenticated": self.is_authenticated(),
+            "has_oauth_tokens": self.oauth_tokens is not None,
+            "has_aspnet_cookies": self.cookies is not None,
+            "oauth_token_info": (self.oauth_tokens.get("expires_in") if self.oauth_tokens else None),
+        }
+
+    def _ensure_authenticated(self) -> None:
+        """
+        Ensure the client is authenticated, performing login if necessary.
+
+        Raises:
+            FogisLoginError: If authentication fails
+        """
+        if not self.is_authenticated():
+            self.logger.info("Not authenticated, performing automatic login...")
+            self.login()
+
+    def _make_authenticated_request(self, method: str, url: str, **kwargs) -> requests.Response:
+        """
+        Make an authenticated request to the FOGIS API with proper headers and error handling.
+
+        Args:
+            method: HTTP method (GET, POST, etc.)
+            url: Request URL
+            **kwargs: Additional arguments for requests
+
+        Returns:
+            Response object
+
+        Raises:
+            FogisAPIRequestError: If the request fails
+        """
+        # Ensure we're authenticated
+        self._ensure_authenticated()
+
+        # Prepare FOGIS-specific headers (same as original implementation)
+        api_headers = {
+            "Content-Type": "application/json; charset=UTF-8",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Origin": "https://fogis.svenskfotboll.se",
+            "Referer": f"{self.BASE_URL}/",
+            "X-Requested-With": "XMLHttpRequest",
+        }
+
+        # Merge with any provided headers
+        if "headers" in kwargs:
+            api_headers.update(kwargs["headers"])
+        kwargs["headers"] = api_headers
+
+        # Make the request
+        try:
+            response = self.session.request(method, url, **kwargs)
+
+            # Check for authentication errors
+            if response.status_code == 401:
+                self.logger.warning("Received 401 Unauthorized, attempting to refresh authentication")
+                if self.refresh_authentication():
+                    # Retry the request
+                    response = self.session.request(method, url, **kwargs)
+                else:
+                    raise FogisAPIRequestError("Authentication refresh failed")
+
+            # Raise for HTTP errors
+            response.raise_for_status()
+
+            return response
+
+        except requests.exceptions.RequestException as e:
+            raise FogisAPIRequestError(f"Request failed: {e}")
+
+    # Placeholder for additional API methods
+    def fetch_matches_list_json(self, filter_params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
         Fetch the list of matches for the logged-in referee.
 
         Args:
-            filter_params: Filter parameters for the match list.
-                If None, default filter parameters will be used.
+            filter_params: Optional filter parameters
 
         Returns:
-            MatchListResponse: The match list response
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
+            List of match dictionaries
         """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Use default filter parameters if none provided
-        if filter_params is None:
-            # Default to matches for the next 7 days
-            today = datetime.now().strftime("%Y-%m-%d")
-            next_week = (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d")
-            filter_params = {
-                "datumFran": today,
-                "datumTill": next_week,
-                "datumTyp": 1,  # Match date
-                "status": ["Ej rapporterad", "Påbörjad rapportering"],
-            }
-
-        try:
-            # Use the internal API client to fetch the match list
-            response_data = self.internal_client.get_matches_list(filter_params)
-
-            # Convert to the public format
-            return cast(MatchListResponse, response_data)
-        except InternalApiError as e:
-            error_msg = f"Failed to fetch match list: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def fetch_match_json(self, match_id: Union[int, str]) -> MatchDict:
-        """
-        Fetch detailed information for a specific match.
-
-        Args:
-            match_id: The ID of the match
-
-        Returns:
-            MatchDict: The match details
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Convert match_id to int if it's a string
-        match_id_int = int(match_id) if isinstance(match_id, str) else match_id
-
-        try:
-            # Use the internal API client to fetch the match details
-            internal_match = self.internal_client.get_match(match_id_int)
-
-            # Convert to the public format
-            return convert_internal_to_match(internal_match)
-        except InternalApiError as e:
-            error_msg = f"Failed to fetch match details: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def fetch_match_players_json(self, match_id: Union[int, str]) -> Dict[str, List[PlayerDict]]:
-        """
-        Fetch player information for a specific match.
-
-        Args:
-            match_id: The ID of the match
-
-        Returns:
-            Dict[str, List[PlayerDict]]: Player information for the match
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Convert match_id to int if it's a string
-        match_id_int = int(match_id) if isinstance(match_id, str) else match_id
-
-        try:
-            # Use the internal API client to fetch the match players
-            internal_players = self.internal_client.get_match_players(match_id_int)
-
-            # Convert to the public format
-            result: Dict[str, List[PlayerDict]] = {}
-            for key, players in internal_players.items():
-                result[key] = [convert_internal_to_player(player) for player in players]
-
-            return result
-        except InternalApiError as e:
-            error_msg = f"Failed to fetch match players: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def fetch_match_officials_json(self, match_id: Union[int, str]) -> Dict[str, List[OfficialDict]]:
-        """
-        Fetch officials information for a specific match.
-
-        Args:
-            match_id: The ID of the match
-
-        Returns:
-            Dict[str, List[OfficialDict]]: Officials information for the match
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Convert match_id to int if it's a string
-        match_id_int = int(match_id) if isinstance(match_id, str) else match_id
-
-        try:
-            # Use the internal API client to fetch the match officials
-            internal_officials = self.internal_client.get_match_officials(match_id_int)
-
-            # Convert to the public format
-            result: Dict[str, List[OfficialDict]] = {}
-            for key, officials in internal_officials.items():
-                result[key] = [convert_internal_to_official(official) for official in officials]
-
-            return result
-        except InternalApiError as e:
-            error_msg = f"Failed to fetch match officials: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def fetch_match_events_json(self, match_id: Union[int, str]) -> List[EventDict]:
-        """
-        Fetch events information for a specific match.
-
-        Args:
-            match_id: The ID of the match
-
-        Returns:
-            List[EventDict]: Events information for the match
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Convert match_id to int if it's a string
-        match_id_int = int(match_id) if isinstance(match_id, str) else match_id
-
-        try:
-            # Use the internal API client to fetch the match events
-            internal_events = self.internal_client.get_match_events(match_id_int)
-
-            # Convert to the public format
-            return [convert_internal_to_event(event) for event in internal_events]
-        except InternalApiError as e:
-            error_msg = f"Failed to fetch match events: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def fetch_team_players_json(self, team_id: Union[int, str]) -> TeamPlayersResponse:
-        """
-        Fetch player information for a specific team.
-
-        Args:
-            team_id: The ID of the team
-
-        Returns:
-            TeamPlayersResponse: Player information for the team
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Convert team_id to int if it's a string
-        team_id_int = int(team_id) if isinstance(team_id, str) else team_id
-
-        try:
-            # Use the internal API client to fetch the team players
-            internal_players = self.internal_client.get_team_players(team_id_int)
-
-            # For now, just cast to the public format since they're the same
-            return cast(TeamPlayersResponse, internal_players)
-        except InternalApiError as e:
-            error_msg = f"Failed to fetch team players: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def report_match_event(self, event_data: EventDict) -> Dict[str, Any]:
-        """
-        Report a match event to the FOGIS API.
-
-        Args:
-            event_data: The event data to report
-
-        Returns:
-            Dict[str, Any]: The response from the API
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-            ValueError: If required fields are missing
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Validate required fields
-        required_fields = ["matchid", "matchhandelsetypid", "matchminut", "matchlagid", "period"]
-        for field in required_fields:
-            if field not in event_data:
-                error_msg = f"Missing required field '{field}' in event data"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-
-        try:
-            # Convert to the internal format
-            internal_event = convert_event_to_internal(event_data)
-
-            # Use the internal API client to report the match event
-            response_data = self.internal_client.save_match_event(internal_event)
-
-            return response_data
-        except InternalApiError as e:
-            error_msg = f"Failed to report match event: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def fetch_match_result_json(self, match_id: Union[int, str]) -> Union[MatchResultDict, List[Dict[str, Any]]]:
-        """
-        Fetch the match results for a given match ID.
-
-        Args:
-            match_id: The ID of the match
-
-        Returns:
-            Union[MatchResultDict, List[Dict[str, Any]]]: The match results
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Convert match_id to int if it's a string
-        match_id_int = int(match_id) if isinstance(match_id, str) else match_id
-
-        try:
-            # Use the internal API client to fetch the match result
-            internal_result = self.internal_client.get_match_result(match_id_int)
-
-            # Convert to the public format
-            return convert_internal_to_match_result(internal_result)
-        except InternalApiError as e:
-            error_msg = f"Failed to fetch match result: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def report_match_result(self, result_data: Union[MatchResultDict, Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Report match results to the FOGIS API.
-
-        Args:
-            result_data: The match result data to report.
-                Can be in either flat format (with hemmamal/bortamal) or
-                nested format (with matchresultatListaJSON).
-
-        Returns:
-            Dict[str, Any]: The response from the API
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-            ValueError: If required fields are missing
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Validate required fields for flat format
-        if "matchresultatListaJSON" not in result_data:
-            required_fields = ["matchid", "hemmamal", "bortamal"]
-            for field in required_fields:
-                if field not in result_data:
-                    error_msg = f"Missing required field '{field}' in result data"
-                    self.logger.error(error_msg)
-                    raise ValueError(error_msg)
-
-        try:
-            # Convert to the internal format
-            internal_result = convert_match_result_to_internal(result_data)
-
-            # Use the internal API client to report the match result
-            response_data = self.internal_client.save_match_result(internal_result)
-
-            return response_data
-        except InternalApiError as e:
-            error_msg = f"Failed to report match result: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def delete_match_event(self, event_id: Union[int, str]) -> Dict[str, Any]:
-        """
-        Delete a match event from the FOGIS API.
-
-        Args:
-            event_id: The ID of the event to delete
-
-        Returns:
-            Dict[str, Any]: The response from the API
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Convert event_id to int if it's a string
-        event_id_int = int(event_id) if isinstance(event_id, str) else event_id
-
-        try:
-            # Use the internal API client to delete the match event
-            response_data = self.internal_client.delete_match_event(event_id_int)
-
-            return response_data
-        except InternalApiError as e:
-            error_msg = f"Failed to delete match event: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def report_team_official_action(self, action_data: OfficialActionDict) -> Dict[str, Any]:
-        """
-        Report a team official action to the FOGIS API.
-
-        Args:
-            action_data: The team official action data to report
-
-        Returns:
-            Dict[str, Any]: The response from the API
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-            ValueError: If required fields are missing
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Validate required fields
-        required_fields = ["matchid", "matchlagid", "matchlagledareid", "matchlagledaretypid"]
-        for field in required_fields:
-            if field not in action_data:
-                error_msg = f"Missing required field '{field}' in action data"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-
-        try:
-            # Convert to the internal format
-            internal_action = convert_official_action_to_internal(action_data)
-
-            # Use the internal API client to report the team official action
-            response_data = self.internal_client.save_team_official_action(internal_action)
-
-            return response_data
-        except InternalApiError as e:
-            error_msg = f"Failed to report team official action: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def fetch_team_officials_json(self, team_id: Union[int, str]) -> List[OfficialDict]:
-        """
-        Fetch officials information for a specific team.
-
-        Args:
-            team_id: The ID of the team
-
-        Returns:
-            List[OfficialDict]: Officials information for the team
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Convert team_id to int if it's a string
-        team_id_int = int(team_id) if isinstance(team_id, str) else team_id
-
-        try:
-            # Use the internal API client to fetch the team officials
-            internal_officials = self.internal_client.get_team_officials(team_id_int)
-
-            # Convert to the public format
-            return [convert_internal_to_official(official) for official in internal_officials]
-        except InternalApiError as e:
-            error_msg = f"Failed to fetch team officials: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def save_match_participant(self, participant_data: MatchParticipantDict) -> Dict[str, Any]:
-        """
-        Save a match participant to the FOGIS API.
-
-        Args:
-            participant_data: The match participant data to save
-
-        Returns:
-            Dict[str, Any]: The response from the API
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-            ValueError: If required fields are missing
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Validate required fields
-        required_fields = ["matchdeltagareid", "trojnummer", "lagdelid"]
-        for field in required_fields:
-            if field not in participant_data:
-                error_msg = f"Missing required field '{field}' in participant data"
-                self.logger.error(error_msg)
-                raise ValueError(error_msg)
-
-        try:
-            # Convert to the internal format
-            internal_participant = convert_match_participant_to_internal(participant_data)
-
-            # Use the internal API client to save the match participant
-            response_data = self.internal_client.save_match_participant(internal_participant)
-            return response_data
-        except InternalApiError as e:
-            error_msg = f"Failed to save match participant: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def clear_match_events(self, match_id: Union[int, str]) -> Dict[str, bool]:
-        """
-        Clear all events for a match.
-
-        Args:
-            match_id: The ID of the match
-
-        Returns:
-            Dict[str, bool]: The response from the API
-
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid
-        """
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
-
-        # Convert match_id to int if it's a string
-        match_id_int = int(match_id) if isinstance(match_id, str) else match_id
-
-        try:
-            # Use the internal API client to clear the match events
-            return self.internal_client.clear_match_events(match_id_int)
-        except InternalApiError as e:
-            error_msg = f"Failed to clear match events: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
-
-    def get_cookies(self) -> Optional[CookieDict]:
-        """
-        Get the current session cookies.
-
-        Returns:
-            Optional[CookieDict]: The current session cookies, or None if not logged in
-        """
-        if self.cookies:
-            self.logger.debug("Returning current session cookies")
+        self.logger.info("Fetching matches list...")
+
+        # Use the correct FOGIS API endpoint
+        matches_url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatcherAttRapportera"
+
+        # Build the default payload with the same structure as the working implementation
+        from datetime import datetime, timedelta
+
+        today = datetime.now().strftime("%Y-%m-%d")
+        default_datum_fran = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")  # One week ago
+        default_datum_till = (datetime.now() + timedelta(days=365)).strftime("%Y-%m-%d")  # 365 days ahead
+
+        payload_filter = {
+            "datumFran": default_datum_fran,
+            "datumTill": default_datum_till,
+            "datumTyp": 0,  # INTEGER, not string
+            "typ": "alla",
+            "status": ["avbruten", "uppskjuten", "installd"],
+            "alderskategori": [1, 2, 3, 4, 5],
+            "kon": [3, 2, 4],
+            "sparadDatum": today,
+        }
+
+        # Update with any custom filter parameters
+        if filter_params:
+            payload_filter.update(filter_params)
+
+        # Wrap the filter in the expected payload structure
+        payload = {"filter": payload_filter}
+
+        response = self._make_authenticated_request("POST", matches_url, json=payload)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key (same as original implementation)
+                if "d" in response_json:
+                    # The 'd' value is a JSON string that needs to be parsed again
+                    if isinstance(response_json["d"], str):
+                        parsed_data = json.loads(response_json["d"])
+
+                        # Extract matches from the response
+                        if isinstance(parsed_data, dict) and "matchlista" in parsed_data:
+                            return parsed_data["matchlista"]
+                        elif isinstance(parsed_data, list):
+                            return parsed_data
+                        else:
+                            return []
+                    else:
+                        # 'd' is already parsed
+                        if isinstance(response_json["d"], dict) and "matchlista" in response_json["d"]:
+                            return response_json["d"]["matchlista"]
+                        elif isinstance(response_json["d"], list):
+                            return response_json["d"]
+                        else:
+                            return []
+                else:
+                    # Fallback: direct response parsing
+                    if isinstance(response_json, dict) and "matchlista" in response_json:
+                        return response_json["matchlista"]
+                    elif isinstance(response_json, list):
+                        return response_json
+                    else:
+                        return []
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
         else:
-            self.logger.debug("No cookies available to return")
-        return self.cookies
+            raise FogisAPIRequestError(f"Failed to fetch matches: {response.status_code}")
 
     def hello_world(self) -> str:
         """
-        Simple test method.
+        Return a hello world message for API compatibility.
 
         Returns:
-            str: A greeting message
+            str: Hello world message
         """
-        self.logger.debug("Hello world method called")
         return "Hello, brave new world!"
 
-    def mark_reporting_finished(self, match_id: Union[int, str]) -> Dict[str, bool]:
+    def get_match_details(self, match_id: Union[int, str]) -> Dict[str, Any]:
         """
-        Mark match reporting as finished.
+        Get match details from the comprehensive match list data.
+
+        This method extracts match details from the match list response, which contains
+        85 comprehensive fields including all necessary match information.
+
+        Args:
+            match_id: The ID of the match to get details for
+
+        Returns:
+            Dict containing match details from the match list
+
+        Raises:
+            FogisAPIRequestError: If the match is not found
+        """
+        self.logger.info(f"Getting match details for match ID: {match_id}")
+
+        # Get all matches and find the specific one
+        matches = self.fetch_matches_list_json()
+
+        match_id_int = int(match_id)
+        for match in matches:
+            if match.get("matchid") == match_id_int:
+                return match
+
+        raise FogisAPIRequestError(f"Match with ID {match_id} not found in match list")
+
+    def get_cookies(self) -> Dict[str, str]:
+        """
+        Get current session cookies.
+
+        Returns:
+            Dictionary of current cookies
+        """
+        cookies = {}
+        for cookie in self.session.cookies:
+            # Handle multiple cookies with same name by using the last one
+            cookies[cookie.name] = cookie.value
+        return cookies
+
+    def get_match_players(self, match_id: Union[int, str]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get all players for a match using team-specific endpoints.
+
+        This method uses the working team-specific endpoints to fetch players
+        for both home and away teams.
+
+        Args:
+            match_id: The ID of the match to get players for
+
+        Returns:
+            Dict with 'hemmalag' and 'bortalag' keys containing player lists
+
+        Raises:
+            FogisAPIRequestError: If the match is not found or API request fails
+        """
+        self.logger.info(f"Getting players for match ID: {match_id}")
+
+        # Get match details to find team IDs
+        match_details = self.get_match_details(match_id)
+        home_team_id = match_details.get("matchlag1id")
+        away_team_id = match_details.get("matchlag2id")
+
+        if not home_team_id or not away_team_id:
+            raise FogisAPIRequestError(f"Could not find team IDs for match {match_id}")
+
+        # Fetch players for both teams using working endpoints
+        home_players_data = self.fetch_team_players_json(home_team_id)
+        away_players_data = self.fetch_team_players_json(away_team_id)
+
+        # Extract player lists from team responses
+        home_players = home_players_data.get("spelare", []) if isinstance(home_players_data, dict) else home_players_data
+        away_players = away_players_data.get("spelare", []) if isinstance(away_players_data, dict) else away_players_data
+
+        return {"home": home_players, "away": away_players}
+
+    def fetch_match_events_json(self, match_id: Union[int, str]) -> List[Dict[str, Any]]:
+        """
+        Fetch match events data in JSON format.
+
+        Args:
+            match_id: The ID of the match to fetch events for
+
+        Returns:
+            List of event dictionaries
+        """
+        self.logger.info(f"Fetching events for match ID: {match_id}")
+
+        # Ensure we're authenticated
+        if not self.is_authenticated():
+            self.logger.info("Not authenticated, performing automatic login...")
+            self.login()
+
+        # Use correct FOGIS API endpoint for events
+        events_url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatchhandelselista"
+        match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
+        payload = {"matchid": match_id_int}
+
+        response = self._make_authenticated_request("POST", events_url, json=payload)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        import json
+
+                        parsed_data = json.loads(response_json["d"])
+                        if isinstance(parsed_data, list):
+                            return parsed_data
+                        elif isinstance(parsed_data, dict) and "events" in parsed_data:
+                            return parsed_data["events"]
+                        else:
+                            return []
+                    else:
+                        if isinstance(response_json["d"], list):
+                            return response_json["d"]
+                        elif isinstance(response_json["d"], dict) and "events" in response_json["d"]:
+                            return response_json["d"]["events"]
+                        else:
+                            return []
+                else:
+                    # Fallback: direct response parsing
+                    if isinstance(response_json, list):
+                        return response_json
+                    elif isinstance(response_json, dict) and "events" in response_json:
+                        return response_json["events"]
+                    else:
+                        return []
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to fetch match events: {response.status_code}")
+
+    def get_match_officials(self, match_id: Union[int, str]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get all officials for a match using team-specific endpoints.
+
+        This method uses the working team-specific endpoints to fetch officials
+        for both home and away teams, plus referee information from match details.
+
+        Args:
+            match_id: The ID of the match to get officials for
+
+        Returns:
+            Dict with team officials and referee information
+
+        Raises:
+            FogisAPIRequestError: If the match is not found or API request fails
+        """
+        self.logger.info(f"Getting officials for match ID: {match_id}")
+
+        # Get match details to find team IDs and referee info
+        match_details = self.get_match_details(match_id)
+        home_team_id = match_details.get("matchlag1id")
+        away_team_id = match_details.get("matchlag2id")
+
+        result = {}
+
+        # Get team officials if team IDs are available
+        if home_team_id:
+            try:
+                home_officials = self.fetch_team_officials_json(home_team_id)
+                result["home"] = home_officials if isinstance(home_officials, list) else []
+            except Exception as e:
+                self.logger.warning(f"Could not fetch home team officials: {e}")
+                result["home"] = []
+
+        if away_team_id:
+            try:
+                away_officials = self.fetch_team_officials_json(away_team_id)
+                result["away"] = away_officials if isinstance(away_officials, list) else []
+            except Exception as e:
+                self.logger.warning(f"Could not fetch away team officials: {e}")
+                result["away"] = []
+
+        # Note: Referees are kept in match_details.domaruppdraglista, not returned here
+        # This method returns team officials only
+
+        return result
+
+    def fetch_team_officials_json(self, matchlagid: Union[int, str]) -> List[Dict[str, Any]]:
+        """
+        Fetch team officials data for a specific team in a match.
+
+        Args:
+            matchlagid: The match-specific team ID
+
+        Returns:
+            List of team officials
+
+        Raises:
+            FogisAPIRequestError: If the API request fails
+        """
+        self.logger.info(f"Fetching team officials for matchlagid: {matchlagid}")
+
+        # Ensure we're authenticated
+        if not self.is_authenticated():
+            self.logger.info("Not authenticated, performing automatic login...")
+            self.login()
+
+        # Use the working team officials endpoint
+        officials_url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag"
+        matchlagid_int = int(matchlagid) if isinstance(matchlagid, (str, int)) else matchlagid
+        payload = {"matchlagid": matchlagid_int}
+
+        response = self._make_authenticated_request("POST", officials_url, json=payload)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        import json
+
+                        parsed_data = json.loads(response_json["d"])
+                        return parsed_data if isinstance(parsed_data, list) else []
+                    else:
+                        return response_json["d"] if isinstance(response_json["d"], list) else []
+                else:
+                    # Fallback: direct response parsing
+                    return response_json if isinstance(response_json, list) else []
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to fetch team officials: {response.status_code}")
+
+    def fetch_team_players_json(self, team_id: Union[int, str]) -> Dict[str, Any]:
+        """
+        Fetch team players data for a specific team in a match.
+
+        Args:
+            team_id: The match-specific team ID (matchlagid)
+
+        Returns:
+            Dict containing team players with 'spelare' key
+
+        Raises:
+            FogisAPIRequestError: If the API request fails
+        """
+        self.logger.info(f"Fetching team players for team ID: {team_id}")
+
+        # Ensure we're authenticated
+        if not self.is_authenticated():
+            self.logger.info("Not authenticated, performing automatic login...")
+            self.login()
+
+        # Use the working team players endpoint
+        players_url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag"
+        team_id_int = int(team_id) if isinstance(team_id, (str, int)) else team_id
+        payload = {"matchlagid": team_id_int}
+
+        response = self._make_authenticated_request("POST", players_url, json=payload)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        import json
+
+                        parsed_data = json.loads(response_json["d"])
+                        return parsed_data if isinstance(parsed_data, dict) else {"spelare": []}
+                    else:
+                        return response_json["d"] if isinstance(response_json["d"], dict) else {"spelare": []}
+                else:
+                    # Fallback: direct response parsing
+                    return response_json if isinstance(response_json, dict) else {"spelare": []}
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to fetch team players: {response.status_code}")
+
+    def fetch_match_result_json(self, match_id: Union[int, str]) -> Dict[str, Any]:
+        """
+        Fetch match result data in JSON format.
+
+        Args:
+            match_id: The ID of the match to fetch result for
+
+        Returns:
+            Dictionary containing match result
+        """
+        self.logger.info(f"Fetching result for match ID: {match_id}")
+
+        # Ensure we're authenticated
+        if not self.is_authenticated():
+            self.logger.info("Not authenticated, performing automatic login...")
+            self.login()
+
+        # Use correct FOGIS API endpoint for result
+        result_url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatchresultatlista"
+        match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
+        payload = {"matchid": match_id_int}
+
+        response = self._make_authenticated_request("POST", result_url, json=payload)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        import json
+
+                        parsed_data = json.loads(response_json["d"])
+                        if isinstance(parsed_data, dict):
+                            return parsed_data
+                        elif isinstance(parsed_data, list) and len(parsed_data) > 0:
+                            # Return first result if multiple results
+                            return parsed_data[0]
+                        else:
+                            return {}
+                    else:
+                        if isinstance(response_json["d"], dict):
+                            return response_json["d"]
+                        elif isinstance(response_json["d"], list) and len(response_json["d"]) > 0:
+                            # Return first result if multiple results
+                            return response_json["d"][0]
+                        else:
+                            return {}
+                else:
+                    # Fallback: direct response parsing
+                    if isinstance(response_json, dict):
+                        return response_json
+                    elif isinstance(response_json, list) and len(response_json) > 0:
+                        # Return first result if multiple results
+                        return response_json[0]
+                    else:
+                        return {}
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to fetch match result: {response.status_code}")
+
+    # New convenience methods for improved API experience
+    def fetch_complete_match(self, match_id: Union[int, str], include_optional: bool = True) -> Dict[str, Any]:
+        """
+        Fetch complete match information in a single call.
+
+        This method aggregates all match-related data from multiple FOGIS endpoints
+        and returns a unified, well-structured match object. It serves as both a
+        convenience method and living documentation of how to properly fetch
+        complete match data.
+
+        Args:
+            match_id: The ID of the match to fetch
+            include_optional: Whether to include optional data (players, officials)
+                             that might fail for some matches (default: True)
+
+        Returns:
+            Dict containing complete match data:
+                - match_details: Basic match information (85 fields from match list)
+                - players: Home and away team players (if include_optional=True)
+                - officials: Team officials and referees (if include_optional=True)
+                - events: Match events (goals, cards, substitutions)
+                - result: Final match result
+                - metadata: Fetch status, timing, and any warnings
+
+        Raises:
+            FogisAPIRequestError: If critical data (match details) cannot be fetched
+
+        Examples:
+            >>> client = PublicApiClient(username="user", password="pass")
+            >>> client.login()
+            >>>
+            >>> # Get complete match data
+            >>> match_data = client.fetch_complete_match(123456)
+            >>>
+            >>> # Check what data was successfully fetched
+            >>> print(f"Teams: {match_data['match_details']['lag1namn']} vs {match_data['match_details']['lag2namn']}")
+            >>> print(f"Events: {len(match_data['events'])} events")
+            >>> print(f"Warnings: {match_data['metadata']['warnings']}")
+            >>>
+            >>> # Handle missing optional data gracefully
+            >>> if match_data['players']:
+            >>>     home_players = match_data['players']['hemmalag']
+            >>>     print(f"Home team: {len(home_players)} players")
+            >>> else:
+            >>>     print("Player data not available")
+        """
+        from datetime import datetime
+
+        self.logger.info(f"Fetching complete match data for match ID: {match_id}")
+
+        result = {
+            "match_id": match_id,
+            "match_details": None,
+            "players": None,
+            "officials": None,
+            "events": None,
+            "result": None,
+            "metadata": {
+                "fetch_time": datetime.now().isoformat(),
+                "success": {},
+                "errors": {},
+                "warnings": [],
+                "include_optional": include_optional,
+            },
+        }
+
+        # 1. CRITICAL: Match details (required)
+        try:
+            result["match_details"] = self.get_match_details(match_id)
+            result["metadata"]["success"]["match_details"] = True
+            self.logger.debug("✅ Match details fetched successfully")
+        except Exception as e:
+            result["metadata"]["errors"]["match_details"] = str(e)
+            self.logger.error(f"❌ Failed to fetch critical match details: {e}")
+            raise FogisAPIRequestError(f"Failed to fetch critical match details: {e}")
+
+        # 2. IMPORTANT: Events and results (usually available)
+        for endpoint_name, method in [("events", self.fetch_match_events_json), ("result", self.fetch_match_result_json)]:
+            try:
+                result[endpoint_name] = method(match_id)
+                result["metadata"]["success"][endpoint_name] = True
+                self.logger.debug(f"✅ {endpoint_name} fetched successfully")
+            except Exception as e:
+                result["metadata"]["errors"][endpoint_name] = str(e)
+                result["metadata"]["warnings"].append(f"Could not fetch {endpoint_name}: {e}")
+                self.logger.warning(f"⚠️ Could not fetch {endpoint_name}: {e}")
+
+        # 3. OPTIONAL: Players and officials (might fail for some matches)
+        if include_optional:
+            for endpoint_name, method in [("players", self.get_match_players), ("officials", self.get_match_officials)]:
+                try:
+                    result[endpoint_name] = method(match_id)
+                    result["metadata"]["success"][endpoint_name] = True
+                    self.logger.debug(f"✅ {endpoint_name} fetched successfully")
+                except Exception as e:
+                    result["metadata"]["errors"][endpoint_name] = str(e)
+                    result["metadata"]["warnings"].append(f"Could not fetch {endpoint_name}: {e}")
+                    self.logger.warning(f"⚠️ Could not fetch {endpoint_name}: {e}")
+
+        # Log summary
+        successful_fetches = len(result["metadata"]["success"])
+        total_attempted = 5 if include_optional else 3
+        self.logger.info(f"Complete match fetch summary: {successful_fetches}/{total_attempted} endpoints successful")
+
+        return result
+
+    def get_recent_matches(self, days: int = 30, include_future: bool = False) -> List[Dict[str, Any]]:
+        """
+        Get recent matches within a specified time period.
+
+        This convenience method simplifies fetching matches from recent dates
+        without needing to construct complex filter parameters.
+
+        Args:
+            days: Number of days to look back from today (default: 30)
+            include_future: Whether to include future matches (default: False)
+
+        Returns:
+            List of match dictionaries sorted by date (newest first)
+
+        Examples:
+            >>> client = PublicApiClient(username="user", password="pass")
+            >>>
+            >>> # Get matches from last 7 days
+            >>> recent = client.get_recent_matches(days=7)
+            >>> print(f"Found {len(recent)} matches in last 7 days")
+            >>>
+            >>> # Get matches from last 30 days including future matches
+            >>> all_recent = client.get_recent_matches(days=30, include_future=True)
+        """
+        from datetime import datetime, timedelta
+
+        self.logger.info(f"Fetching recent matches: {days} days back, include_future={include_future}")
+
+        # Calculate date range
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=days)
+
+        if include_future:
+            # Extend end date to include future matches
+            end_date = end_date + timedelta(days=30)
+
+        # Build filter parameters
+        filter_params = {"datumFran": start_date.strftime("%Y-%m-%d"), "datumTill": end_date.strftime("%Y-%m-%d")}
+
+        # Fetch matches
+        matches = self.fetch_matches_list_json(filter_params)
+
+        # Sort by date (newest first)
+        def get_match_date(match):
+            try:
+                return datetime.strptime(match.get("datum", "1900-01-01"), "%Y-%m-%d")
+            except (ValueError, TypeError):
+                return datetime.min
+
+        sorted_matches = sorted(matches, key=get_match_date, reverse=True)
+
+        self.logger.info(f"Found {len(sorted_matches)} recent matches")
+        return sorted_matches
+
+    def get_match_summary(self, match_id: Union[int, str]) -> Dict[str, Any]:
+        """
+        Get a concise summary of match information.
+
+        This method provides essential match information in a clean, structured format
+        suitable for display purposes or quick overview.
 
         Args:
             match_id: The ID of the match
 
         Returns:
-            Dict[str, bool]: The response from the FOGIS API, typically containing a success status
+            Dict containing match summary with standardized keys
 
-        Raises:
-            FogisLoginError: If not logged in
-            FogisAPIRequestError: If there's an error with the API request
-            FogisDataError: If the response data is invalid or not a dictionary
-            ValueError: If match_id is empty or invalid
+        Examples:
+            >>> summary = client.get_match_summary(123456)
+            >>> print(f"{summary['home_team']} vs {summary['away_team']}")
+            >>> print(f"Date: {summary['date']}, Status: {summary['status']}")
         """
-        # Validate match_id
-        if not match_id:
-            error_msg = "match_id cannot be empty"
-            self.logger.error(error_msg)
-            raise ValueError(error_msg)
+        self.logger.info(f"Getting match summary for match ID: {match_id}")
 
-        # Ensure we're logged in
-        if not self.cookies:
-            self.login()
+        # Get match details
+        match_details = self.get_match_details(match_id)
 
-        # Convert match_id to int if it's a string
-        match_id_int = int(match_id) if isinstance(match_id, str) else match_id
+        # Extract and standardize key information
+        summary = {
+            "match_id": match_details.get("matchid"),
+            "home_team": match_details.get("lag1namn", "Unknown"),
+            "away_team": match_details.get("lag2namn", "Unknown"),
+            "date": match_details.get("datum"),
+            "time": match_details.get("tid"),
+            "venue": match_details.get("anlaggningnamn"),
+            "status": match_details.get("status", "Unknown"),
+            "competition": match_details.get("serienamn"),
+            "referee_assigned": bool(match_details.get("domaruppdraglista")),
+            "home_score": match_details.get("lag1resultat"),
+            "away_score": match_details.get("lag2resultat"),
+        }
+
+        # Add computed fields
+        if summary["home_score"] is not None and summary["away_score"] is not None:
+            summary["final_score"] = f"{summary['home_score']}-{summary['away_score']}"
+            summary["match_completed"] = True
+        else:
+            summary["final_score"] = None
+            summary["match_completed"] = False
+
+        self.logger.debug(f"Match summary: {summary['home_team']} vs {summary['away_team']}")
+        return summary
+
+    def get_match_events_by_type(self, match_id: Union[int, str], event_type: str = None) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get match events organized by type for easier processing.
+
+        This method fetches match events and organizes them by type (goals, cards, etc.)
+        for more convenient access and processing.
+
+        Args:
+            match_id: The ID of the match
+            event_type: Optional filter for specific event type (e.g., 'goal', 'card')
+
+        Returns:
+            Dict with event types as keys and lists of events as values
+
+        Examples:
+            >>> events = client.get_match_events_by_type(123456)
+            >>> print(f"Goals: {len(events.get('goals', []))}")
+            >>> print(f"Cards: {len(events.get('cards', []))}")
+            >>>
+            >>> # Get only goals
+            >>> goals = client.get_match_events_by_type(123456, event_type='goal')
+        """
+        self.logger.info(f"Getting match events by type for match ID: {match_id}")
+
+        # Fetch all events
+        events = self.fetch_match_events_json(match_id)
+
+        # Organize by type
+        events_by_type = {"goals": [], "cards": [], "substitutions": [], "other": []}
+
+        for event in events:
+            event_type_key = self._categorize_event(event)
+            events_by_type[event_type_key].append(event)
+
+        # Filter by specific type if requested
+        if event_type:
+            event_type_lower = event_type.lower()
+            if event_type_lower in events_by_type:
+                return {event_type_lower: events_by_type[event_type_lower]}
+            else:
+                return {event_type_lower: []}
+
+        # Log summary
+        summary = {k: len(v) for k, v in events_by_type.items() if v}
+        self.logger.info(f"Events by type: {summary}")
+
+        return events_by_type
+
+    def _categorize_event(self, event: Dict[str, Any]) -> str:
+        """Categorize an event based on its properties."""
+        event_type = event.get("typ", "").lower()
+        event_name = event.get("namn", "").lower()
+
+        # Goal-related events
+        if "mål" in event_type or "goal" in event_type or "mål" in event_name:
+            return "goals"
+
+        # Card-related events
+        if "kort" in event_type or "card" in event_type or "gult" in event_name or "rött" in event_name:
+            return "cards"
+
+        # Substitution-related events
+        if "byte" in event_type or "substitution" in event_type or "in" in event_name or "ut" in event_name:
+            return "substitutions"
+
+        return "other"
+
+    def get_team_statistics(self, match_id: Union[int, str]) -> Dict[str, Dict[str, Any]]:
+        """
+        Get comprehensive team statistics for a match.
+
+        This method aggregates player and event data to provide team-level statistics.
+
+        Args:
+            match_id: The ID of the match
+
+        Returns:
+            Dict with 'home' and 'away' keys containing team statistics
+
+        Examples:
+            >>> stats = client.get_team_statistics(123456)
+            >>> home_stats = stats['home']
+            >>> print(f"Home team players: {home_stats['player_count']}")
+            >>> print(f"Home team goals: {home_stats['goals']}")
+        """
+        self.logger.info(f"Getting team statistics for match ID: {match_id}")
+
+        # Get match data
+        match_details = self.get_match_details(match_id)
 
         try:
-            # Use the internal API client to mark reporting as finished
-            response = self.internal_client.mark_reporting_finished(match_id_int)
-            return response
-        except requests.exceptions.RequestException as e:
-            error_msg = f"Failed to mark reporting as finished: {e}"
-            self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
+            players = self.get_match_players(match_id)
+            events_by_type = self.get_match_events_by_type(match_id)
+        except Exception as e:
+            self.logger.warning(f"Could not fetch complete data for statistics: {e}")
+            players = {"home": [], "away": []}
+            events_by_type = {"goals": [], "cards": [], "substitutions": []}
+
+        # Build statistics
+        stats = {
+            "home": {
+                "team_name": match_details.get("lag1namn", "Unknown"),
+                "player_count": len(players.get("home", [])),
+                "goals": len([g for g in events_by_type.get("goals", []) if self._is_home_team_event(g, match_details)]),
+                "cards": len([c for c in events_by_type.get("cards", []) if self._is_home_team_event(c, match_details)]),
+                "substitutions": len(
+                    [s for s in events_by_type.get("substitutions", []) if self._is_home_team_event(s, match_details)]
+                ),
+            },
+            "away": {
+                "team_name": match_details.get("lag2namn", "Unknown"),
+                "player_count": len(players.get("away", [])),
+                "goals": len([g for g in events_by_type.get("goals", []) if not self._is_home_team_event(g, match_details)]),
+                "cards": len([c for c in events_by_type.get("cards", []) if not self._is_home_team_event(c, match_details)]),
+                "substitutions": len(
+                    [s for s in events_by_type.get("substitutions", []) if not self._is_home_team_event(s, match_details)]
+                ),
+            },
+        }
+
+        self.logger.info(f"Team statistics: {stats['home']['team_name']} vs {stats['away']['team_name']}")
+        return stats
+
+    def _is_home_team_event(self, event: Dict[str, Any], match_details: Dict[str, Any]) -> bool:
+        """Determine if an event belongs to the home team."""
+        # This is a simplified implementation - in practice, you'd need to check
+        # team IDs or player associations in the event data
+        event_team = event.get("lag", "")
+        home_team = match_details.get("lag1namn", "")
+
+        return event_team == home_team or "hemma" in event_team.lower()
+
+    def find_matches(
+        self,
+        team_name: str = None,
+        date_from: str = None,
+        date_to: str = None,
+        status: List[str] = None,
+        competition: str = None,
+        limit: int = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Find matches using simplified search criteria.
+
+        This convenience method provides an intuitive interface for finding matches
+        without needing to understand FOGIS filter parameter structure.
+
+        Args:
+            team_name: Name of team to search for (partial match)
+            date_from: Start date in YYYY-MM-DD format
+            date_to: End date in YYYY-MM-DD format
+            status: List of match statuses to include
+            competition: Competition/series name to filter by
+            limit: Maximum number of matches to return
+
+        Returns:
+            List of matching matches
+
+        Examples:
+            >>> # Find recent matches for a specific team
+            >>> matches = client.find_matches(team_name="IFK", date_from="2025-01-01")
+            >>>
+            >>> # Find completed matches in a date range
+            >>> completed = client.find_matches(
+            ...     date_from="2025-01-01",
+            ...     date_to="2025-01-31",
+            ...     status=["klar"]
+            ... )
+        """
+        self.logger.info(f"Finding matches with criteria: team={team_name}, dates={date_from} to {date_to}")
+
+        # Build filter parameters
+        filter_params = {}
+
+        if date_from:
+            filter_params["datumFran"] = date_from
+        if date_to:
+            filter_params["datumTill"] = date_to
+        if status:
+            filter_params["status"] = status
+
+        # Fetch matches
+        matches = self.fetch_matches_list_json(filter_params)
+
+        # Apply additional filters
+        filtered_matches = matches
+
+        # Filter by team name
+        if team_name:
+            team_name_lower = team_name.lower()
+            filtered_matches = [
+                match
+                for match in filtered_matches
+                if (
+                    team_name_lower in match.get("lag1namn", "").lower()
+                    or team_name_lower in match.get("lag2namn", "").lower()
+                )
+            ]
+
+        # Filter by competition
+        if competition:
+            competition_lower = competition.lower()
+            filtered_matches = [match for match in filtered_matches if competition_lower in match.get("serienamn", "").lower()]
+
+        # Apply limit
+        if limit and limit > 0:
+            filtered_matches = filtered_matches[:limit]
+
+        self.logger.info(f"Found {len(filtered_matches)} matches matching criteria")
+        return filtered_matches
+
+    def get_matches_requiring_action(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Get matches that require referee action or attention.
+
+        This convenience method identifies matches that need referee attention,
+        such as upcoming matches or matches requiring reports.
+
+        Returns:
+            Dict categorizing matches by action type
+
+        Examples:
+            >>> action_matches = client.get_matches_requiring_action()
+            >>> upcoming = action_matches['upcoming']
+            >>> print(f"You have {len(upcoming)} upcoming matches")
+        """
+        self.logger.info("Getting matches requiring action")
+
+        from datetime import datetime, timedelta
+
+        # Get matches from recent past and near future
+        today = datetime.now()
+        past_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
+        future_date = (today + timedelta(days=30)).strftime("%Y-%m-%d")
+
+        filter_params = {"datumFran": past_date, "datumTill": future_date}
+
+        matches = self.fetch_matches_list_json(filter_params)
+
+        # Categorize matches
+        action_matches = {"upcoming": [], "needs_report": [], "recently_completed": [], "cancelled": []}
+
+        today_str = today.strftime("%Y-%m-%d")
+
+        for match in matches:
+            match_date = match.get("datum", "")
+            status = match.get("status", "").lower()
+
+            if status in ["avbruten", "uppskjuten"]:
+                action_matches["cancelled"].append(match)
+            elif match_date > today_str:
+                action_matches["upcoming"].append(match)
+            elif status == "klar" and match_date >= (today - timedelta(days=3)).strftime("%Y-%m-%d"):
+                action_matches["recently_completed"].append(match)
+            elif status in ["pagar", "ej_pabörjad"] and match_date <= today_str:
+                action_matches["needs_report"].append(match)
+
+        # Log summary
+        summary = {k: len(v) for k, v in action_matches.items() if v}
+        self.logger.info(f"Matches requiring action: {summary}")
+
+        return action_matches
+
+    # Backward compatibility methods (deprecated but functional)
+    def fetch_match_json(self, match_id: Union[int, str]) -> Dict[str, Any]:
+        """
+        Fetch match details (backward compatibility method).
+
+        .. deprecated:: 2.0.0
+            Use :meth:`get_match_details` or :meth:`fetch_complete_match` instead.
+            This method now uses the comprehensive match list data.
+
+        Args:
+            match_id: The ID of the match to fetch
+
+        Returns:
+            Dict containing match details
+
+        Migration:
+            Replace ``client.fetch_match_json(match_id)`` with:
+            - ``client.get_match_details(match_id)`` for basic match info
+            - ``client.fetch_complete_match(match_id)`` for comprehensive data
+        """
+        import warnings
+
+        warnings.warn(
+            "fetch_match_json() is deprecated and will be removed in v3.0. "
+            "Use get_match_details() for basic info or fetch_complete_match() for comprehensive data.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return self.get_match_details(match_id)
+
+    def fetch_match_players_json(self, match_id: Union[int, str]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Fetch match players (backward compatibility method).
+
+        .. deprecated:: 2.0.0
+            Use :meth:`get_match_players` or :meth:`fetch_complete_match` instead.
+            This method now uses working team-specific endpoints.
+
+        Args:
+            match_id: The ID of the match to fetch players for
+
+        Returns:
+            Dict with 'hemmalag' and 'bortalag' keys containing player lists (legacy format)
+
+        Migration:
+            Replace ``client.fetch_match_players_json(match_id)`` with:
+            - ``client.get_match_players(match_id)`` for player data with standardized names
+            - ``client.fetch_complete_match(match_id)['players']`` for comprehensive data
+        """
+        import warnings
+
+        warnings.warn(
+            "fetch_match_players_json() is deprecated and will be removed in v3.0. "
+            "Use get_match_players() or fetch_complete_match() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # Get new format and convert to legacy format for backward compatibility
+        new_format = self.get_match_players(match_id)
+        return {"hemmalag": new_format.get("home", []), "bortalag": new_format.get("away", [])}
+
+    def fetch_match_officials_json(self, match_id: Union[int, str]) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        Fetch match officials (backward compatibility method).
+
+        .. deprecated:: 2.0.0
+            Use :meth:`get_match_officials` or :meth:`fetch_complete_match` instead.
+            This method now uses working team-specific endpoints.
+
+        Args:
+            match_id: The ID of the match to fetch officials for
+
+        Returns:
+            Dict with team officials and referee information (legacy format)
+
+        Migration:
+            Replace ``client.fetch_match_officials_json(match_id)`` with:
+            - ``client.get_match_officials(match_id)`` for team officials with standardized names
+            - ``client.fetch_complete_match(match_id)`` for comprehensive data including referees
+        """
+        import warnings
+
+        warnings.warn(
+            "fetch_match_officials_json() is deprecated and will be removed in v3.0. "
+            "Use get_match_officials() or fetch_complete_match() instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # Get new format and convert to legacy format for backward compatibility
+        new_format = self.get_match_officials(match_id)
+
+        # Get referees from match details for legacy compatibility
+        try:
+            match_details = self.get_match_details(match_id)
+            referees = match_details.get("domaruppdraglista", [])
+        except Exception:
+            referees = []
+
+        return {"hemmalag": new_format.get("home", []), "bortalag": new_format.get("away", []), "domare": referees}
+
+
+# Maintain backward compatibility
+FogisApiClient = PublicApiClient

@@ -7,9 +7,6 @@ for the CLI API client components.
 
 from unittest.mock import Mock, patch
 
-import pytest
-import requests
-
 from fogis_api_client.cli.api_client import MockServerApiClient
 
 
@@ -30,7 +27,7 @@ class TestMockServerApiClient:
         assert client.port == 8080
         assert client.base_url == "http://example.com:8080"
 
-    @patch('fogis_api_client.cli.api_client.requests.get')
+    @patch("fogis_api_client.cli.api_client.requests.get")
     def test_get_status_success(self, mock_get):
         """Test successful status retrieval."""
         mock_response = Mock()
