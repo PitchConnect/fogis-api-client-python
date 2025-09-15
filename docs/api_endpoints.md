@@ -21,9 +21,9 @@ https://fogis.svenskfotboll.se/mdk
 | Endpoint | Method | Description | Parameters |
 |----------|--------|-------------|------------|
 | `/MatchWebMetoder.aspx/GetMatcherAttRapportera` | POST | Fetches the list of matches | `filter`: Object with date range and other filters |
-| `/MatchWebMetoder.aspx/GetMatch` | POST | Fetches detailed information for a specific match | `matchid`: Integer |
-| `/MatchWebMetoder.aspx/GetMatchdeltagareLista` | POST | Fetches the list of players for a match | `matchid`: Integer |
-| `/MatchWebMetoder.aspx/GetMatchfunktionarerLista` | POST | Fetches the list of officials for a match | `matchid`: Integer |
+| `/MatchWebMetoder.aspx/HamtaMatch` | POST | Fetches detailed information for a specific match | `matchid`: Integer |
+| `/MatchWebMetoder.aspx/HamtaMatchSpelare` | POST | Fetches the list of players for a match | `matchid`: Integer |
+| `/MatchWebMetoder.aspx/HamtaMatchFunktionarer` | POST | Fetches the list of officials for a match | `matchid`: Integer |
 | `/MatchWebMetoder.aspx/GetMatchhandelselista` | POST | Fetches the list of events for a match | `matchid`: Integer |
 | `/MatchWebMetoder.aspx/GetMatchresultatlista` | POST | Fetches the match result | `matchid`: Integer |
 | `/MatchWebMetoder.aspx/ClearMatchEvents` | POST | Clears all events for a match | `matchid`: Integer |

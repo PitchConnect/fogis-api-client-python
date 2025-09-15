@@ -42,10 +42,10 @@ from fogis_api_client.internal.api_contracts import (
     RESPONSE_SCHEMAS,
     ValidationConfig,
     convert_flat_to_nested_match_result,
-    validate_request,
-    validate_response,
     extract_endpoint_from_url,
     get_schema_for_endpoint,
+    validate_request,
+    validate_response,
 )
 
 # Configure logging

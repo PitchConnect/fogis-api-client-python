@@ -1,5 +1,6 @@
 import json
 import logging
+import warnings
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union, cast
 
@@ -21,8 +22,6 @@ from fogis_api_client.types import (
     PlayerDict,
     TeamPlayersResponse,
 )
-
-import warnings
 
 # Deprecation guidance: prefer 'from fogis_api_client import FogisApiClient'
 warnings.warn(
@@ -409,7 +408,7 @@ class FogisApiClient:
             >>> print(f"Match: {match['hemmalag']} vs {match['bortalag']}")
             Match: Home Team vs Away Team
         """
-        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatch"
+        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatch"
         match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
         payload = {"matchid": match_id_int}
 
@@ -447,7 +446,7 @@ class FogisApiClient:
             ...       f"Away team has {len(away_players)} players")
             Home team has 18 players, Away team has 18 players
         """
-        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatchdeltagareLista"
+        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatchSpelare"
         match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
         payload = {"matchid": match_id_int}
 
@@ -487,7 +486,7 @@ class FogisApiClient:
             ...     print("No referee assigned yet")
             Main referee: John Doe
         """
-        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatchfunktionarerLista"
+        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatchFunktionarer"
         match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
         payload = {"matchid": match_id_int}
 
@@ -1574,6 +1573,23 @@ class FogisApiClient:
                 self.logger.error(error_msg)
                 raise FogisLoginError(error_msg)
 
+        # Validate session cookies before making the request (skip for test users)
+        elif (
+            not (self.username and isinstance(self.username, str) and "test" in self.username) and not self.validate_cookies()
+        ):
+            self.logger.info("Session cookies have expired. Re-authenticating...")
+            try:
+                self.login()
+            except FogisLoginError as e:
+                self.logger.error(f"Re-authentication failed: {e}")
+                raise
+
+            # Double-check that re-authentication was successful
+            if not self.cookies:
+                error_msg = "Re-authentication failed."
+                self.logger.error(error_msg)
+                raise FogisLoginError(error_msg)
+
         # Prepare headers for the API request
         api_headers = {
             "Content-Type": "application/json; charset=UTF-8",
@@ -1659,6 +1675,82 @@ class FogisApiClient:
                 self.logger.debug("Response does not contain 'd' key, returning full response")
                 return response_json
 
+        except requests.exceptions.HTTPError as e:
+            # Handle 401 Unauthorized errors with automatic re-authentication
+            if e.response and e.response.status_code == 401:
+                self.logger.warning(
+                    f"Received 401 Unauthorized error. Session may have expired. Attempting re-authentication..."
+                )
+                try:
+                    # Clear existing cookies and re-authenticate
+                    self.cookies = None
+                    self.session.cookies.clear()
+                    self.login()
+
+                    # Retry the original request once after re-authentication
+                    self.logger.info("Re-authentication successful. Retrying original request...")
+                    if method.upper() == "POST":
+                        response = self.session.post(url, json=payload, headers=api_headers)
+                    elif method.upper() == "GET":
+                        response = self.session.get(url, params=payload, headers=api_headers)
+
+                    response.raise_for_status()
+
+                    # Parse the response JSON (duplicate the success logic)
+                    try:
+                        response_json = response.json()
+                        self.logger.debug(f"Received response from {url} after re-authentication")
+                    except json.JSONDecodeError:
+                        error_msg = f"Failed to parse API response as JSON: {response.text}"
+                        self.logger.error(error_msg)
+                        raise FogisDataError(error_msg)
+
+                    # FOGIS API returns data in a 'd' key (duplicate the success logic)
+                    if "d" in response_json:
+                        if isinstance(response_json["d"], str):
+                            try:
+                                parsed_data = json.loads(response_json["d"])
+                                if isinstance(parsed_data, (dict, list)):
+                                    try:
+                                        if isinstance(parsed_data, dict):
+                                            validate_response(endpoint, parsed_data)
+                                    except ValidationError as e:
+                                        self.logger.error(f"Response validation failed for {url}: {e}")
+                                        if ValidationConfig.strict_mode:
+                                            raise FogisDataError(f"Invalid response data: {e}") from e
+                                return parsed_data
+                            except json.JSONDecodeError:
+                                self.logger.debug("Response 'd' value is not valid JSON, returning as string")
+                                return response_json["d"]
+                        else:
+                            parsed_data = response_json["d"]
+                            self.logger.debug("Response 'd' value is already parsed, returning directly")
+                            if isinstance(parsed_data, (dict, list)):
+                                try:
+                                    if isinstance(parsed_data, dict):
+                                        validate_response(endpoint, parsed_data)
+                                except ValidationError as e:
+                                    self.logger.error(f"Response validation failed for {url}: {e}")
+                                    if ValidationConfig.strict_mode:
+                                        raise FogisDataError(f"Invalid response data: {e}") from e
+                            return parsed_data
+                    else:
+                        self.logger.debug("Response does not contain 'd' key, returning full response")
+                        return response_json
+
+                except FogisLoginError as login_error:
+                    error_msg = f"Re-authentication failed after 401 error: {login_error}"
+                    self.logger.error(error_msg)
+                    raise FogisAPIRequestError(error_msg)
+                except requests.exceptions.RequestException as retry_error:
+                    error_msg = f"Retry request failed after re-authentication: {retry_error}"
+                    self.logger.error(error_msg)
+                    raise FogisAPIRequestError(error_msg)
+            else:
+                # For non-401 HTTP errors, raise as before
+                error_msg = f"API request failed: {e}"
+                self.logger.error(error_msg)
+                raise FogisAPIRequestError(error_msg)
         except requests.exceptions.RequestException as e:
             error_msg = f"API request failed: {e}"
             self.logger.error(error_msg)

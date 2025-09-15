@@ -17,36 +17,43 @@ from .enhanced_logging_config import get_enhanced_logger, log_error_context
 # Custom exception classes for FOGIS API operations
 class FogisOperationError(Exception):
     """Base exception for FOGIS API operation errors."""
+
     pass
 
 
 class FogisAuthenticationError(FogisOperationError):
     """Exception raised when FOGIS authentication fails."""
+
     pass
 
 
 class FogisAPIError(FogisOperationError):
     """Exception raised when FOGIS API calls fail."""
+
     pass
 
 
 class FogisConnectionError(FogisOperationError):
     """Exception raised when connection to FOGIS fails."""
+
     pass
 
 
 class FogisValidationError(FogisOperationError):
     """Exception raised when FOGIS data validation fails."""
+
     pass
 
 
 class FogisRateLimitError(FogisOperationError):
     """Exception raised when FOGIS rate limits are exceeded."""
+
     pass
 
 
 class ConfigurationError(FogisOperationError):
     """Exception raised when configuration is invalid."""
+
     pass
 
 
@@ -58,13 +65,13 @@ class FogisCircuitBreaker:
         self.recovery_timeout = recovery_timeout
         self.failure_count = 0
         self.last_failure_time = None
-        self.state = 'CLOSED'  # CLOSED, OPEN, HALF_OPEN
+        self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
 
     def call(self, func: Callable, *args, **kwargs) -> Any:
         """Execute function with circuit breaker protection."""
-        if self.state == 'OPEN':
+        if self.state == "OPEN":
             if time.time() - self.last_failure_time > self.recovery_timeout:
-                self.state = 'HALF_OPEN'
+                self.state = "HALF_OPEN"
             else:
                 raise FogisOperationError("Circuit breaker is OPEN")
 
@@ -79,7 +86,7 @@ class FogisCircuitBreaker:
     def _on_success(self):
         """Handle successful operation."""
         self.failure_count = 0
-        self.state = 'CLOSED'
+        self.state = "CLOSED"
 
     def _on_failure(self):
         """Handle failed operation."""
@@ -87,7 +94,7 @@ class FogisCircuitBreaker:
         self.last_failure_time = time.time()
 
         if self.failure_count >= self.failure_threshold:
-            self.state = 'OPEN'
+            self.state = "OPEN"
 
 
 # Global circuit breaker instance - can be reset for testing
@@ -108,6 +115,7 @@ def handle_fogis_operations(operation_name: str, component: str = "fogis_operati
         operation_name: Name of the operation being performed
         component: Component name for logging context
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> Any:
@@ -128,10 +136,10 @@ def handle_fogis_operations(operation_name: str, component: str = "fogis_operati
             except FogisOperationError as e:
                 duration = time.time() - start_time
                 context = {
-                    'operation': operation_name,
-                    'duration': duration,
-                    'args_count': len(args),
-                    'kwargs_keys': list(kwargs.keys())
+                    "operation": operation_name,
+                    "duration": duration,
+                    "args_count": len(args),
+                    "kwargs_keys": list(kwargs.keys()),
                 }
 
                 log_error_context(logger, e, operation_name, context)
@@ -140,10 +148,10 @@ def handle_fogis_operations(operation_name: str, component: str = "fogis_operati
             except requests.exceptions.RequestException as e:
                 duration = time.time() - start_time
                 context = {
-                    'operation': operation_name,
-                    'duration': duration,
-                    'args_count': len(args),
-                    'kwargs_keys': list(kwargs.keys())
+                    "operation": operation_name,
+                    "duration": duration,
+                    "args_count": len(args),
+                    "kwargs_keys": list(kwargs.keys()),
                 }
 
                 # Convert requests exceptions to appropriate FOGIS exceptions
@@ -154,10 +162,10 @@ def handle_fogis_operations(operation_name: str, component: str = "fogis_operati
             except Exception as e:
                 duration = time.time() - start_time
                 context = {
-                    'operation': operation_name,
-                    'duration': duration,
-                    'args_count': len(args),
-                    'kwargs_keys': list(kwargs.keys())
+                    "operation": operation_name,
+                    "duration": duration,
+                    "args_count": len(args),
+                    "kwargs_keys": list(kwargs.keys()),
                 }
 
                 # Wrap unexpected errors in FogisOperationError
@@ -166,6 +174,7 @@ def handle_fogis_operations(operation_name: str, component: str = "fogis_operati
                 raise wrapped_error from e
 
         return wrapper
+
     return decorator
 
 
@@ -177,6 +186,7 @@ def handle_api_errors(operation_name: str, component: str = "api"):
         operation_name: Name of the API operation being performed
         component: Component name for logging context
     """
+
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs) -> Any:
@@ -194,26 +204,21 @@ def handle_api_errors(operation_name: str, component: str = "api"):
             except Exception as e:
                 duration = time.time() - start_time
                 context = {
-                    'operation': operation_name,
-                    'duration': duration,
-                    'args_count': len(args),
-                    'kwargs_keys': list(kwargs.keys())
+                    "operation": operation_name,
+                    "duration": duration,
+                    "args_count": len(args),
+                    "kwargs_keys": list(kwargs.keys()),
                 }
 
                 log_error_context(logger, e, operation_name, context)
                 raise
 
         return wrapper
+
     return decorator
 
 
-def safe_fogis_operation(
-    operation: Callable,
-    *args,
-    max_retries: int = 3,
-    retry_delay: float = 1.0,
-    **kwargs
-) -> Any:
+def safe_fogis_operation(operation: Callable, *args, max_retries: int = 3, retry_delay: float = 1.0, **kwargs) -> Any:
     """
     Execute FOGIS operation with retry logic and error handling.
 
@@ -230,7 +235,7 @@ def safe_fogis_operation(
     Raises:
         FogisOperationError: If operation fails after all retries
     """
-    logger = get_enhanced_logger(__name__, 'safe_operation')
+    logger = get_enhanced_logger(__name__, "safe_operation")
 
     for attempt in range(max_retries + 1):
         try:
@@ -248,7 +253,7 @@ def validate_fogis_parameters(
     username: Optional[str] = None,
     password: Optional[str] = None,
     base_url: Optional[str] = None,
-    cookies: Optional[Dict] = None
+    cookies: Optional[Dict] = None,
 ) -> None:
     """
     Validate FOGIS API operation parameters.
@@ -273,7 +278,7 @@ def validate_fogis_parameters(
     if base_url is not None:
         if not isinstance(base_url, str) or not base_url.strip():
             raise ConfigurationError("base_url must be a non-empty string")
-        if not (base_url.startswith('http://') or base_url.startswith('https://')):
+        if not (base_url.startswith("http://") or base_url.startswith("https://")):
             raise ConfigurationError("base_url must be a valid HTTP/HTTPS URL")
 
     if cookies is not None:
@@ -295,7 +300,7 @@ def _convert_requests_error(requests_error: requests.exceptions.RequestException
 
     # HTTP errors
     if isinstance(requests_error, requests.exceptions.HTTPError):
-        if hasattr(requests_error, 'response') and requests_error.response is not None:
+        if hasattr(requests_error, "response") and requests_error.response is not None:
             status_code = requests_error.response.status_code
 
             # Authentication errors
