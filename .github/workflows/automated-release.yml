@@ -112,27 +112,22 @@ jobs:
         echo "release_type=$RELEASE_TYPE" >> $GITHUB_OUTPUT
         echo "should_release=true" >> $GITHUB_OUTPUT
 
-        # Calculate new version
+        # Calculate new version using simple bash logic
         CURRENT_VERSION=$(echo $LATEST_TAG | sed 's/^v//')
         if [ "$CURRENT_VERSION" = "0.0.0" ]; then
           NEW_VERSION="1.0.0"
         else
-          # Use Python to calculate semantic version
-          cat > version_calc.py << 'EOF'
-from packaging import version
-import os
-current = version.parse(os.environ['CURRENT_VERSION'])
-release_type = os.environ['RELEASE_TYPE']
-if release_type == 'major':
-    new_version = version.Version(f'{current.major + 1}.0.0')
-elif release_type == 'minor':
-    new_version = version.Version(f'{current.major}.{current.minor + 1}.0')
-else:
-    new_version = version.Version(f'{current.major}.{current.minor}.{current.micro + 1}')
-print(str(new_version))
-EOF
-          NEW_VERSION=$(CURRENT_VERSION=$CURRENT_VERSION RELEASE_TYPE=$RELEASE_TYPE python3 version_calc.py)
-          rm version_calc.py
+          # Parse current version
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          # Calculate new version based on release type
+          if [ "$RELEASE_TYPE" = "major" ]; then
+            NEW_VERSION="$((MAJOR + 1)).0.0"
+          elif [ "$RELEASE_TYPE" = "minor" ]; then
+            NEW_VERSION="$MAJOR.$((MINOR + 1)).0"
+          else
+            NEW_VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          fi
         fi
 
         echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
