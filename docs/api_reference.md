@@ -17,6 +17,8 @@ This document provides detailed information about the FOGIS API Client classes, 
 
 The main class for interacting with the FOGIS API.
 
+> **💡 New in v2.0:** The FOGIS API Client now includes powerful convenience methods that simplify common operations. See the [Convenience Methods Guide](convenience_methods.md) for detailed examples and migration information.
+
 ### Constructor
 
 ```python
@@ -110,6 +112,93 @@ new_client = FogisApiClient(cookies=cookies)  # Authenticate with saved cookies
 print("Using saved cookies for authentication")
 ```
 
+### Convenience Methods (Recommended)
+
+The following convenience methods provide a more intuitive and user-friendly interface for common operations. These methods are recommended for new development and provide better error handling, data aggregation, and structured responses.
+
+#### fetch_complete_match
+
+```python
+fetch_complete_match(match_id: Union[int, str], include_optional: bool = True) -> Dict[str, Any]
+```
+
+**The flagship convenience method** that fetches all match-related data in a single call.
+
+**Parameters:**
+- `match_id` (Union[int, str]): The ID of the match to fetch
+- `include_optional` (bool): Whether to include optional data (players, officials) that might fail for some matches (default: True)
+
+**Returns:**
+- `Dict[str, Any]`: Complete match data containing:
+  - `match_details`: Basic match information (85 fields from match list)
+  - `players`: Home and away team players (if include_optional=True)
+  - `officials`: Team officials and referees (if include_optional=True)
+  - `events`: Match events (goals, cards, substitutions)
+  - `result`: Final match result
+  - `metadata`: Fetch status, timing, and any warnings
+
+**Example:**
+```python
+# Get complete match data
+match_data = client.fetch_complete_match(123456)
+
+# Access different data types
+print(f"Teams: {match_data['match_details']['lag1namn']} vs {match_data['match_details']['lag2namn']}")
+print(f"Events: {len(match_data['events'])} events")
+print(f"Home players: {len(match_data['players']['hemmalag'])} players")
+
+# Check what was successfully fetched
+metadata = match_data['metadata']
+print(f"Successful endpoints: {list(metadata['success'].keys())}")
+if metadata['warnings']:
+    print(f"Warnings: {metadata['warnings']}")
+```
+
+#### get_match_summary
+
+```python
+get_match_summary(match_id: Union[int, str]) -> Dict[str, Any]
+```
+
+Get essential match information in a clean, standardized format.
+
+**Parameters:**
+- `match_id` (Union[int, str]): The ID of the match
+
+**Returns:**
+- `Dict[str, Any]`: Match summary with standardized keys including home_team, away_team, date, status, final_score, etc.
+
+**Example:**
+```python
+summary = client.get_match_summary(123456)
+print(f"{summary['home_team']} vs {summary['away_team']}")
+print(f"Date: {summary['date']}, Status: {summary['status']}")
+```
+
+#### get_recent_matches
+
+```python
+get_recent_matches(days: int = 30, include_future: bool = False) -> List[Dict[str, Any]]
+```
+
+Get recent matches within a specified time period.
+
+**Parameters:**
+- `days` (int): Number of days to look back from today (default: 30)
+- `include_future` (bool): Whether to include future matches (default: False)
+
+**Returns:**
+- `List[Dict[str, Any]]`: List of match dictionaries sorted by date (newest first)
+
+**Example:**
+```python
+# Get matches from last 7 days
+recent = client.get_recent_matches(days=7)
+print(f"Found {len(recent)} matches in last 7 days")
+```
+
+> **📖 More Convenience Methods:** For complete documentation of all convenience methods including `get_match_events_by_type()`, `get_team_statistics()`, `find_matches()`, and `get_matches_requiring_action()`, see the [Convenience Methods Guide](convenience_methods.md).
+
 ### Match Methods
 
 #### fetch_matches_list_json
@@ -155,6 +244,8 @@ matches = client.fetch_matches_list_json({
 
 #### fetch_match_json
 
+> **⚠️ DEPRECATED:** This method is deprecated and will be removed in v3.0. Use [`fetch_complete_match()`](#fetch_complete_match) for comprehensive data or [`get_match_details()`](#get_match_details) for basic match information.
+
 ```python
 fetch_match_json(match_id: Union[str, int]) -> Dict[str, Any]
 ```
@@ -172,11 +263,17 @@ Fetches detailed information for a specific match.
 - `FogisAPIRequestError`: If there's an error with the API request
 - `FogisDataError`: If the response data is invalid
 
-**Example:**
+**Migration:**
 ```python
-client = FogisApiClient(username="your_username", password="your_password")
+# ❌ Old (deprecated)
 match = client.fetch_match_json(123456)
-print(f"Match: {match['hemmalag']} vs {match['bortalag']}")
+
+# ✅ New (recommended)
+match_data = client.fetch_complete_match(123456)
+match_details = match_data['match_details']
+
+# ✅ Alternative for basic info only
+match_details = client.get_match_details(123456)
 ```
 
 #### fetch_match_result_json

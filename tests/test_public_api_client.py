@@ -84,7 +84,7 @@ def test_fetch_matches_list_json(mock_login):
 
     # Test with default filter parameters
     result = client.fetch_matches_list_json()
-    assert result == {"matchlista": []}
+    assert result == []  # Should return the list, not the wrapper object
     mock_login.assert_not_called()
     client._make_authenticated_request.assert_called_once()
 
@@ -92,13 +92,56 @@ def test_fetch_matches_list_json(mock_login):
     client._make_authenticated_request.reset_mock()
     filter_params = {"datumFran": "2021-01-01", "datumTill": "2021-01-31"}
     result = client.fetch_matches_list_json(filter_params)
-    assert result == {"matchlista": []}
+    assert result == []  # Should return the list, not the wrapper object
     client._make_authenticated_request.assert_called_once()
+
+
+def test_fetch_matches_list_json_payload_structure():
+    """Test that fetch_matches_list_json uses the correct payload structure."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    # Mock the _make_authenticated_request method
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json = Mock(return_value={"matchlista": []})
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    # Call the method
+    client.fetch_matches_list_json()
+
+    # Verify the correct endpoint and payload structure
+    call_args = client._make_authenticated_request.call_args
+    assert call_args[0][0] == "POST"  # HTTP method
+    assert "/MatchWebMetoder.aspx/GetMatcherAttRapportera" in call_args[0][1]  # Endpoint URL
+
+    # Check payload structure
+    payload = call_args[1]["json"]
+    assert "filter" in payload
+    filter_data = payload["filter"]
+
+    # Verify required fields with correct types
+    assert "datumFran" in filter_data
+    assert "datumTill" in filter_data
+    assert "datumTyp" in filter_data
+    assert filter_data["datumTyp"] == 0  # Should be integer, not string
+    assert "typ" in filter_data
+    assert filter_data["typ"] == "alla"
+    assert "status" in filter_data
+    assert isinstance(filter_data["status"], list)
+    assert "alderskategori" in filter_data
+    assert isinstance(filter_data["alderskategori"], list)
+    assert "kon" in filter_data
+    assert isinstance(filter_data["kon"], list)
+    assert "sparadDatum" in filter_data
 
 
 @patch("fogis_api_client.public_api_client.PublicApiClient.login")
 def test_fetch_match_json(mock_login):
-    """Test the fetch_match_json method."""
+    """Test the fetch_match_json method (now deprecated, uses get_match_details)."""
+    import warnings
+
     # Mock the login method
     mock_login.return_value = {
         "FogisMobilDomarKlient_ASPXAUTH": "test",
@@ -110,37 +153,36 @@ def test_fetch_match_json(mock_login):
     client.cookies = mock_login.return_value
     client.authentication_method = "aspnet"  # Set authentication method so is_authenticated() returns True
 
-    # Mock the session.get method directly for this test
-    mock_response = Mock()
-    mock_response.status_code = 200
-    mock_response.json = Mock(
-        return_value={
+    # Mock the fetch_matches_list_json method to return a match with the expected ID
+    mock_matches = [
+        {
             "matchid": 123456,
             "hemmalag": "Home Team",
             "bortalag": "Away Team",
+            "lag1namn": "Home Team",
+            "lag2namn": "Away Team",
         }
-    )
-    client.session.get = Mock(return_value=mock_response)
+    ]
+    client.fetch_matches_list_json = Mock(return_value=mock_matches)
 
-    # Test with integer match_id
-    result = client.fetch_match_json(123456)
-    assert result == {
-        "matchid": 123456,
-        "hemmalag": "Home Team",
-        "bortalag": "Away Team",
-    }
-    mock_login.assert_not_called()
-    client.session.get.assert_called_once()
+    # Test with integer match_id (should show deprecation warning)
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        result = client.fetch_match_json(123456)
+
+        # Check deprecation warning was issued
+        assert len(w) == 1
+        assert issubclass(w[0].category, DeprecationWarning)
+        assert "deprecated" in str(w[0].message)
+
+    # Verify the result
+    assert result["matchid"] == 123456
+    assert result["hemmalag"] == "Home Team"
+    assert result["bortalag"] == "Away Team"
 
     # Test with string match_id
-    client.session.get.reset_mock()
     result = client.fetch_match_json("123456")
-    assert result == {
-        "matchid": 123456,
-        "hemmalag": "Home Team",
-        "bortalag": "Away Team",
-    }
-    client.session.get.assert_called_once()
+    assert result["matchid"] == 123456
 
 
 class TestPublicApiClientOAuthIntegration:
@@ -230,3 +272,59 @@ class TestPublicApiClientOAuthIntegration:
         result = client.hello_world()
 
         assert result == "Hello, brave new world!"
+
+
+def test_endpoint_urls_comprehensive():
+    """Test that all endpoints use the correct FOGIS URLs and payload structures."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    # Mock the _make_authenticated_request method
+    mock_response = Mock()
+    mock_response.status_code = 200
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    # Test match details endpoint (now uses match list)
+    mock_matches = [{"matchid": 123456, "hemmalag": "Home", "bortalag": "Away"}]
+    client.fetch_matches_list_json = Mock(return_value=mock_matches)
+
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # Ignore deprecation warnings for this test
+        result = client.fetch_match_json(123456)
+    assert result["matchid"] == 123456
+
+    # Test match players endpoint (now uses team-specific endpoints)
+    client._make_authenticated_request.reset_mock()
+    mock_response.json = Mock(return_value={"d": '{"hemmalag": [], "bortalag": []}'})
+
+    # Mock the match details to include team IDs
+    mock_match_with_teams = {"matchid": 123456, "matchlag1id": 111, "matchlag2id": 222, "hemmalag": "Home", "bortalag": "Away"}
+    client.fetch_matches_list_json = Mock(return_value=[mock_match_with_teams])
+    client.fetch_team_players_json = Mock(return_value={"spelare": []})
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # Ignore deprecation warnings for this test
+        result = client.fetch_match_players_json(123456)
+    assert "hemmalag" in result
+    assert "bortalag" in result
+
+    # Test match events endpoint
+    client._make_authenticated_request.reset_mock()
+    mock_response.json = Mock(return_value=[])
+    client.fetch_match_events_json(123456)
+    call_args = client._make_authenticated_request.call_args
+    assert call_args[0][0] == "POST"
+    assert "/MatchWebMetoder.aspx/GetMatchhandelselista" in call_args[0][1]
+    assert call_args[1]["json"] == {"matchid": 123456}
+
+    # Test match result endpoint
+    client._make_authenticated_request.reset_mock()
+    mock_response.json = Mock(return_value={})
+    client.fetch_match_result_json(123456)
+    call_args = client._make_authenticated_request.call_args
+    assert call_args[0][0] == "POST"
+    assert "/MatchWebMetoder.aspx/GetMatchresultatlista" in call_args[0][1]
+    assert call_args[1]["json"] == {"matchid": 123456}

@@ -10,8 +10,6 @@ import logging
 import time
 from unittest.mock import patch
 
-import pytest
-
 from fogis_api_client_http_wrapper import app as wrapper_app
 from fogis_api_gateway import app as gateway_app
 

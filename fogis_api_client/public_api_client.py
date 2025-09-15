@@ -5,6 +5,7 @@ This module provides the main API client interface with support for both
 OAuth 2.0 PKCE authentication and ASP.NET form authentication fallback.
 """
 
+import json
 import logging
 from typing import Any, Dict, List, Optional, Union
 
@@ -381,8 +382,6 @@ class PublicApiClient:
                 if "d" in response_json:
                     # The 'd' value is a JSON string that needs to be parsed again
                     if isinstance(response_json["d"], str):
-                        import json
-
                         parsed_data = json.loads(response_json["d"])
 
                         # Extract matches from the response
