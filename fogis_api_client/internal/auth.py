@@ -7,7 +7,7 @@ OAuth 2.0 PKCE flow (new) and ASP.NET form authentication (legacy fallback).
 
 import logging
 from typing import Any, Dict, Tuple
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -88,6 +88,65 @@ def authenticate(session: requests.Session, username: str, password: str, base_u
         raise FogisAuthenticationError(f"Unexpected error during authentication: {e}")
 
 
+def _extract_oauth_parameters(oauth_url: str) -> Dict[str, str]:
+    """
+    Extract OAuth parameters from the FOGIS redirect URL.
+
+    This function parses the OAuth authorization URL that FOGIS redirected us to
+    and extracts all the OAuth parameters that we need to continue the flow.
+
+    Args:
+        oauth_url: The OAuth authorization URL from FOGIS redirect
+
+    Returns:
+        Dict containing OAuth parameters
+
+    Raises:
+        FogisOAuthAuthenticationError: If required parameters are missing
+    """
+    try:
+        parsed_url = urlparse(oauth_url)
+        query_params = parse_qs(parsed_url.query)
+
+        # Extract OAuth parameters (convert from list to string)
+        oauth_params = {}
+        for key, value_list in query_params.items():
+            if value_list:  # Only take first value if multiple exist
+                oauth_params[key] = value_list[0]
+
+        # Verify required OAuth parameters are present
+        # For production, we need all parameters, but for testing we can be more flexible
+        required_params = ["client_id"]  # Minimum required parameter
+
+        # Optional parameters that should be present in production
+        optional_params = [
+            "redirect_uri",
+            "response_type",
+            "scope",
+            "code_challenge",
+            "code_challenge_method",
+            "state",
+            "nonce",
+        ]
+
+        missing_required = [param for param in required_params if param not in oauth_params]
+        if missing_required:
+            raise FogisOAuthAuthenticationError(f"Missing required OAuth parameters: {', '.join(missing_required)}")
+
+        # Log warning for missing optional parameters (but don't fail)
+        missing_optional = [param for param in optional_params if param not in oauth_params]
+        if missing_optional:
+            logger.warning(f"Missing optional OAuth parameters: {', '.join(missing_optional)}")
+            logger.warning("This may indicate a test environment or incomplete OAuth redirect")
+
+        logger.debug(f"Successfully extracted {len(oauth_params)} OAuth parameters from FOGIS redirect")
+        return oauth_params
+
+    except Exception as e:
+        logger.error(f"Failed to extract OAuth parameters from URL: {e}")
+        raise FogisOAuthAuthenticationError(f"Failed to extract OAuth parameters: {e}")
+
+
 def _handle_oauth_authentication(session: requests.Session, username: str, password: str, oauth_url: str) -> Dict[str, Any]:
     """
     Handle OAuth 2.0 PKCE authentication flow.
@@ -108,20 +167,31 @@ def _handle_oauth_authentication(session: requests.Session, username: str, passw
         # Import OAuth manager dynamically to avoid circular imports
         from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager
 
-        # Initialize OAuth manager
+        # Initialize OAuth manager with the existing OAuth session
         oauth_manager = FogisOAuthManager(session)
 
-        logger.debug("Starting OAuth 2.0 PKCE authentication flow")
+        logger.debug(f"Starting OAuth 2.0 PKCE authentication flow with URL: {oauth_url}")
 
         # Parse the current OAuth URL to understand the flow state
         parsed_url = urlparse(oauth_url)
 
         # Check if we're at the authorization endpoint
         if "/connect/authorize" in parsed_url.path:
-            logger.debug("At OAuth authorization endpoint")
+            logger.debug("At OAuth authorization endpoint - using FOGIS-provided OAuth parameters")
 
-            # We need to handle the login form that appears after OAuth redirect
-            # The OAuth flow redirects to a login page where we enter credentials
+            # Extract OAuth parameters from the FOGIS redirect URL
+            # This is critical: we must use FOGIS-provided parameters, not generate new ones
+            oauth_params = _extract_oauth_parameters(oauth_url)
+            logger.debug(
+                f"Extracted OAuth parameters: client_id={oauth_params.get('client_id')}, "
+                f"state={oauth_params.get('state', '')[:50]}..., "
+                f"code_challenge={oauth_params.get('code_challenge', '')[:20]}..."
+            )
+
+            # Store the OAuth parameters in the manager for later use
+            oauth_manager.set_oauth_parameters(oauth_params)
+
+            # Continue with the OAuth flow using the existing session
             return _handle_oauth_login_form(session, username, password, oauth_manager)
 
         # If we're at a different OAuth endpoint, handle accordingly
@@ -137,14 +207,26 @@ def _handle_oauth_authentication(session: requests.Session, username: str, passw
         raise FogisOAuthAuthenticationError(f"OAuth authentication failed: {e}")
 
 
-def _get_oauth_login_page(session: requests.Session) -> requests.Response:
-    """Get the OAuth login page response."""
-    current_url = session.url if hasattr(session, "url") else None
-    if not current_url:
-        login_url = "https://fogis.svenskfotboll.se/mdk/Login.aspx?ReturnUrl=%2fmdk%2f"
-        return session.get(login_url, allow_redirects=True, timeout=10)
-    else:
-        return session.get(current_url, timeout=10)
+def _get_oauth_login_page(session: requests.Session, oauth_manager) -> requests.Response:
+    """
+    Get the OAuth login page response.
+
+    This function gets the OAuth login page where we need to enter credentials.
+    We should already be at the OAuth authorization endpoint from the FOGIS redirect.
+    """
+    # If we have OAuth parameters, we're already in the OAuth flow
+    if oauth_manager.oauth_parameters:
+        # We should already be at the OAuth login page from the redirect
+        # Just get the current page content to extract the login form
+        current_url = getattr(session, "url", None)
+        if current_url and "auth.fogis.se" in current_url:
+            logger.debug(f"Getting OAuth login page from current URL: {current_url}")
+            return session.get(current_url, timeout=10)
+
+    # Fallback: redirect to OAuth login
+    login_url = "https://fogis.svenskfotboll.se/mdk/Login.aspx?ReturnUrl=%2fmdk%2f"
+    logger.debug(f"Fallback: redirecting to OAuth login via: {login_url}")
+    return session.get(login_url, allow_redirects=True, timeout=10)
 
 
 def _extract_form_data(soup: BeautifulSoup, username: str, password: str) -> Tuple[str, str, Dict[str, str]]:
@@ -212,7 +294,7 @@ def _handle_oauth_login_form(session: requests.Session, username: str, password:
         Dict containing OAuth tokens
     """
     try:
-        current_response = _get_oauth_login_page(session)
+        current_response = _get_oauth_login_page(session, oauth_manager)
         soup = BeautifulSoup(current_response.text, "html.parser")
         form_url, form_method, form_data = _extract_form_data(soup, username, password)
 

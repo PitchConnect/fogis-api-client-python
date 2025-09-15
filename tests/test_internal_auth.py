@@ -260,21 +260,26 @@ class TestOAuthAuthenticationPaths:
     def test_get_oauth_login_page_success(self, mock_get):
         """Test getting OAuth login page successfully."""
         from fogis_api_client.internal.auth import _get_oauth_login_page
+        from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager
 
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.text = "<html>Login form</html>"
         mock_get.return_value = mock_response
 
-        result = _get_oauth_login_page(self.session)
+        oauth_manager = FogisOAuthManager(self.session)
+
+        result = _get_oauth_login_page(self.session, oauth_manager)
         assert result == mock_response
 
     @patch("requests.Session.get")
     def test_get_oauth_login_page_failure(self, mock_get):
         """Test getting OAuth login page with failure."""
         from fogis_api_client.internal.auth import _get_oauth_login_page
+        from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager
 
         mock_get.side_effect = requests.exceptions.RequestException("Network error")
+        oauth_manager = FogisOAuthManager(self.session)
 
         with pytest.raises(requests.exceptions.RequestException):
-            _get_oauth_login_page(self.session)
+            _get_oauth_login_page(self.session, oauth_manager)
