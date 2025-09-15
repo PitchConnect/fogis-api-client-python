@@ -8,7 +8,7 @@ and user-friendly API interface for common operations.
 import pytest
 import warnings
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from fogis_api_client.public_api_client import PublicApiClient, FogisAPIRequestError
 
