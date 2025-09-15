@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 from flask import Blueprint, current_app, jsonify, request
 
-from fogis_api_client.fogis_api_client import FogisApiClient, FogisLoginError
+from fogis_api_client.public_api_client import FogisLoginError, PublicApiClient
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -23,12 +23,12 @@ logger = logging.getLogger(__name__)
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
 
 
-def get_client_from_app() -> Optional[FogisApiClient]:
+def get_client_from_app() -> Optional[PublicApiClient]:
     """
-    Get the FogisApiClient instance from the Flask app.
+    Get the PublicApiClient instance from the Flask app.
 
     Returns:
-        Optional[FogisApiClient]: The client instance or None if not available
+        Optional[PublicApiClient]: The client instance or None if not available
     """
     return current_app.config.get("FOGIS_CLIENT")
 
@@ -82,7 +82,7 @@ def login() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
 
     try:
         # Create a new client instance with the provided credentials
-        client = FogisApiClient(username=username, password=password)
+        client = PublicApiClient(username=username, password=password)
 
         # Perform login
         cookies = client.login()
@@ -130,7 +130,7 @@ def validate() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
 
     try:
         # Create a new client instance with the provided token (cookies)
-        client = FogisApiClient(cookies=token)
+        client = PublicApiClient(cookies=token)
 
         # Validate the cookies
         is_valid = client.validate_cookies()
@@ -212,7 +212,7 @@ def refresh() -> Union[Dict[str, Any], Tuple[Dict[str, Any], int]]:
 
     try:
         # Create a new client instance with the provided token (cookies)
-        client = FogisApiClient(cookies=token)
+        client = PublicApiClient(cookies=token)
 
         # Validate the cookies
         is_valid = client.validate_cookies()

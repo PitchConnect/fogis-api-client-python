@@ -5,7 +5,7 @@ from unittest.mock import patch
 from flask import Flask
 
 from auth_routes import register_auth_routes
-from fogis_api_client.fogis_api_client import FogisLoginError
+from fogis_api_client.public_api_client import FogisLoginError
 
 
 class TestAuthRoutes(unittest.TestCase):
@@ -31,7 +31,7 @@ class TestAuthRoutes(unittest.TestCase):
             "ASP.NET_SessionId": "test_session_id",
         }
 
-    @patch("auth_routes.FogisApiClient")
+    @patch("auth_routes.PublicApiClient")
     def test_login_success(self, mock_fogis_client):
         """Test successful login."""
         # Configure the mock
@@ -55,7 +55,7 @@ class TestAuthRoutes(unittest.TestCase):
         mock_fogis_client.assert_called_once_with(username=self.test_username, password=self.test_password)
         mock_instance.login.assert_called_once()
 
-    @patch("auth_routes.FogisApiClient")
+    @patch("auth_routes.PublicApiClient")
     def test_login_failure(self, mock_fogis_client):
         """Test login failure."""
         # Configure the mock to raise an exception
@@ -110,7 +110,7 @@ class TestAuthRoutes(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 415)
 
-    @patch("auth_routes.FogisApiClient")
+    @patch("auth_routes.PublicApiClient")
     def test_validate_valid_token(self, mock_fogis_client):
         """Test token validation with valid token."""
         # Configure the mock
@@ -134,7 +134,7 @@ class TestAuthRoutes(unittest.TestCase):
         mock_fogis_client.assert_called_once_with(cookies=self.test_cookies)
         mock_instance.validate_cookies.assert_called_once()
 
-    @patch("auth_routes.FogisApiClient")
+    @patch("auth_routes.PublicApiClient")
     def test_validate_invalid_token(self, mock_fogis_client):
         """Test token validation with invalid token."""
         # Configure the mock
@@ -163,7 +163,7 @@ class TestAuthRoutes(unittest.TestCase):
         response = self.client.post("/auth/validate", data=json.dumps({}), content_type="application/json")
         self.assertEqual(response.status_code, 400)
 
-    @patch("auth_routes.FogisApiClient")
+    @patch("auth_routes.PublicApiClient")
     def test_refresh_valid_token(self, mock_fogis_client):
         """Test token refresh with valid token."""
         # Configure the mock
@@ -187,7 +187,7 @@ class TestAuthRoutes(unittest.TestCase):
         mock_fogis_client.assert_called_once_with(cookies=self.test_cookies)
         mock_instance.validate_cookies.assert_called_once()
 
-    @patch("auth_routes.FogisApiClient")
+    @patch("auth_routes.PublicApiClient")
     def test_refresh_invalid_token(self, mock_fogis_client):
         """Test token refresh with invalid token."""
         # Configure the mock
