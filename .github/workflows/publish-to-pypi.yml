@@ -2,13 +2,7 @@ name: Publish Python Package
 
 on:
   release:
-    types: [created]
-  push:
-    branches: [main]
-    paths-ignore:
-      - '**.md'
-      - '.github/**'
-      - 'docs/**'
+    types: [created, published]
   workflow_dispatch:
     inputs:
       version_type:
@@ -25,13 +19,18 @@ on:
         required: false
         default: false
         type: boolean
+      force_publish:
+        description: 'Force publish even if version exists'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   check-version:
     name: Check Version and Changes
     runs-on: ubuntu-latest
-    # Only run on actual pushes to main, releases, or manual dispatch - not on pull requests
-    if: github.event_name != 'pull_request' && (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    # Only run on releases or manual dispatch
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
     outputs:
       should_publish: ${{ steps.check.outputs.should_publish }}
       version: ${{ steps.check.outputs.version }}
