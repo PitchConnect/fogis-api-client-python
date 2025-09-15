@@ -16,6 +16,7 @@ from typing import Dict, Optional, Union
 # Import enhanced logging if available
 try:
     from .core import configure_enhanced_logging, get_enhanced_logger
+
     HAS_ENHANCED_LOGGING = True
 except ImportError:
     HAS_ENHANCED_LOGGING = False
@@ -69,11 +70,11 @@ def configure_logging(
 
         # Configure enhanced logging with backward compatibility
         if log_file:
-            log_dir = os.path.dirname(log_file) if os.path.dirname(log_file) else 'logs'
+            log_dir = os.path.dirname(log_file) if os.path.dirname(log_file) else "logs"
             log_filename = os.path.basename(log_file)
         else:
-            log_dir = 'logs'
-            log_filename = 'fogis-api-client.log'
+            log_dir = "logs"
+            log_filename = "fogis-api-client.log"
 
         configure_enhanced_logging(
             log_level=level_str,
@@ -81,7 +82,7 @@ def configure_logging(
             enable_file=log_to_file,
             enable_structured=True,
             log_dir=log_dir,
-            log_file=log_filename
+            log_file=log_filename,
         )
         return
 

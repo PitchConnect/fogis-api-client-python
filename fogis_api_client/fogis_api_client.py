@@ -408,7 +408,7 @@ class FogisApiClient:
             >>> print(f"Match: {match['hemmalag']} vs {match['bortalag']}")
             Match: Home Team vs Away Team
         """
-        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatch"
+        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatch"
         match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
         payload = {"matchid": match_id_int}
 
@@ -446,7 +446,7 @@ class FogisApiClient:
             ...       f"Away team has {len(away_players)} players")
             Home team has 18 players, Away team has 18 players
         """
-        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatchdeltagareLista"
+        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatchSpelare"
         match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
         payload = {"matchid": match_id_int}
 
@@ -486,7 +486,7 @@ class FogisApiClient:
             ...     print("No referee assigned yet")
             Main referee: John Doe
         """
-        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatchfunktionarerLista"
+        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/HamtaMatchFunktionarer"
         match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
         payload = {"matchid": match_id_int}
 
