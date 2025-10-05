@@ -1241,6 +1241,631 @@ class PublicApiClient:
 
         return action_matches
 
+    # Write operations for match reporting
+    def save_match_event(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Save a match event (goal, card, substitution, etc.) to the FOGIS API.
+
+        Args:
+            event_data: Data containing match event details. Must include:
+                - matchid: The ID of the match
+                - matchhandelsetypid: The type ID of the event
+                - Additional fields depending on event type (player IDs, minute, etc.)
+
+        Returns:
+            Dict[str, Any]: Response from the API, typically containing success status
+                and the ID of the created event
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+            FogisDataError: If the response data is invalid or not a dictionary
+
+        Examples:
+            >>> client = PublicApiClient(username="your_username", password="your_password")
+            >>> # Save a goal event
+            >>> event = {
+            ...     "matchid": 123456,
+            ...     "matchhandelsetypid": 1,  # Goal
+            ...     "spelareid": 78910,
+            ...     "minut": 25
+            ... }
+            >>> response = client.save_match_event(event)
+            >>> print(f"Event saved successfully: {response.get('success', False)}")
+            Event saved successfully: True
+        """
+        self.logger.info("Saving match event...")
+
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchhandelse"
+        response = self._make_authenticated_request("POST", url, json=event_data)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        parsed_data = json.loads(response_json["d"])
+                        if isinstance(parsed_data, dict):
+                            return parsed_data
+                        else:
+                            return {"success": True, "data": parsed_data}
+                    else:
+                        if isinstance(response_json["d"], dict):
+                            return response_json["d"]
+                        else:
+                            return {"success": True, "data": response_json["d"]}
+                else:
+                    # Fallback: direct response parsing
+                    if isinstance(response_json, dict):
+                        return response_json
+                    else:
+                        return {"success": True, "data": response_json}
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to save match event: {response.status_code}")
+
+    def delete_match_event(self, event_id: Union[str, int]) -> bool:  # noqa: C901
+        """
+        Delete a specific event from a match.
+
+        Args:
+            event_id: The ID of the event to delete
+
+        Returns:
+            bool: True if deletion was successful, False otherwise
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+
+        Examples:
+            >>> client = PublicApiClient(username="your_username", password="your_password")
+            >>> # Get all events for a match
+            >>> events = client.fetch_match_events_json(123456)
+            >>> if events:
+            ...     # Delete the first event
+            ...     event_id = events[0]['matchhandelseid']
+            ...     success = client.delete_match_event(event_id)
+            ...     print(f"Event deletion {'successful' if success else 'failed'}")
+            Event deletion successful
+        """
+        self.logger.info(f"Deleting match event with ID: {event_id}")
+
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/RaderaMatchhandelse"
+
+        # Ensure event_id is an integer
+        event_id_int = int(event_id) if isinstance(event_id, str) else event_id
+        payload = {"matchhandelseid": event_id_int}
+
+        try:
+            response = self._make_authenticated_request("POST", url, json=payload)
+
+            if response.status_code == 200:
+                try:
+                    response_json = response.json()
+
+                    # Handle different response formats
+                    if "d" in response_json:
+                        if isinstance(response_json["d"], str):
+                            parsed_data = json.loads(response_json["d"])
+                            if isinstance(parsed_data, dict) and "success" in parsed_data:
+                                return bool(parsed_data["success"])
+                            # If parsed_data doesn't have success field, assume success
+                            return True
+                        elif isinstance(response_json["d"], dict) and "success" in response_json["d"]:
+                            return bool(response_json["d"]["success"])
+                        else:
+                            # Original API returns None on successful deletion
+                            return True
+                    elif isinstance(response_json, dict) and "success" in response_json:
+                        return bool(response_json["success"])
+                    else:
+                        # Assume success if we got a 200 response
+                        return True
+
+                except json.JSONDecodeError:
+                    # If response is not JSON, assume success based on status code
+                    return True
+            else:
+                return False
+
+        except FogisAPIRequestError as e:
+            self.logger.error(f"Error deleting event with ID {event_id}: {e}")
+            return False
+        except Exception as e:
+            self.logger.error(f"Unexpected error deleting event with ID {event_id}: {e}")
+            return False
+
+    def report_match_result(self, result_data: Dict[str, Any]) -> Dict[str, Any]:  # noqa: C901
+        """
+        Report match results (halftime and fulltime) to the FOGIS API.
+
+        This method supports two different input formats:
+        1. The flat format with direct fields (hemmamal, bortamal, etc.) - PREFERRED
+        2. The nested format with matchresultatListaJSON array (for backward compatibility)
+
+        Args:
+            result_data: Data containing match results. Can be either:
+
+                Format 1 (flat structure - PREFERRED):
+                - matchid: The ID of the match
+                - hemmamal: Full-time score for the home team
+                - bortamal: Full-time score for the away team
+                - halvtidHemmamal: Half-time score for the home team (optional)
+                - halvtidBortamal: Half-time score for the away team (optional)
+
+                Format 2 (nested structure - for backward compatibility):
+                - matchresultatListaJSON: Array of match result objects with:
+                  - matchid: The ID of the match
+                  - matchresultattypid: 1 for full-time, 2 for half-time
+                  - matchlag1mal: Score for team 1
+                  - matchlag2mal: Score for team 2
+                  - wo, ow, ww: Boolean flags
+
+        Returns:
+            Dict[str, Any]: Response from the API, typically containing success status
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+            FogisDataError: If the response data is invalid or not a dictionary
+            ValueError: If required fields are missing
+
+        Examples:
+            >>> client = PublicApiClient(username="your_username", password="your_password")
+            >>> # Format 1 (flat structure)
+            >>> result = {
+            ...     "matchid": 123456,
+            ...     "hemmamal": 2,
+            ...     "bortamal": 1,
+            ...     "halvtidHemmamal": 1,
+            ...     "halvtidBortamal": 0
+            ... }
+            >>> response = client.report_match_result(result)
+            >>> print(f"Result reported successfully: {response.get('success', False)}")
+            Result reported successfully: True
+        """
+        self.logger.info("Reporting match result...")
+
+        # Import the conversion function
+        try:
+            from fogis_api_client.api_contracts import convert_flat_to_nested_match_result
+        except ImportError:
+            # Fallback if api_contracts module is not available
+            convert_flat_to_nested_match_result = None
+
+        # Determine the format and convert if necessary
+        if "matchresultatListaJSON" in result_data:
+            # Already in the nested format for the API
+            self.logger.info("Using nested matchresultatListaJSON format for reporting match result")
+            result_data_copy = json.loads(json.dumps(result_data))
+
+            # Ensure numeric fields are integers in each result object
+            for result_obj in result_data_copy.get("matchresultatListaJSON", []):
+                for field in ["matchid", "matchresultattypid", "matchlag1mal", "matchlag2mal"]:
+                    if field in result_obj and result_obj[field] is not None:
+                        value = result_obj[field]
+                        if isinstance(value, str):
+                            result_obj[field] = int(value)
+        else:
+            # We have the flat structure, need to convert to nested structure
+            self.logger.info("Converting flat result structure to nested matchresultatListaJSON format")
+
+            if convert_flat_to_nested_match_result:
+                try:
+                    result_data_copy = convert_flat_to_nested_match_result(result_data)
+                except Exception as e:
+                    error_msg = f"Invalid match result data: {e}"
+                    self.logger.error(error_msg)
+                    raise ValueError(error_msg)
+            else:
+                # Manual conversion if api_contracts is not available
+                match_id = result_data.get("matchid")
+                if not match_id:
+                    raise ValueError("Missing required field 'matchid' in result data")
+
+                result_list = []
+
+                # Full-time result
+                if "hemmamal" in result_data and "bortamal" in result_data:
+                    result_list.append(
+                        {
+                            "matchid": int(match_id),
+                            "matchresultattypid": 1,  # Full-time
+                            "matchlag1mal": int(result_data["hemmamal"]),
+                            "matchlag2mal": int(result_data["bortamal"]),
+                            "wo": result_data.get("wo", False),
+                            "ow": result_data.get("ow", False),
+                            "ww": result_data.get("ww", False),
+                        }
+                    )
+
+                # Half-time result
+                if "halvtidHemmamal" in result_data and "halvtidBortamal" in result_data:
+                    result_list.append(
+                        {
+                            "matchid": int(match_id),
+                            "matchresultattypid": 2,  # Half-time
+                            "matchlag1mal": int(result_data["halvtidHemmamal"]),
+                            "matchlag2mal": int(result_data["halvtidBortamal"]),
+                            "wo": False,
+                            "ow": False,
+                            "ww": False,
+                        }
+                    )
+
+                result_data_copy = {"matchresultatListaJSON": result_list}
+
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista"
+        response = self._make_authenticated_request("POST", url, json=result_data_copy)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        parsed_data = json.loads(response_json["d"])
+                        if isinstance(parsed_data, dict):
+                            return parsed_data
+                        else:
+                            return {"success": True, "data": parsed_data}
+                    else:
+                        if isinstance(response_json["d"], dict):
+                            return response_json["d"]
+                        else:
+                            return {"success": True, "data": response_json["d"]}
+                else:
+                    # Fallback: direct response parsing
+                    if isinstance(response_json, dict):
+                        return response_json
+                    else:
+                        return {"success": True, "data": response_json}
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to report match result: {response.status_code}")
+
+    def mark_reporting_finished(self, match_id: Union[str, int]) -> Dict[str, bool]:
+        """
+        Mark a match report as completed/finished in the FOGIS system.
+
+        This is the final step in the referee reporting workflow that finalizes
+        the match report and submits it officially.
+
+        Args:
+            match_id: The ID of the match to mark as finished
+
+        Returns:
+            Dict[str, bool]: The response from the FOGIS API, typically containing a success status
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+            FogisDataError: If the response data is invalid or not a dictionary
+            ValueError: If match_id is empty or invalid
+
+        Examples:
+            >>> client = PublicApiClient(username="your_username", password="your_password")
+            >>> client.login()
+            >>> result = client.mark_reporting_finished(match_id=123456)
+            >>> print(f"Report marked as finished: {result.get('success', False)}")
+            Report marked as finished: True
+        """
+        # Validate match_id
+        if not match_id:
+            error_msg = "match_id cannot be empty"
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        self.logger.info(f"Marking match ID {match_id} reporting as finished")
+
+        # Ensure match_id is an integer
+        match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
+        payload = {"matchid": match_id_int}
+
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport"
+        response = self._make_authenticated_request("POST", url, json=payload)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        parsed_data = json.loads(response_json["d"])
+                        if isinstance(parsed_data, dict):
+                            return parsed_data
+                        else:
+                            return {"success": True, "data": parsed_data}
+                    else:
+                        if isinstance(response_json["d"], dict):
+                            return response_json["d"]
+                        else:
+                            return {"success": True, "data": response_json["d"]}
+                else:
+                    # Fallback: direct response parsing
+                    if isinstance(response_json, dict):
+                        return response_json
+                    else:
+                        return {"success": True, "data": response_json}
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to mark reporting finished: {response.status_code}")
+
+    def save_match_participant(self, participant_data: Dict[str, Any]) -> Dict[str, Any]:  # noqa: C901
+        """
+        Update specific fields for a match participant in FOGIS while preserving other fields.
+
+        This method is used to modify only the fields you specify (like jersey number, captain status, etc.)
+        while keeping all other player information unchanged. You identify the player using their
+        match-specific ID (matchdeltagareid), and provide only the fields you want to update.
+
+        Args:
+            participant_data: Data containing match participant details. Must include:
+                - matchdeltagareid: The ID of the match participant
+                - trojnummer: Jersey number
+                - lagdelid: Team part ID (typically 0)
+                - lagkapten: Boolean indicating if the player is team captain
+                - ersattare: Boolean indicating if the player is a substitute
+                - positionsnummerhv: Position number (typically 0)
+                - arSpelandeLedare: Boolean indicating if the player is a playing leader
+                - ansvarig: Boolean indicating if the player is responsible
+
+        Returns:
+            Dict[str, Any]: Response from the API containing the updated team roster
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+            FogisDataError: If the response data is invalid or not a dictionary
+            ValueError: If required fields are missing
+
+        Examples:
+            >>> client = PublicApiClient(username="your_username", password="your_password")
+            >>> # Update a player's jersey number and set as captain
+            >>> participant = {
+            ...     "matchdeltagareid": 46123762,
+            ...     "trojnummer": 10,
+            ...     "lagkapten": True,
+            ...     "ersattare": False,
+            ...     "lagdelid": 0,
+            ...     "positionsnummerhv": 0,
+            ...     "arSpelandeLedare": False,
+            ...     "ansvarig": False
+            ... }
+            >>> response = client.save_match_participant(participant)
+            >>> print(f"Participant updated successfully: {response.get('success', False)}")
+            Participant updated successfully: True
+        """
+        self.logger.info("Saving match participant...")
+
+        # Ensure required fields are present
+        required_fields = [
+            "matchdeltagareid",
+            "trojnummer",
+            "lagdelid",
+            "lagkapten",
+            "ersattare",
+            "positionsnummerhv",
+            "arSpelandeLedare",
+            "ansvarig",
+        ]
+        for field in required_fields:
+            if field not in participant_data:
+                error_msg = f"Missing required field '{field}' in participant data"
+                self.logger.error(error_msg)
+                raise ValueError(error_msg)
+
+        # Create a copy to avoid modifying the original
+        participant_data_copy = dict(participant_data)
+
+        # Ensure numeric fields are integers
+        for field in ["matchdeltagareid", "trojnummer", "lagdelid", "positionsnummerhv"]:
+            if field in participant_data_copy and participant_data_copy[field] is not None:
+                value = participant_data_copy[field]
+                if isinstance(value, str):
+                    participant_data_copy[field] = int(value)
+
+        # Ensure boolean fields are booleans
+        for field in ["lagkapten", "ersattare", "arSpelandeLedare", "ansvarig"]:
+            if field in participant_data_copy and participant_data_copy[field] is not None:
+                value = participant_data_copy[field]
+                if isinstance(value, str):
+                    participant_data_copy[field] = value.lower() == "true"
+                elif not isinstance(value, bool):
+                    participant_data_copy[field] = bool(value)
+
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare"
+        response = self._make_authenticated_request("POST", url, json=participant_data_copy)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        parsed_data = json.loads(response_json["d"])
+                        if isinstance(parsed_data, dict):
+                            return parsed_data
+                        else:
+                            return {"success": True, "data": parsed_data}
+                    else:
+                        if isinstance(response_json["d"], dict):
+                            return response_json["d"]
+                        else:
+                            return {"success": True, "data": response_json["d"]}
+                else:
+                    # Fallback: direct response parsing
+                    if isinstance(response_json, dict):
+                        return response_json
+                    else:
+                        return {"success": True, "data": response_json}
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to save match participant: {response.status_code}")
+
+    def save_team_official(self, official_data: Dict[str, Any]) -> Dict[str, Any]:  # noqa: C901
+        """
+        Report team official disciplinary action to the FOGIS API.
+
+        Args:
+            official_data: Data containing team official action details. Must include:
+                - matchid: The ID of the match
+                - lagid: The ID of the team
+                - personid: The ID of the team official
+                - matchlagledaretypid: The type ID of the disciplinary action
+
+                Optional fields:
+                - minut: The minute when the action occurred
+
+        Returns:
+            Dict[str, Any]: Response from the API, typically containing success status
+                and the ID of the created action
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+            FogisDataError: If the response data is invalid or not a dictionary
+            ValueError: If required fields are missing
+
+        Examples:
+            >>> client = PublicApiClient(username="your_username", password="your_password")
+            >>> # Report a yellow card for a team official
+            >>> action = {
+            ...     "matchid": 123456,
+            ...     "lagid": 78910,  # Team ID
+            ...     "personid": 12345,  # Official ID
+            ...     "matchlagledaretypid": 1,  # Yellow card
+            ...     "minut": 35
+            ... }
+            >>> response = client.save_team_official(action)
+            >>> print(f"Action reported successfully: {response.get('success', False)}")
+            Action reported successfully: True
+        """
+        self.logger.info("Saving team official action...")
+
+        # Ensure required fields are present
+        required_fields = ["matchid", "lagid", "personid", "matchlagledaretypid"]
+        for field in required_fields:
+            if field not in official_data:
+                error_msg = f"Missing required field '{field}' in official data"
+                self.logger.error(error_msg)
+                raise ValueError(error_msg)
+
+        # Create a copy to avoid modifying the original
+        official_data_copy = dict(official_data)
+
+        # Ensure IDs are integers
+        for key in ["matchid", "lagid", "personid", "matchlagledaretypid", "minut"]:
+            if key in official_data_copy and official_data_copy[key] is not None:
+                value = official_data_copy[key]
+                if isinstance(value, str):
+                    official_data_copy[key] = int(value)
+
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchlagledare"
+        response = self._make_authenticated_request("POST", url, json=official_data_copy)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        parsed_data = json.loads(response_json["d"])
+                        if isinstance(parsed_data, dict):
+                            return parsed_data
+                        else:
+                            return {"success": True, "data": parsed_data}
+                    else:
+                        if isinstance(response_json["d"], dict):
+                            return response_json["d"]
+                        else:
+                            return {"success": True, "data": response_json["d"]}
+                else:
+                    # Fallback: direct response parsing
+                    if isinstance(response_json, dict):
+                        return response_json
+                    else:
+                        return {"success": True, "data": response_json}
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to save team official: {response.status_code}")
+
+    def clear_match_events(self, match_id: Union[str, int]) -> Dict[str, bool]:
+        """
+        Clear all events for a match.
+
+        Args:
+            match_id: The ID of the match
+
+        Returns:
+            Dict[str, bool]: Response from the API, typically containing a success status
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If there's an error with the API request
+            FogisDataError: If the response data is invalid or not a dictionary
+
+        Examples:
+            >>> client = PublicApiClient(username="your_username", password="your_password")
+            >>> response = client.clear_match_events(123456)
+            >>> print(f"Events cleared successfully: {response.get('success', False)}")
+            Events cleared successfully: True
+        """
+        self.logger.info(f"Clearing all events for match ID {match_id}")
+
+        # Ensure match_id is an integer
+        match_id_int = int(match_id) if isinstance(match_id, (str, int)) else match_id
+        payload = {"matchid": match_id_int}
+
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/ClearMatchEvents"
+        response = self._make_authenticated_request("POST", url, json=payload)
+
+        if response.status_code == 200:
+            try:
+                response_json = response.json()
+
+                # FOGIS API returns data in a 'd' key
+                if "d" in response_json:
+                    if isinstance(response_json["d"], str):
+                        parsed_data = json.loads(response_json["d"])
+                        if isinstance(parsed_data, dict):
+                            return parsed_data
+                        else:
+                            return {"success": True, "data": parsed_data}
+                    else:
+                        if isinstance(response_json["d"], dict):
+                            return response_json["d"]
+                        else:
+                            return {"success": True, "data": response_json["d"]}
+                else:
+                    # Fallback: direct response parsing
+                    if isinstance(response_json, dict):
+                        return response_json
+                    else:
+                        return {"success": True, "data": response_json}
+
+            except json.JSONDecodeError as e:
+                raise FogisAPIRequestError(f"Failed to parse API response: {e}")
+        else:
+            raise FogisAPIRequestError(f"Failed to clear match events: {response.status_code}")
+
     # Backward compatibility methods (deprecated but functional)
     def fetch_match_json(self, match_id: Union[int, str]) -> Dict[str, Any]:
         """
