@@ -35,17 +35,17 @@ cleanup() {
     print_info "Cleaning up Docker resources..."
 
     # Stop and remove containers
-    docker-compose -f docker-compose.test.yml down -v 2>/dev/null || true
+    $DOCKER_COMPOSE -f docker-compose.test.yml down -v 2>/dev/null || true
 
     # Show container logs if tests failed
     if [ $exit_code -ne 0 ]; then
         print_warning "Tests failed. Showing container logs:"
         echo ""
         print_info "=== Mock Server Logs ==="
-        docker-compose -f docker-compose.test.yml logs mock-fogis-server 2>/dev/null || echo "No logs available"
+        $DOCKER_COMPOSE -f docker-compose.test.yml logs mock-fogis-server 2>/dev/null || echo "No logs available"
         echo ""
         print_info "=== Test Runner Logs ==="
-        docker-compose -f docker-compose.test.yml logs test-runner 2>/dev/null || echo "No logs available"
+        $DOCKER_COMPOSE -f docker-compose.test.yml logs test-runner 2>/dev/null || echo "No logs available"
     fi
 
     print_info "Cleanup complete"
@@ -74,8 +74,15 @@ if \! command -v docker &> /dev/null; then
     exit 1
 fi
 
-if \! command -v docker-compose &> /dev/null; then
-    print_error "Docker Compose is not installed or not in PATH"
+# Check for Docker Compose (V2 uses 'docker compose', V1 uses 'docker-compose')
+if docker compose version &> /dev/null; then
+    DOCKER_COMPOSE="docker compose"
+    print_success "Docker Compose V2 detected"
+elif command -v docker-compose &> /dev/null; then
+    DOCKER_COMPOSE="docker-compose"
+    print_success "Docker Compose V1 detected"
+else
+    print_error "Docker Compose is not installed or not available"
     exit 1
 fi
 
@@ -84,7 +91,7 @@ echo ""
 
 # Build the images
 print_info "Building Docker images..."
-docker-compose -f docker-compose.test.yml build --no-cache
+$DOCKER_COMPOSE -f docker-compose.test.yml build --no-cache
 
 if [ $? -ne 0 ]; then
     print_error "Failed to build Docker images"
@@ -96,7 +103,7 @@ echo ""
 
 # Start the mock server
 print_info "Starting mock FOGIS server..."
-docker-compose -f docker-compose.test.yml up -d mock-fogis-server
+$DOCKER_COMPOSE -f docker-compose.test.yml up -d mock-fogis-server
 
 if [ $? -ne 0 ]; then
     print_error "Failed to start mock server"
@@ -131,13 +138,13 @@ if [ "$HEALTH_STATUS" \!= "healthy" ]; then
     print_error "Mock server failed to become healthy within ${MAX_WAIT} seconds"
     print_info "Mock server status: $HEALTH_STATUS"
     print_info "Showing mock server logs:"
-    docker-compose -f docker-compose.test.yml logs mock-fogis-server
+    $DOCKER_COMPOSE -f docker-compose.test.yml logs mock-fogis-server
     exit 1
 fi
 
 # Verify mock server is responding
 print_info "Verifying mock server is responding..."
-if docker-compose -f docker-compose.test.yml exec -T mock-fogis-server curl -f http://localhost:5001/health > /dev/null 2>&1; then
+if $DOCKER_COMPOSE -f docker-compose.test.yml exec -T mock-fogis-server curl -f http://localhost:5001/health > /dev/null 2>&1; then
     print_success "Mock server is responding to health checks"
 else
     print_warning "Mock server health check returned non-zero, but continuing..."
@@ -151,7 +158,7 @@ print_info "Running Unit Tests"
 print_info "=========================================="
 echo ""
 
-docker-compose -f docker-compose.test.yml run --rm test-runner pytest tests/ -v --tb=short
+$DOCKER_COMPOSE -f docker-compose.test.yml run --rm test-runner pytest tests/ -v --tb=short
 
 UNIT_TEST_EXIT_CODE=$?
 
@@ -182,7 +189,7 @@ if [ -n "$VERBOSE" ]; then
 fi
 
 # Run the integration tests
-docker-compose -f docker-compose.test.yml run --rm test-runner $TEST_CMD
+$DOCKER_COMPOSE -f docker-compose.test.yml run --rm test-runner $TEST_CMD
 
 INTEGRATION_TEST_EXIT_CODE=$?
 
