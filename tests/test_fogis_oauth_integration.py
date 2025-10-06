@@ -10,6 +10,8 @@ import logging
 import os
 import sys
 
+import pytest
+
 from fogis_api_client.internal.fogis_oauth_manager import FogisOAuthManager
 from fogis_api_client.public_api_client import PublicApiClient
 
@@ -167,13 +169,31 @@ def run_integration_tests():
 
 
 def test_with_real_credentials():
-    """Test with real FOGIS credentials if provided."""
+    """Test with real FOGIS credentials if provided.
+
+    This test is skipped in CI environments and when using test credentials.
+    It requires actual FOGIS API credentials to test against the real FOGIS API.
+
+    To run this test locally:
+    1. Set FOGIS_USERNAME and FOGIS_PASSWORD to real FOGIS credentials
+    2. Run: pytest tests/test_fogis_oauth_integration.py::test_with_real_credentials -v
+
+    Note: This test connects to the real FOGIS API, not the mock server.
+    """
     username = os.environ.get("FOGIS_USERNAME")
     password = os.environ.get("FOGIS_PASSWORD")
 
+    # Skip if no credentials provided
     if not (username and password):
-        print("\n💡 To test with real credentials, set FOGIS_USERNAME and FOGIS_PASSWORD environment variables")
-        return
+        pytest.skip("No FOGIS credentials provided. Set FOGIS_USERNAME and FOGIS_PASSWORD to test with real API.")
+
+    # Skip if using test credentials (not real ones)
+    if username == "test_user" or password == "test_password":
+        pytest.skip("Test credentials detected. This test requires real FOGIS credentials to connect to the actual FOGIS API.")
+
+    # Skip in CI environments
+    if os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true":
+        pytest.skip("Skipped in CI - requires real FOGIS credentials")
 
     print(f"\n🔐 Testing with real credentials for user: {username}")
 
