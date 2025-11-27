@@ -258,13 +258,22 @@ class PublicApiClient:
         match_id_int = int(match_id) if isinstance(match_id, str) else match_id
 
         try:
-            # Use the internal API client to fetch the match players
-            internal_players = self.internal_client.get_match_players(match_id_int)
+            # Fetch match details to get team IDs
+            match_details = self.fetch_match_json(match_id_int)
 
-            # Convert to the public format
+            # Try to get team IDs using both potential key names
+            home_team_id = match_details.get("hemmalagid") or match_details.get("matchlag1id")
+            away_team_id = match_details.get("bortalagid") or match_details.get("matchlag2id")
+
             result: Dict[str, List[PlayerDict]] = {}
-            for key, players in internal_players.items():
-                result[key] = [convert_internal_to_player(player) for player in players]
+
+            if home_team_id:
+                home_players = self.internal_client.get_match_players_for_team(match_id_int, int(home_team_id))
+                result["hemmalag"] = [convert_internal_to_player(player) for player in home_players]
+
+            if away_team_id:
+                away_players = self.internal_client.get_match_players_for_team(match_id_int, int(away_team_id))
+                result["bortalag"] = [convert_internal_to_player(player) for player in away_players]
 
             return result
         except InternalApiError as e:

@@ -181,30 +181,31 @@ class InternalApiClient:
 
         return cast(InternalMatchDict, response_data)
 
-    def get_match_players(self, match_id: int) -> Dict[str, List[InternalPlayerDict]]:
+    def get_match_players_for_team(self, match_id: int, team_id: int) -> List[InternalPlayerDict]:
         """
-        Get player information for a specific match.
+        Get player information for a specific team in a match.
 
         Args:
             match_id: The ID of the match
+            team_id: The ID of the team (matchlagid)
 
         Returns:
-            Dict[str, List[InternalPlayerDict]]: Player information for the match
+            List[InternalPlayerDict]: Player information for the team
 
         Raises:
             InternalApiError: If the request fails
         """
-        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatchdeltagareLista"
-        payload = {"matchid": match_id}
+        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatchdeltagareListaForMatchlag"
+        payload = {"matchid": match_id, "matchlagid": team_id}
 
         response_data = self.api_request(url, payload)
 
-        if not isinstance(response_data, dict):
+        if not isinstance(response_data, list):
             error_msg = f"Invalid match players response: {response_data}"
             self.logger.error(error_msg)
             raise InternalApiError(error_msg)
 
-        return cast(Dict[str, List[InternalPlayerDict]], response_data)
+        return cast(List[InternalPlayerDict], response_data)
 
     def get_match_officials(self, match_id: int) -> Dict[str, List[InternalOfficialDict]]:
         """
@@ -409,7 +410,6 @@ class InternalApiClient:
             raise InternalApiError(error_msg)
 
         return response_data
-
 
     def save_match_participant(self, participant_data: InternalMatchParticipantDict) -> Dict[str, Any]:
         """
