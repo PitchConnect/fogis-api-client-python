@@ -30,7 +30,7 @@ class TestMockServerApiClient:
         assert client.port == 8080
         assert client.base_url == "http://example.com:8080"
 
-    @patch('fogis_api_client.cli.api_client.requests.get')
+    @patch("fogis_api_client.cli.api_client.requests.get")
     def test_get_status_success(self, mock_get):
         """Test successful status retrieval."""
         mock_response = Mock()
@@ -96,8 +96,10 @@ class TestMockServerApiClient:
         assert result["status"] == "error"
         assert "message" in result
 
-    def test_test_endpoint_connection_error(self):
+    @patch("fogis_api_client.cli.api_client.requests.get")
+    def test_test_endpoint_connection_error(self, mock_get):
         """Test endpoint testing with connection error returns error dict."""
+        mock_get.side_effect = requests.exceptions.ConnectionError("Connection refused")
         client = MockServerApiClient()
 
         # This will fail because no server is running, but should return error dict
@@ -121,8 +123,19 @@ class TestMockServerApiClient:
         client = MockServerApiClient(host="localhost", port=8080)
         assert client.base_url == "http://localhost:8080"
 
-    def test_test_endpoint_different_methods(self):
+    @patch("fogis_api_client.cli.api_client.requests.delete")
+    @patch("fogis_api_client.cli.api_client.requests.put")
+    @patch("fogis_api_client.cli.api_client.requests.post")
+    @patch("fogis_api_client.cli.api_client.requests.get")
+    def test_test_endpoint_different_methods(self, mock_get, mock_post, mock_put, mock_delete):
         """Test endpoint testing with different HTTP methods."""
+        # Setup mocks to raise ConnectionError
+        error = requests.exceptions.ConnectionError("Connection refused")
+        mock_get.side_effect = error
+        mock_post.side_effect = error
+        mock_put.side_effect = error
+        mock_delete.side_effect = error
+
         client = MockServerApiClient()
 
         # Test GET method
