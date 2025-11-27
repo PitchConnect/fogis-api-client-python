@@ -6,7 +6,6 @@ It uses the internal API layer to communicate with the server,
 but presents a simpler, more user-friendly interface.
 """
 
-import json
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Union, cast
@@ -729,3 +728,71 @@ class PublicApiClient:
             error_msg = f"Failed to mark reporting as finished: {e}"
             self.logger.error(error_msg)
             raise FogisAPIRequestError(error_msg) from e
+
+    def get_match_details(self, match_id: Union[int, str], filter_params: Optional[Dict[str, Any]] = None) -> MatchDict:
+        """
+        Fetch match details by searching in the match list.
+
+        Args:
+            match_id: The ID of the match
+            filter_params: Optional filter parameters to narrow down the search
+
+        Returns:
+            MatchDict: The match details
+
+        Raises:
+            FogisLoginError: If not logged in
+            FogisAPIRequestError: If the match is not found or API error
+        """
+        # Ensure we're logged in
+        if not self.cookies:
+            self.login()
+
+        match_id_int = int(match_id) if isinstance(match_id, str) else match_id
+
+        # Fetch the match list
+        # If filter_params is None, fetch_matches_list_json will use default (next 7 days)
+        matches_response = self.fetch_matches_list_json(filter_params)
+
+        # Handle different response types
+        matches = []
+        if isinstance(matches_response, list):
+            matches = matches_response
+        elif isinstance(matches_response, dict) and "matchlista" in matches_response:
+            matches = matches_response["matchlista"]
+
+        # Find the match
+        for match in matches:
+            if match.get("matchid") == match_id_int:
+                return match
+
+        raise FogisAPIRequestError(f"Match with ID {match_id} not found in match list")
+
+    def fetch_complete_match(
+        self,
+        match_id: Union[int, str],
+        include_optional: bool = True,
+        search_filter: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Fetch complete match information including details, players, events, etc.
+
+        Args:
+            match_id: The ID of the match
+            include_optional: Whether to include optional data
+            search_filter: Optional filter parameters to pass to get_match_details
+
+        Returns:
+            Dict[str, Any]: Complete match information
+        """
+        result = {}
+
+        # Pass the filter down to get_match_details
+        result["match_details"] = self.get_match_details(match_id, filter_params=search_filter)
+
+        # Fetch other details
+        result["players"] = self.fetch_match_players_json(match_id)
+        result["events"] = self.fetch_match_events_json(match_id)
+        result["officials"] = self.fetch_match_officials_json(match_id)
+
+        return result
