@@ -211,6 +211,39 @@ jobs:
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
+    - name: Update setup.py version
+      run: |
+        NEW_VERSION="${{ needs.detect-changes.outputs.version }}"
+        echo "📝 Updating setup.py to version $NEW_VERSION"
+
+        # Update version in setup.py
+        sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"$NEW_VERSION\"/" setup.py
+
+        # Verify the update
+        UPDATED_VERSION=$(python3 -c "import re; content=open('setup.py').read(); match=re.search(r'\"version\":\s*\"([^\"]+)\"', content); print(match.group(1) if match else 'unknown')")
+        echo "Updated version in setup.py: $UPDATED_VERSION"
+
+        if [ "$UPDATED_VERSION" != "$NEW_VERSION" ]; then
+          echo "❌ Failed to update version in setup.py"
+          exit 1
+        fi
+
+        echo "✅ Successfully updated setup.py to version $NEW_VERSION"
+
+    - name: Commit version update
+      run: |
+        NEW_VERSION="${{ needs.detect-changes.outputs.version }}"
+
+        # Check if there are changes to commit
+        if git diff --quiet setup.py; then
+          echo "ℹ️ No changes to setup.py (version already up to date)"
+        else
+          git add setup.py
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git push origin main
+          echo "✅ Committed and pushed version update to main"
+        fi
+
     - name: Create and push tag
       run: |
         NEW_VERSION="${{ needs.detect-changes.outputs.version }}"
@@ -230,57 +263,104 @@ jobs:
           COMMIT_RANGE="v$NEW_VERSION"
         fi
 
-        # Generate categorized changelog
+        # Generate categorized changelog with enhanced details
         FEATURES=$(git log $COMMIT_RANGE --pretty=format:"- %s (%h)" --grep="^feat" | head -20)
         FIXES=$(git log $COMMIT_RANGE --pretty=format:"- %s (%h)" --grep="^fix" | head -20)
         BREAKING=$(git log $COMMIT_RANGE --pretty=format:"- %s (%h)" --grep="BREAKING CHANGE\|!:" | head -10)
         OTHER=$(git log $COMMIT_RANGE --pretty=format:"- %s (%h)" --invert-grep --grep="^feat\|^fix" | head -10)
 
-        # Create release notes
+        # Extract PR numbers and issue references from commits
+        PR_NUMBERS=$(git log $COMMIT_RANGE --pretty=format:"%s" | grep -oP '#\d+' | sort -u | tr '\n' ' ')
+        ISSUE_REFS=$(git log $COMMIT_RANGE --pretty=format:"%s" | grep -oP '(?:Fix|Fixes|Close|Closes|Resolve|Resolves) #\d+' | sort -u)
+
+        # Create comprehensive release notes
         cat > release_notes.md << EOF
         ## Release v$NEW_VERSION
 
         **Release Type**: ${{ needs.detect-changes.outputs.release_type }}
         **Commits**: ${{ needs.detect-changes.outputs.commit_count }}
+        **Date**: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-        ### 🚀 Installation
+        ### 📦 Installation
+
+        #### PyPI Package
         \`\`\`bash
         pip install fogis-api-client==$NEW_VERSION
         \`\`\`
 
-        ### 🐳 Container
+        #### Container Image
         \`\`\`bash
         docker pull ghcr.io/pitchconnect/fogis-api-client-python:$NEW_VERSION
         \`\`\`
+
+        ### 📝 What's Changed
         EOF
 
         if [ -n "$BREAKING" ]; then
           echo "" >> release_notes.md
           echo "### ⚠️ BREAKING CHANGES" >> release_notes.md
+          echo "" >> release_notes.md
           echo "$BREAKING" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "> **Note**: This release contains breaking changes. Please review the changes carefully before upgrading." >> release_notes.md
         fi
 
         if [ -n "$FEATURES" ]; then
           echo "" >> release_notes.md
           echo "### ✨ New Features" >> release_notes.md
+          echo "" >> release_notes.md
           echo "$FEATURES" >> release_notes.md
         fi
 
         if [ -n "$FIXES" ]; then
           echo "" >> release_notes.md
           echo "### 🐛 Bug Fixes" >> release_notes.md
+          echo "" >> release_notes.md
           echo "$FIXES" >> release_notes.md
         fi
 
         if [ -n "$OTHER" ]; then
           echo "" >> release_notes.md
           echo "### 🔧 Other Changes" >> release_notes.md
+          echo "" >> release_notes.md
           echo "$OTHER" >> release_notes.md
+        fi
+
+        # Add related PRs and issues section
+        if [ -n "$PR_NUMBERS" ]; then
+          echo "" >> release_notes.md
+          echo "### 🔗 Related Pull Requests" >> release_notes.md
+          echo "" >> release_notes.md
+          for pr in $PR_NUMBERS; do
+            echo "- PR $pr: https://github.com/${{ github.repository }}/pull/${pr#\#}" >> release_notes.md
+          done
+        fi
+
+        if [ -n "$ISSUE_REFS" ]; then
+          echo "" >> release_notes.md
+          echo "### 🐛 Issues Resolved" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "$ISSUE_REFS" | while read -r issue_ref; do
+            issue_num=$(echo "$issue_ref" | grep -oP '#\d+')
+            echo "- $issue_ref: https://github.com/${{ github.repository }}/issues/${issue_num#\#}" >> release_notes.md
+          done
+        fi
+
+        # Add changelog link
+        echo "" >> release_notes.md
+        echo "### 📚 Full Changelog" >> release_notes.md
+        echo "" >> release_notes.md
+        if [ -n "$LATEST_TAG" ]; then
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG}...v$NEW_VERSION" >> release_notes.md
+        else
+          echo "**Full Changelog**: https://github.com/${{ github.repository }}/commits/v$NEW_VERSION" >> release_notes.md
         fi
 
         echo "" >> release_notes.md
         echo "---" >> release_notes.md
+        echo "" >> release_notes.md
         echo "_This release was automatically created by the automated release pipeline._" >> release_notes.md
+        echo "_For detailed information about each change, please refer to the linked PRs and issues above._" >> release_notes.md
 
     - name: Create GitHub Release
       uses: actions/github-script@v6
