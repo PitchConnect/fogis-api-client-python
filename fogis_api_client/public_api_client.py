@@ -422,7 +422,7 @@ class PublicApiClient:
         """
         return "Hello, brave new world!"
 
-    def get_match_details(self, match_id: Union[int, str]) -> Dict[str, Any]:
+    def get_match_details(self, match_id: Union[int, str], filter_params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Get match details from the comprehensive match list data.
 
@@ -431,17 +431,27 @@ class PublicApiClient:
 
         Args:
             match_id: The ID of the match to get details for
+            filter_params: Optional filter parameters to pass to fetch_matches_list_json.
+                          Useful for finding matches outside the default 7-day window.
+                          Example: {"datumFran": "2024-01-01", "datumTill": "2024-12-31"}
 
         Returns:
             Dict containing match details from the match list
 
         Raises:
             FogisAPIRequestError: If the match is not found
+
+        Examples:
+            >>> # Get recent match (within last 7 days)
+            >>> client.get_match_details(123456)
+
+            >>> # Get older match by specifying date range
+            >>> client.get_match_details(123456, filter_params={"datumFran": "2024-01-01"})
         """
         self.logger.info(f"Getting match details for match ID: {match_id}")
 
         # Get all matches and find the specific one
-        matches = self.fetch_matches_list_json()
+        matches = self.fetch_matches_list_json(filter_params)
 
         match_id_int = int(match_id)
         for match in matches:
@@ -770,7 +780,9 @@ class PublicApiClient:
             raise FogisAPIRequestError(f"Failed to fetch match result: {response.status_code}")
 
     # New convenience methods for improved API experience
-    def fetch_complete_match(self, match_id: Union[int, str], include_optional: bool = True) -> Dict[str, Any]:
+    def fetch_complete_match(
+        self, match_id: Union[int, str], include_optional: bool = True, search_filter: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         """
         Fetch complete match information in a single call.
 
@@ -783,6 +795,9 @@ class PublicApiClient:
             match_id: The ID of the match to fetch
             include_optional: Whether to include optional data (players, officials)
                              that might fail for some matches (default: True)
+            search_filter: Optional filter parameters to pass to get_match_details.
+                          Useful for finding matches outside the default 7-day window.
+                          Example: {"datumFran": "2024-01-01", "datumTill": "2024-12-31"}
 
         Returns:
             Dict containing complete match data:
@@ -800,8 +815,14 @@ class PublicApiClient:
             >>> client = PublicApiClient(username="user", password="pass")
             >>> client.login()
             >>>
-            >>> # Get complete match data
+            >>> # Get complete match data for recent match
             >>> match_data = client.fetch_complete_match(123456)
+            >>>
+            >>> # Get complete match data for older match (outside 7-day window)
+            >>> match_data = client.fetch_complete_match(
+            ...     123456,
+            ...     search_filter={"datumFran": "2024-01-01", "datumTill": "2024-12-31"}
+            ... )
             >>>
             >>> # Check what data was successfully fetched
             >>> print(f"Teams: {match_data['match_details']['lag1namn']} vs {match_data['match_details']['lag2namn']}")
@@ -837,7 +858,7 @@ class PublicApiClient:
 
         # 1. CRITICAL: Match details (required)
         try:
-            result["match_details"] = self.get_match_details(match_id)
+            result["match_details"] = self.get_match_details(match_id, filter_params=search_filter)
             result["metadata"]["success"]["match_details"] = True
             self.logger.debug("✅ Match details fetched successfully")
         except Exception as e:
