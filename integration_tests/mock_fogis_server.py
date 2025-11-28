@@ -7,12 +7,13 @@ for integration testing without requiring real credentials or internet access.
 
 import json
 import logging
+import os
 import random
 import threading
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from flask import Flask, Response, jsonify, request, session
+from flask import Flask, Response, jsonify, redirect, request, session
 
 # Import request validator
 from integration_tests.request_validator import RequestValidationError, RequestValidator
@@ -26,22 +27,33 @@ logger = logging.getLogger(__name__)
 
 
 class MockFogisServer:
-    """
-    A Flask-based mock server that simulates the FOGIS API endpoints.
-    """
+    """A Flask-based mock server that simulates the FOGIS API endpoints."""
 
-    def __init__(self, host: str = "localhost", port: int = 5001):
+    def __init__(self, host: str = "localhost", port: int = 5001, oauth_mode: bool = False):
         """
         Initialize the mock server.
 
         Args:
             host: The host to run the server on
             port: The port to run the server on
+            oauth_mode: If True, simulate OAuth redirect; if False, use ASP.NET form auth
+                       Can also be controlled via MOCK_SERVER_OAUTH_MODE environment variable
+
+        Note:
+            OAuth mode is disabled by default because the real client checks for
+            "auth.fogis.se" in the response URL, which cannot be simulated in a
+            localhost mock server. To test OAuth flows, you need to either:
+            1. Use ASP.NET form authentication (default)
+            2. Mock/patch the OAuth detection logic in tests
+            3. Use a proper DNS setup with auth.fogis.se pointing to localhost
         """
         self.host = host
         self.port = port
         self.app = Flask(__name__)
         self.app.secret_key = "mock_fogis_server_secret_key"
+
+        # OAuth mode configuration - can be overridden by environment variable
+        self.oauth_mode = os.environ.get("MOCK_SERVER_OAUTH_MODE", str(oauth_mode)).lower() in ("true", "1", "yes")
 
         # Store registered users
         self.users = {
@@ -50,6 +62,12 @@ class MockFogisServer:
 
         # Store session data
         self.sessions: Dict[str, Dict] = {}
+
+        # Store OAuth tokens (token -> username mapping)
+        self.oauth_tokens: Dict[str, str] = {}
+
+        # Store OAuth authorization codes (code -> username mapping)
+        self.oauth_codes: Dict[str, str] = {}
 
         # Store request history
         self.request_history: List[Dict[str, Any]] = []
@@ -71,8 +89,12 @@ class MockFogisServer:
         # Flag to enable/disable request validation
         self.validate_requests = True
 
+        # Generate consistent sample data for testing
+        self._initialize_sample_data()
+
         # Register routes
         self._register_routes()
+        self._register_convenience_method_routes()
 
         # Register before_request handler to track all requests
         @self.app.before_request
@@ -80,13 +102,97 @@ class MockFogisServer:
             """Track all requests to the server."""
             self._track_request(request.path)
 
+    def _initialize_sample_data(self):
+        """Initialize consistent sample data for testing."""
+        # Generate a fixed set of matches for consistency
+        self.sample_matches = []
+        base_match_ids = [123456, 234567, 345678, 456789, 567890]
+
+        for i, match_id in enumerate(base_match_ids):
+            match = {
+                "matchid": match_id,
+                "matchnr": f"{100000 + i:06d}",
+                "lag1namn": f"Home Team {i+1}",
+                "lag2namn": f"Away Team {i+1}",
+                "lag1resultat": i if i < 3 else None,  # Some completed matches
+                "lag2resultat": (i + 1) % 3 if i < 3 else None,
+                "datum": "2025-01-15",
+                "tid": f"{19 + i % 3}:00",
+                "anlaggningnamn": f"Stadium {i+1}",
+                "status": "klar" if i < 3 else "ej_pabörjad",
+                "serienamn": f"Division {(i % 3) + 1}",
+                "matchlag1id": 1000 + i * 2,  # Team-specific IDs for players/officials
+                "matchlag2id": 1000 + i * 2 + 1,
+                "domaruppdraglista": [{"namn": f"Referee {i+1}", "roll": "Huvuddomare"}] if i % 2 == 0 else [],
+            }
+            self.sample_matches.append(match)
+
+        # Store the match list response
+        self.sample_match_list_response = {"matchlista": self.sample_matches}
+
     def _register_routes(self):
         """Register the API routes."""
 
         # Login route
         @self.app.route("/mdk/Login.aspx", methods=["GET", "POST"])
         def login():
-            if request.method == "POST":
+            if request.method == "GET":
+                # Check if OAuth mode is enabled
+                if self.oauth_mode:
+                    # Simulate OAuth redirect by returning a page that redirects to OAuth
+                    # The client will follow this redirect and detect the OAuth flow
+                    return_url = request.args.get("ReturnUrl", "/mdk/")
+                    # Store return URL in session for later use
+                    session["oauth_return_url"] = return_url
+
+                    # Build OAuth authorization URL with PKCE parameters
+                    # Simulate the parameters that FOGIS would use
+                    import secrets
+                    import urllib.parse
+
+                    state = f"OpenIdConnect.AuthenticationProperties={secrets.token_urlsafe(32)}"
+                    nonce = secrets.token_urlsafe(32)
+                    code_challenge = secrets.token_urlsafe(32)
+
+                    oauth_params = {
+                        "client_id": "fogis.mobildomarklient",
+                        "redirect_uri": f"http://{self.host}:{self.port}/mdk/signin-oidc",
+                        "response_type": "code",
+                        "scope": "openid fogis profile anvandare personid offline_access",
+                        "code_challenge": code_challenge,
+                        "code_challenge_method": "S256",
+                        "state": state,
+                        "nonce": nonce,
+                    }
+
+                    oauth_url = f"http://{self.host}:{self.port}/oauth/authorize?" + urllib.parse.urlencode(oauth_params)
+
+                    # Return a redirect response that the client will follow
+                    # The client checks for "auth.fogis.se" in response.url, but since
+                    # we can't use that domain, we use a special path that simulates it
+                    return redirect(oauth_url, code=302)
+                else:
+                    # Return ASP.NET login form
+                    return """
+                    <html>
+                    <body>
+                        <form method="post" id="aspnetForm">
+                            <input type="hidden" name="__VIEWSTATE"
+                                value="viewstate_value" />
+                            <input type="hidden" name="__EVENTVALIDATION"
+                                value="eventvalidation_value" />
+                            <input type="text" name="ctl00$cphMain$tbUsername" />
+                            <input type="password" name="ctl00$cphMain$tbPassword" />
+                            <input type="text" name="ctl00$MainContent$UserName" />
+                            <input type="password" name="ctl00$MainContent$Password" />
+                            <input type="submit" name="ctl00$cphMain$btnLogin" value="Logga in" />
+                            <input type="submit" name="ctl00$MainContent$LoginButton"
+                                value="Logga in" />
+                        </form>
+                    </body>
+                    </html>
+                    """
+            else:  # POST
                 # Try both field name formats
                 username = request.form.get("ctl00$cphMain$tbUsername") or request.form.get("ctl00$MainContent$UserName")
                 password = request.form.get("ctl00$cphMain$tbPassword") or request.form.get("ctl00$MainContent$Password")
@@ -127,27 +233,6 @@ class MockFogisServer:
                     </body>
                     </html>
                     """
-            else:
-                # Return a mock login page with form fields
-                return """
-                <html>
-                <body>
-                    <form method="post" id="aspnetForm">
-                        <input type="hidden" name="__VIEWSTATE"
-                            value="viewstate_value" />
-                        <input type="hidden" name="__EVENTVALIDATION"
-                            value="eventvalidation_value" />
-                        <input type="text" name="ctl00$cphMain$tbUsername" />
-                        <input type="password" name="ctl00$cphMain$tbPassword" />
-                        <input type="text" name="ctl00$MainContent$UserName" />
-                        <input type="password" name="ctl00$MainContent$Password" />
-                        <input type="submit" name="ctl00$cphMain$btnLogin" value="Logga in" />
-                        <input type="submit" name="ctl00$MainContent$LoginButton"
-                            value="Logga in" />
-                    </form>
-                </body>
-                </html>
-                """
 
         # Match list endpoint
         @self.app.route("/mdk/MatchWebMetoder.aspx/HamtaMatchLista", methods=["POST"])
@@ -176,21 +261,13 @@ class MockFogisServer:
             data = request.json or {}
             data.get("filter", {})
 
-            # Generate a fresh match list using the factory
-            match_list = MockDataFactory.generate_match_list()
-
-            # Extract the match list from the response and format it for the new API
-            # The match_list["d"] is already a JSON string, so we need to parse it
-            matches_data = json.loads(match_list["d"]) if isinstance(match_list["d"], str) else match_list["d"]
-
-            # Create a response in the format expected by the client
-            # The client expects a response with a matchlista field
+            # Use consistent sample match list data
             response_data = {
                 "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatcherAttRapportera",
                 "anvandare": None,
                 "anvandareforeningid": 0,
                 "anvandartyp": "Domare",
-                "matchlista": matches_data["matchlista"],  # This is what the client expects
+                "matchlista": self.sample_matches,  # Use consistent data
                 "success": True,
             }
 
@@ -208,8 +285,15 @@ class MockFogisServer:
             data = request.json or {}
             match_id = data.get("matchid")
 
-            # Generate match details using the factory
-            match_data = MockDataFactory.generate_match_details(match_id)
+            # Find match in consistent data or generate new one
+            match_data = None
+            for match in self.sample_matches:
+                if match["matchid"] == match_id:
+                    match_data = match
+                    break
+
+            if not match_data:
+                match_data = MockDataFactory.generate_match_details(match_id)
 
             return jsonify({"d": json.dumps(match_data)})
 
@@ -714,6 +798,14 @@ class MockFogisServer:
 
     def _check_auth(self):
         """Check if the request is authenticated."""
+        # Check for OAuth Bearer token in Authorization header
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ", 1)[1]
+            # Verify the token exists in our token store
+            if token in self.oauth_tokens:
+                return True
+
         # Check if the user is authenticated via session or cookies
         if session.get("authenticated") or request.cookies.get("FogisMobilDomarKlient.ASPXAUTH"):
             return True
@@ -925,6 +1017,184 @@ class MockFogisServer:
                     "message": "Server shutting down",
                 }
             )
+
+    def _register_convenience_method_routes(self):
+        """Register additional routes needed for convenience methods."""
+
+        # OAuth 2.0 authorization endpoint (simulates auth.fogis.se)
+        @self.app.route("/oauth/authorize", methods=["GET"])
+        def oauth_authorize():
+            """Show OAuth authorization login form."""
+            # Extract OAuth parameters from query string
+            client_id = request.args.get("client_id")
+            redirect_uri = request.args.get("redirect_uri")
+            state = request.args.get("state")
+            nonce = request.args.get("nonce")
+            code_challenge = request.args.get("code_challenge")
+
+            # Store OAuth parameters in session for later use
+            session["oauth_client_id"] = client_id
+            session["oauth_redirect_uri"] = redirect_uri
+            session["oauth_state"] = state
+            session["oauth_nonce"] = nonce
+            session["oauth_code_challenge"] = code_challenge
+
+            # Return OAuth login form (simulates auth.fogis.se login page)
+            return f"""
+            <html>
+            <head><title>FOGIS OAuth Login</title></head>
+            <body>
+                <h1>FOGIS OAuth Login</h1>
+                <form method="post" action="/oauth/login">
+                    <input type="hidden" name="client_id" value="{client_id or ''}" />
+                    <input type="hidden" name="redirect_uri" value="{redirect_uri or ''}" />
+                    <input type="hidden" name="state" value="{state or ''}" />
+                    <input type="hidden" name="nonce" value="{nonce or ''}" />
+                    <input type="hidden" name="code_challenge" value="{code_challenge or ''}" />
+                    <label>Username: <input type="text" name="Username" /></label><br/>
+                    <label>Password: <input type="password" name="Password" /></label><br/>
+                    <input type="checkbox" name="RememberMe" value="false" /> Remember Me<br/>
+                    <input type="submit" value="Login" />
+                </form>
+            </body>
+            </html>
+            """
+
+        # OAuth login form submission endpoint
+        @self.app.route("/oauth/login", methods=["POST"])
+        def oauth_login():
+            """Handle OAuth login form submission."""
+            username = request.form.get("Username")
+            password = request.form.get("Password")
+            redirect_uri = request.form.get("redirect_uri") or session.get("oauth_redirect_uri")
+            state = request.form.get("state") or session.get("oauth_state")
+
+            # Validate credentials
+            if username in self.users and self.users[username] == password:
+                # Generate authorization code
+                import secrets
+
+                auth_code = f"mock_auth_code_{secrets.token_urlsafe(16)}"
+
+                # Store the authorization code with username
+                self.oauth_codes[auth_code] = username
+
+                # Store username in session for hybrid auth
+                session["authenticated"] = True
+                session["username"] = username
+
+                # Redirect back to FOGIS with authorization code
+                # This simulates the OAuth callback redirect
+                callback_url = f"{redirect_uri}?code={auth_code}&state={state}"
+                return redirect(callback_url, code=302)
+            else:
+                # Login failed
+                return (
+                    """
+                <html>
+                <head><title>FOGIS OAuth Login Failed</title></head>
+                <body>
+                    <h1>Login Failed</h1>
+                    <p>Invalid username or password</p>
+                    <a href="/oauth/authorize">Try again</a>
+                </body>
+                </html>
+                """,
+                    401,
+                )
+
+        # OAuth callback endpoint (simulates fogis.svenskfotboll.se/mdk/signin-oidc)
+        @self.app.route("/mdk/signin-oidc", methods=["GET"])
+        def oauth_callback():
+            """Receive authorization code and set session cookies."""
+            code = request.args.get("code")
+            # state parameter is received but not validated in mock
+            # request.args.get("state")
+
+            # Verify the authorization code exists
+            if code not in self.oauth_codes:
+                return "Invalid authorization code", 400
+
+            # Get username from authorization code
+            username = self.oauth_codes[code]
+
+            # Set ASP.NET session cookies (hybrid OAuth + ASP.NET approach)
+            # This matches the real FOGIS behavior
+            resp = Response("OAuth authentication successful", status=302)
+            resp.set_cookie("FogisMobilDomarKlient.ASPXAUTH", f"mock_oauth_cookie_{code[:16]}")
+            resp.set_cookie("ASP.NET_SessionId", f"mock_session_{code[:16]}")
+            resp.headers["Location"] = session.get("oauth_return_url", "/mdk/")
+
+            # Mark session as authenticated
+            session["authenticated"] = True
+            session["username"] = username
+
+            return resp
+
+        # OAuth token exchange endpoint
+        @self.app.route("/oauth/token", methods=["POST"])
+        def oauth_token():
+            """Exchange authorization code or refresh token for access tokens."""
+            grant_type = request.form.get("grant_type")
+
+            if grant_type == "authorization_code":
+                # Exchange authorization code for tokens
+                code = request.form.get("code")
+                # code_verifier is received but not validated in mock
+                # request.form.get("code_verifier")
+
+                # Verify the authorization code exists
+                if code not in self.oauth_codes:
+                    return (
+                        jsonify({"error": "invalid_grant", "error_description": "Invalid authorization code"}),
+                        400,
+                    )
+
+                # Get username from authorization code
+                username = self.oauth_codes[code]
+
+                # Generate access and refresh tokens
+                import secrets
+
+                access_token = f"mock_access_token_{secrets.token_urlsafe(32)}"
+                refresh_token = f"mock_refresh_token_{secrets.token_urlsafe(32)}"
+
+                # Store the access token with username
+                self.oauth_tokens[access_token] = username
+
+                # Return tokens
+                return jsonify(
+                    {
+                        "access_token": access_token,
+                        "token_type": "Bearer",
+                        "expires_in": 3600,
+                        "refresh_token": refresh_token,
+                        "scope": "openid fogis profile anvandare personid offline_access",
+                    }
+                )
+
+            elif grant_type == "refresh_token":
+                # Refresh access token
+                refresh_token = request.form.get("refresh_token")
+
+                # For mock purposes, just generate a new access token
+                import secrets
+
+                access_token = f"mock_access_token_{secrets.token_urlsafe(32)}"
+
+                # Return new tokens
+                return jsonify(
+                    {
+                        "access_token": access_token,
+                        "token_type": "Bearer",
+                        "expires_in": 3600,
+                        "refresh_token": refresh_token,
+                        "scope": "openid fogis profile anvandare personid offline_access",
+                    }
+                )
+
+            else:
+                return jsonify({"error": "unsupported_grant_type"}), 400
 
 
 if __name__ == "__main__":

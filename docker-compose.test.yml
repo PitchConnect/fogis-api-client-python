@@ -1,0 +1,77 @@
+# Docker Compose configuration for running integration tests with containerized mock server
+# This file is specifically designed for test execution and provides:
+# - Isolated test environment with mock FOGIS API server
+# - Proper health checks and service dependencies
+# - Network configuration for container-to-container communication
+# - Environment variables for test configuration
+
+services:
+  # Mock FOGIS API Server
+  # Provides a simulated FOGIS API for integration testing
+  mock-fogis-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.mock
+    container_name: mock-fogis-server-test
+    networks:
+      - fogis-test-network
+    ports:
+      # Expose port for debugging and local access
+      # Tests use internal network (mock-fogis-server:5001)
+      - "5001:5001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MOCK_SERVER_PORT=5001
+      - FLASK_ENV=testing
+    healthcheck:
+      # Health check ensures mock server is ready before tests run
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: "no"  # Don't restart in test environment
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Test Runner
+  # Executes integration tests against the mock server
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: fogis-test-runner
+    networks:
+      - fogis-test-network
+    volumes:
+      # Mount test directories for live updates during development
+      - ./tests:/app/tests
+      - ./integration_tests:/app/integration_tests
+      - ./test-results:/app/test-results
+      # Mount source code for coverage reporting
+      - ./fogis_api_client:/app/fogis_api_client
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      # Mock server URL for tests to connect to
+      - MOCK_SERVER_URL=http://mock-fogis-server:5001
+      # Test credentials (used by mock server)
+      - FOGIS_USERNAME=test_user
+      - FOGIS_PASSWORD=test_password
+      # Pytest configuration
+      - PYTEST_ADDOPTS=--color=yes
+    depends_on:
+      mock-fogis-server:
+        # Wait for mock server to be healthy before starting tests
+        condition: service_healthy
+    # Default command runs all integration tests
+    # Can be overridden: docker-compose -f docker-compose.test.yml run test-runner pytest tests/ -v
+    command: ["pytest", "integration_tests", "-v", "--log-cli-level=INFO", "--tb=short"]
+    restart: "no"  # Don't restart in test environment
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  fogis-test-network:
+    name: fogis-test-network
+    driver: bridge

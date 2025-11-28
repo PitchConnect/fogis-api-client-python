@@ -37,7 +37,7 @@ def test_get_status_connection_error(self):
     """Test status retrieval with connection error returns error dict."""
     client = MockServerApiClient()
     result = client.get_status()
-    
+
     assert isinstance(result, dict)
     assert result["status"] == "error"
     assert "message" in result
@@ -60,9 +60,9 @@ def test_authenticate_success(self):
     """Test successful authentication with proper form fields."""
     # Mock proper form fields and auth cookie
     mock_session.cookies = {'FogisMobilDomarKlient.ASPXAUTH': 'test_auth_token'}
-    
+
     result = authenticate(mock_session, "testuser", "testpass", "http://example.com")
-    
+
     assert 'FogisMobilDomarKlient.ASPXAUTH' in result
     assert result['FogisMobilDomarKlient.ASPXAUTH'] == 'test_auth_token'
 ```
@@ -82,7 +82,7 @@ def test_authenticate_success(self):
 def test_circuit_breaker_open_state(self):
     """Test circuit breaker transitions to open state."""
     cb = FogisCircuitBreaker(failure_threshold=2, recovery_timeout=1)
-    
+
     # Trigger failures to open circuit
     for _ in range(2):
         with pytest.raises(Exception):
@@ -124,7 +124,7 @@ def test_circuit_breaker_open_state(self):
 def test_connection_error(self):
     client = MockServerApiClient()
     result = client.get_status()
-    
+
     assert isinstance(result, dict)
     assert result["status"] == "error"
     assert "message" in result
@@ -133,14 +133,14 @@ def test_connection_error(self):
 def test_authenticate_success(self):
     mock_session = Mock(spec=requests.Session)
     mock_session.cookies = {'FogisMobilDomarKlient.ASPXAUTH': 'token'}
-    
+
     result = authenticate(mock_session, "user", "pass", "url")
     assert 'FogisMobilDomarKlient.ASPXAUTH' in result
 
 # Pattern 3: Circuit breaker state testing
 def test_circuit_breaker_recovery(self):
     cb = FogisCircuitBreaker(failure_threshold=1, recovery_timeout=1)
-    
+
     # Test state transitions
     assert cb.state == "CLOSED"
     # ... trigger failure and recovery

@@ -1,4 +1,4 @@
-name: Sync Main to Develop
+name: Branch Synchronization
 
 on:
   push:
@@ -6,8 +6,21 @@ on:
   pull_request:
     branches: [main]
     types: [closed]
+  workflow_run:
+    workflows: ["Automated Release Pipeline"]
+    branches: [main]
+    types: [completed]
   workflow_dispatch:
     inputs:
+      sync_direction:
+        description: 'Synchronization direction'
+        required: true
+        default: 'main-to-develop'
+        type: choice
+        options:
+          - main-to-develop
+          - develop-to-main
+          - bidirectional
       force_sync:
         description: 'Force synchronization even if conflicts exist'
         required: false
@@ -16,9 +29,9 @@ on:
 
 jobs:
   sync-branches:
-    name: Synchronize Main to Develop
+    name: Synchronize Branches
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true) || github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_run'
 
     steps:
     - name: Checkout repository

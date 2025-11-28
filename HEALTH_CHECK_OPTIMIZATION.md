@@ -59,14 +59,14 @@
 def health():
     """Optimized health check endpoint with minimal logging."""
     start_time = time.time()
-    
+
     try:
         # Get current timestamp
         current_time = datetime.now().isoformat()
-        
+
         # Check if the client is initialized
         client_status = "available" if client_initialized else "unavailable"
-        
+
         # Build minimal health response
         health_data = {
             "status": "healthy" if client_initialized else "degraded",
@@ -87,7 +87,7 @@ def health():
         # Single optimized error log entry
         duration = time.time() - start_time
         logger.error(f"❌ Health check FAILED ({duration:.3f}s): {str(e)}")
-        
+
         return jsonify({
             "status": "warning",
             "message": "Health check encountered an error but service is still responding",
@@ -104,7 +104,7 @@ def health():
 def health():
     """Optimized health check endpoint with minimal logging."""
     start_time = time.time()
-    
+
     try:
         # Get current timestamp
         current_time = datetime.now().isoformat()
@@ -118,7 +118,7 @@ def health():
         # Single optimized error log entry
         duration = time.time() - start_time
         logger.error(f"❌ Health check FAILED ({duration:.3f}s): {str(e)}")
-        
+
         return jsonify({
             "status": "warning",
             "message": "Health check encountered an error but service is still responding",

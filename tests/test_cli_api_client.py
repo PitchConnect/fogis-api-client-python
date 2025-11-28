@@ -7,9 +7,6 @@ for the CLI API client components.
 
 from unittest.mock import Mock, patch
 
-import pytest
-import requests
-
 from fogis_api_client.cli.api_client import MockServerApiClient
 
 
