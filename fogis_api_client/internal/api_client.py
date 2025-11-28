@@ -181,30 +181,10 @@ class InternalApiClient:
 
         return cast(InternalMatchDict, response_data)
 
-    def get_match_players(self, match_id: int) -> Dict[str, List[InternalPlayerDict]]:
-        """
-        Get player information for a specific match.
-
-        Args:
-            match_id: The ID of the match
-
-        Returns:
-            Dict[str, List[InternalPlayerDict]]: Player information for the match
-
-        Raises:
-            InternalApiError: If the request fails
-        """
-        url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatchdeltagareLista"
-        payload = {"matchid": match_id}
-
-        response_data = self.api_request(url, payload)
-
-        if not isinstance(response_data, dict):
-            error_msg = f"Invalid match players response: {response_data}"
-            self.logger.error(error_msg)
-            raise InternalApiError(error_msg)
-
-        return cast(Dict[str, List[InternalPlayerDict]], response_data)
+    # NOTE: The get_match_players() method has been removed (Issue #317)
+    # It used the non-existent endpoint GetMatchdeltagareLista which does not work.
+    # For fetching match players, use PublicApiClient.get_match_players() which correctly
+    # uses the team-specific endpoint GetMatchdeltagareListaForMatchlag via get_team_players().
 
     def get_match_officials(self, match_id: int) -> Dict[str, List[InternalOfficialDict]]:
         """
