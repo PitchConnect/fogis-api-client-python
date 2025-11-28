@@ -15,8 +15,8 @@ except ImportError:
     CORS = None
 
 from auth_routes import register_auth_routes
-from fogis_api_client.fogis_api_client import FogisApiClient
 from fogis_api_client.match_list_filter import MatchListFilter
+from fogis_api_client.public_api_client import PublicApiClient
 from fogis_api_client_swagger import get_swagger_blueprint, spec
 
 # Configure logging
@@ -34,14 +34,14 @@ debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
 
 # Initialize the Fogis API client but don't login yet
 # Login will happen automatically when needed (lazy login)
-client: Optional[FogisApiClient] = None
+client: Optional[PublicApiClient] = None
 client_initialized = False
 
 try:
-    client = FogisApiClient(fogis_username, fogis_password)
+    client = PublicApiClient(username=fogis_username, password=fogis_password)
     client_initialized = True
 except Exception as e:
-    logger.error(f"Failed to initialize FogisApiClient: {e}")
+    logger.error(f"Failed to initialize PublicApiClient: {e}")
     client_initialized = False
 
 # Log startup information
