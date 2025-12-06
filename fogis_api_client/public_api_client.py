@@ -473,7 +473,7 @@ class PublicApiClient:
             cookies[cookie.name] = cookie.value
         return cookies
 
-    def get_match_players(self, match_id: Union[int, str]) -> Dict[str, List[Dict[str, Any]]]:
+    def get_match_players(self, match_id: Union[int, str], filter_params: Optional[Dict[str, Any]] = None) -> Dict[str, List[Dict[str, Any]]]:
         """
         Get all players for a match using team-specific endpoints.
 
@@ -482,6 +482,9 @@ class PublicApiClient:
 
         Args:
             match_id: The ID of the match to get players for
+            filter_params: Optional filter parameters to pass to get_match_details.
+                          Useful for finding matches outside the default 7-day window.
+                          Example: {"datumFran": "2024-01-01", "datumTill": "2024-12-31"}
 
         Returns:
             Dict with 'hemmalag' and 'bortalag' keys containing player lists
@@ -492,7 +495,7 @@ class PublicApiClient:
         self.logger.info(f"Getting players for match ID: {match_id}")
 
         # Get match details to find team IDs
-        match_details = self.get_match_details(match_id)
+        match_details = self.get_match_details(match_id, filter_params=filter_params)
         home_team_id = match_details.get("matchlag1id")
         away_team_id = match_details.get("matchlag2id")
 
@@ -570,7 +573,7 @@ class PublicApiClient:
         else:
             raise FogisAPIRequestError(f"Failed to fetch match events: {response.status_code}")
 
-    def get_match_officials(self, match_id: Union[int, str]) -> Dict[str, List[Dict[str, Any]]]:
+    def get_match_officials(self, match_id: Union[int, str], filter_params: Optional[Dict[str, Any]] = None) -> Dict[str, List[Dict[str, Any]]]:
         """
         Get all officials for a match using team-specific endpoints.
 
@@ -579,6 +582,9 @@ class PublicApiClient:
 
         Args:
             match_id: The ID of the match to get officials for
+            filter_params: Optional filter parameters to pass to get_match_details.
+                          Useful for finding matches outside the default 7-day window.
+                          Example: {"datumFran": "2024-01-01", "datumTill": "2024-12-31"}
 
         Returns:
             Dict with team officials and referee information
@@ -589,7 +595,7 @@ class PublicApiClient:
         self.logger.info(f"Getting officials for match ID: {match_id}")
 
         # Get match details to find team IDs and referee info
-        match_details = self.get_match_details(match_id)
+        match_details = self.get_match_details(match_id, filter_params=filter_params)
         home_team_id = match_details.get("matchlag1id")
         away_team_id = match_details.get("matchlag2id")
 
@@ -699,13 +705,21 @@ class PublicApiClient:
 
                 # FOGIS API returns data in a 'd' key
                 if "d" in response_json:
-                    if isinstance(response_json["d"], str):
+                    d_value = response_json["d"]
+                    if isinstance(d_value, str):
                         import json
-
-                        parsed_data = json.loads(response_json["d"])
+                        parsed_data = json.loads(d_value)
+                        # Handle both list and dict responses
+                        if isinstance(parsed_data, list):
+                            return {"spelare": parsed_data}
                         return parsed_data if isinstance(parsed_data, dict) else {"spelare": []}
+                    elif isinstance(d_value, list):
+                        # API returns list directly in 'd' key (e.g., GetMatchdeltagareListaForMatchlag)
+                        return {"spelare": d_value}
+                    elif isinstance(d_value, dict):
+                        return d_value
                     else:
-                        return response_json["d"] if isinstance(response_json["d"], dict) else {"spelare": []}
+                        return {"spelare": []}
                 else:
                     # Fallback: direct response parsing
                     return response_json if isinstance(response_json, dict) else {"spelare": []}
@@ -881,7 +895,7 @@ class PublicApiClient:
         if include_optional:
             for endpoint_name, method in [("players", self.get_match_players), ("officials", self.get_match_officials)]:
                 try:
-                    result[endpoint_name] = method(match_id)
+                    result[endpoint_name] = method(match_id, filter_params=search_filter)
                     result["metadata"]["success"][endpoint_name] = True
                     self.logger.debug(f"✅ {endpoint_name} fetched successfully")
                 except Exception as e:
