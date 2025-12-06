@@ -705,13 +705,21 @@ class PublicApiClient:
 
                 # FOGIS API returns data in a 'd' key
                 if "d" in response_json:
-                    if isinstance(response_json["d"], str):
+                    d_value = response_json["d"]
+                    if isinstance(d_value, str):
                         import json
-
-                        parsed_data = json.loads(response_json["d"])
+                        parsed_data = json.loads(d_value)
+                        # Handle both list and dict responses
+                        if isinstance(parsed_data, list):
+                            return {"spelare": parsed_data}
                         return parsed_data if isinstance(parsed_data, dict) else {"spelare": []}
+                    elif isinstance(d_value, list):
+                        # API returns list directly in 'd' key (e.g., GetMatchdeltagareListaForMatchlag)
+                        return {"spelare": d_value}
+                    elif isinstance(d_value, dict):
+                        return d_value
                     else:
-                        return response_json["d"] if isinstance(response_json["d"], dict) else {"spelare": []}
+                        return {"spelare": []}
                 else:
                     # Fallback: direct response parsing
                     return response_json if isinstance(response_json, dict) else {"spelare": []}
