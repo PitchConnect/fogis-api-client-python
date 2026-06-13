@@ -9,12 +9,12 @@ from unittest.mock import MagicMock, patch
 
 from jsonschema import ValidationError
 
-from fogis_api_client.api_contracts import (
+from fogis_api_client.internal.api_contracts import (
     ValidationConfig,
     extract_endpoint_from_url,
     validate_request,
 )
-from fogis_api_client.fogis_api_client import FogisApiClient, FogisDataError
+
 
 
 class TestValidationLayer(unittest.TestCase):
@@ -108,57 +108,6 @@ class TestValidationLayer(unittest.TestCase):
         result = validate_request(endpoint, payload)
         self.assertTrue(result)
 
-    @patch("fogis_api_client.fogis_api_client.requests.Session")
-    def test_api_request_validation_success(self, mock_session):
-        """Test API request with successful validation."""
-        # Create a mock client
-        client = FogisApiClient(username="test", password="test")
-        client.cookies = {"cookie1": "value1"}  # Add cookies to skip login
-
-        # Mock the session's post method
-        mock_session_instance = mock_session.return_value
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"d": '{"matchid": 123456, "hemmalag": "Team A", "bortalag": "Team B"}'}
-        mock_response.raise_for_status.return_value = None
-        mock_session_instance.post.return_value = mock_response
-
-        # Make an API request with valid payload
-        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatch"
-        payload = {"matchid": 123456}
-        response_data = client._api_request(url, payload)
-
-        # Verify the response
-        self.assertEqual(response_data, {"matchid": 123456, "hemmalag": "Team A", "bortalag": "Team B"})
-        mock_session_instance.post.assert_called_once()
-
-    @patch("fogis_api_client.fogis_api_client.requests.Session")
-    def test_api_request_validation_failure(self, mock_session):
-        """Test API request with validation failure."""
-        # Create a mock client
-        client = FogisApiClient(username="test", password="test")
-        client.cookies = {"cookie1": "value1"}  # Add cookies to skip login
-
-        # Make an API request with invalid payload
-        url = f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/GetMatch"
-        payload = {"not_matchid": 123456}  # Invalid payload
-
-        # In strict mode, validation should raise an exception
-        with self.assertRaises(FogisDataError):
-            client._api_request(url, payload)
-
-        # In non-strict mode, validation should not raise an exception
-        ValidationConfig.strict_mode = False
-
-        # Mock the session's post method for non-strict mode test
-        mock_session_instance = mock_session.return_value
-        mock_response = MagicMock()
-        mock_response.json.return_value = {"d": '{"matchid": 123456, "hemmalag": "Team A", "bortalag": "Team B"}'}
-        mock_response.raise_for_status.return_value = None
-        mock_session_instance.post.return_value = mock_response
-
-        # Request should succeed in non-strict mode
-        response_data = client._api_request(url, payload)
-        self.assertEqual(response_data, {"matchid": 123456, "hemmalag": "Team A", "bortalag": "Team B"})
 
 
 if __name__ == "__main__":

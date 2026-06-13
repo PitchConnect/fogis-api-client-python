@@ -24,7 +24,7 @@ class TestCliCommands(unittest.TestCase):
         """Test the base command."""
 
         # The base command is abstract, so we need to create a concrete subclass
-        class TestCommand(Command):
+        class StubCommand(Command):
             name = "test"
             help = "Test command"
             description = "Test command description"
@@ -33,7 +33,7 @@ class TestCliCommands(unittest.TestCase):
                 return 0
 
         # Create a command instance
-        command = TestCommand()
+        command = StubCommand()
 
         # Test the name, help, and description
         self.assertEqual(command.name, "test")

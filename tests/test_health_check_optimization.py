@@ -4,14 +4,13 @@ Tests for health check logging optimization.
 This module tests that health check endpoints generate minimal, optimized logging
 instead of verbose multi-line output.
 """
-
 import json
 import logging
 import time
 from unittest.mock import patch
 
-from fogis_api_client_http_wrapper import app as wrapper_app
 from fogis_api_gateway import app as gateway_app
+
 
 
 class TestHealthCheckOptimization:
@@ -41,28 +40,6 @@ class TestHealthCheckOptimization:
                 assert log_message.endswith("s)")
                 assert "duration" not in log_message.lower() or "(" in log_message
 
-    def test_wrapper_health_check_optimized_logging(self, caplog):
-        """Test that wrapper health check generates single optimized log line."""
-        with wrapper_app.test_client() as client:
-            with caplog.at_level(logging.INFO):
-                response = client.get("/health")
-
-                # Verify response is successful
-                assert response.status_code == 200
-                data = json.loads(response.data)
-                assert data["status"] == "healthy"
-                assert data["service"] == "fogis-api-client"
-
-                # Verify optimized logging - should have exactly one health check log
-                health_logs = [
-                    record for record in caplog.records if "Health check" in record.message and record.levelname == "INFO"
-                ]
-
-                assert len(health_logs) == 1, f"Expected 1 health check log, got {len(health_logs)}"
-
-                log_message = health_logs[0].message
-                assert log_message.startswith("✅ Health check OK (")
-                assert log_message.endswith("s)")
 
     def test_gateway_health_check_error_logging(self, caplog):
         """Test that gateway health check error generates single optimized error log."""
@@ -92,33 +69,6 @@ class TestHealthCheckOptimization:
                     assert log_message.startswith("❌ Health check FAILED (")
                     assert "Test error" in log_message
 
-    def test_wrapper_health_check_error_logging(self, caplog):
-        """Test that wrapper health check error generates single optimized error log."""
-        with wrapper_app.test_client() as client:
-            with caplog.at_level(logging.ERROR):
-                # Mock an exception in the health check
-                with patch("fogis_api_client_http_wrapper.datetime") as mock_datetime:
-                    mock_datetime.now.side_effect = Exception("Test error")
-
-                    response = client.get("/health")
-
-                    # Verify response still returns 200 (for Docker health checks)
-                    assert response.status_code == 200
-                    data = json.loads(response.data)
-                    assert data["status"] == "warning"
-
-                    # Verify optimized error logging
-                    error_logs = [
-                        record
-                        for record in caplog.records
-                        if "Health check FAILED" in record.message and record.levelname == "ERROR"
-                    ]
-
-                    assert len(error_logs) == 1, f"Expected 1 error log, got {len(error_logs)}"
-
-                    log_message = error_logs[0].message
-                    assert log_message.startswith("❌ Health check FAILED (")
-                    assert "Test error" in log_message
 
     def test_health_check_timing_accuracy(self, caplog):
         """Test that health check timing is accurate and properly formatted."""

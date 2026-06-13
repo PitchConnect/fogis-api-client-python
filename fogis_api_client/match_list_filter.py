@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 from .enums import AgeCategory, FootballType, Gender, MatchStatus
-from .fogis_api_client import FogisApiClient
+from .public_api_client import PublicApiClient as FogisApiClient
 
 
 class MatchListFilter:

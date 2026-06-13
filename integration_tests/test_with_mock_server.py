@@ -458,12 +458,7 @@ class TestFogisApiClientWithMockServer:
 
         # Verify the response structure
         assert isinstance(response, dict)
-        # The mock server might not include a 'success' field, so we just check that we got a response
-        # In a real test, we would check for specific fields
-        assert "spelare" in response  # The mock server returns 'spelare' instead of 'roster'
-        # The mock server might not include an 'updated_player' field
-
-        # The mock server might not include a 'verified' field
-
-        # The mock server response structure is different from the real API
-        # We've already verified that the response is a dictionary and contains 'spelare'
+        assert "success" in response
+        assert response["success"] is True
+        assert "roster" in response
+        assert "spelare" in response["roster"]

@@ -252,6 +252,50 @@ class PublicApiClient:
             return self.cookies is not None and len(self.cookies) > 0
         return False
 
+    def validate_cookies(self) -> bool:
+        """
+        Validates if the current cookies are still valid for authentication.
+        """
+        if not self.cookies:
+            self.logger.debug("No cookies available to validate")
+            return False
+
+        try:
+            dashboard_url = f"{self.BASE_URL}/"
+            headers = {
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+                "User-Agent": (
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+                ),
+                "Referer": f"{self.BASE_URL}/",
+            }
+
+            for key, value in self.cookies.items():
+                if isinstance(value, str):
+                    self.session.cookies.set(key, value)
+
+            self.logger.debug(f"Validating session cookies with request to {dashboard_url}")
+            response = self.session.get(dashboard_url, headers=headers)
+            response.raise_for_status()
+
+            if "Logga in" in response.text or "login" in response.url.lower():
+                self.logger.info("Cookies are no longer valid - redirected to login")
+                return False
+
+            self.logger.debug("Session cookies are valid")
+            return True
+        except Exception as e:
+            self.logger.info(f"Cookie validation failed: {str(e)}")
+            return False
+
+    def get_cookies(self) -> Optional[Dict[str, str]]:
+        """
+        Returns the current session cookies.
+        """
+        return self.cookies
+
+
     def get_authentication_info(self) -> Dict[str, Any]:
         """
         Get information about the current authentication state.
@@ -623,12 +667,15 @@ class PublicApiClient:
 
         return result
 
-    def fetch_team_officials_json(self, matchlagid: Union[int, str]) -> List[Dict[str, Any]]:
+    def fetch_team_officials_json(
+        self, matchlagid: Union[int, str] = None, team_id: Union[int, str] = None
+    ) -> List[Dict[str, Any]]:
         """
         Fetch team officials data for a specific team in a match.
 
         Args:
-            matchlagid: The match-specific team ID
+            matchlagid: The match-specific team ID (matchlagid)
+            team_id: Deprecated alias for matchlagid (for backward compatibility)
 
         Returns:
             List of team officials
@@ -636,7 +683,11 @@ class PublicApiClient:
         Raises:
             FogisAPIRequestError: If the API request fails
         """
-        self.logger.info(f"Fetching team officials for matchlagid: {matchlagid}")
+        actual_id = matchlagid if matchlagid is not None else team_id
+        if actual_id is None:
+            raise TypeError("fetch_team_officials_json() missing 1 required positional argument: 'matchlagid' (or 'team_id')")
+
+        self.logger.info(f"Fetching team officials for ID: {actual_id}")
 
         # Ensure we're authenticated
         if not self.is_authenticated():
@@ -645,7 +696,7 @@ class PublicApiClient:
 
         # Use the working team officials endpoint
         officials_url = f"{self.BASE_URL}/MatchWebMetoder.aspx/GetMatchlagledareListaForMatchlag"
-        matchlagid_int = int(matchlagid) if isinstance(matchlagid, (str, int)) else matchlagid
+        matchlagid_int = int(actual_id) if isinstance(actual_id, (str, int)) else actual_id
         payload = {"matchlagid": matchlagid_int}
 
         response = self._make_authenticated_request("POST", officials_url, json=payload)
@@ -1468,7 +1519,7 @@ class PublicApiClient:
 
         # Import the conversion function
         try:
-            from fogis_api_client.api_contracts import convert_flat_to_nested_match_result
+            from fogis_api_client.internal.api_contracts import convert_flat_to_nested_match_result
         except ImportError:
             # Fallback if api_contracts module is not available
             convert_flat_to_nested_match_result = None
@@ -1720,6 +1771,14 @@ class PublicApiClient:
                 elif not isinstance(value, bool):
                     participant_data_copy[field] = bool(value)
 
+        # Store the expected values for verification
+        expected_values = {
+            "trojnummer": participant_data_copy["trojnummer"],
+            "lagkapten": participant_data_copy["lagkapten"],
+            "ersattare": participant_data_copy["ersattare"],
+        }
+        player_id = participant_data_copy["matchdeltagareid"]
+
         url = f"{self.BASE_URL}/MatchWebMetoder.aspx/SparaMatchdeltagare"
         response = self._make_authenticated_request("POST", url, json=participant_data_copy)
 
@@ -1728,29 +1787,86 @@ class PublicApiClient:
                 response_json = response.json()
 
                 # FOGIS API returns data in a 'd' key
+                parsed_data = None
                 if "d" in response_json:
                     if isinstance(response_json["d"], str):
                         parsed_data = json.loads(response_json["d"])
-                        if isinstance(parsed_data, dict):
-                            return parsed_data
-                        else:
-                            return {"success": True, "data": parsed_data}
-                    else:
-                        if isinstance(response_json["d"], dict):
-                            return response_json["d"]
-                        else:
-                            return {"success": True, "data": response_json["d"]}
+                    elif isinstance(response_json["d"], dict):
+                        parsed_data = response_json["d"]
                 else:
-                    # Fallback: direct response parsing
                     if isinstance(response_json, dict):
-                        return response_json
-                    else:
-                        return {"success": True, "data": response_json}
+                        parsed_data = response_json
+
+                if not isinstance(parsed_data, dict):
+                    return {"success": True, "data": parsed_data}
+
+                # Prepare the result dictionary
+                result = {"success": True, "roster": parsed_data, "updated_player": None, "verified": False}
+
+                # Try to find the updated player in the roster
+                updated_player = None
+                if "spelare" in parsed_data and isinstance(parsed_data["spelare"], list):
+                    for player in parsed_data["spelare"]:
+                        # First try to match by matchdeltagareid (preferred)
+                        if player.get("matchdeltagareid") == player_id:
+                            updated_player = player
+                            break
+
+                    # If we couldn't find by matchdeltagareid, try to find by other identifiers (jersey number)
+                    if not updated_player and len(parsed_data["spelare"]) > 0:
+                        self.logger.warning(
+                            f"Could not find player with matchdeltagareid={player_id} in response. "
+                            f"Checking for other identifiers."
+                        )
+                        expected_jersey = expected_values["trojnummer"]
+                        for player in parsed_data["spelare"]:
+                            jersey = player.get("trojnummer")
+                            if jersey is not None:
+                                if isinstance(jersey, str):
+                                    try:
+                                        jersey = int(jersey)
+                                    except (ValueError, TypeError):
+                                        pass
+                                if jersey == expected_jersey:
+                                    self.logger.info(
+                                        f"Found player with matching jersey number {expected_jersey} "
+                                        f"instead of matchdeltagareid"
+                                    )
+                                    updated_player = player
+                                    break
+
+                if updated_player:
+                    result["updated_player"] = updated_player
+
+                    # Verify key values match
+                    verified = True
+                    for key, expected_val in expected_values.items():
+                        actual_val = updated_player.get(key)
+                        if actual_val is not None:
+                            # Handle type conversions for comparison
+                            if isinstance(expected_val, bool) and isinstance(actual_val, str):
+                                actual_val = actual_val.lower() == "true"
+                            elif isinstance(expected_val, int) and isinstance(actual_val, str):
+                                try:
+                                    actual_val = int(actual_val)
+                                except (ValueError, TypeError):
+                                    pass
+
+                            if actual_val != expected_val:
+                                verified = False
+                                break
+                        else:
+                            verified = False
+                            break
+                    result["verified"] = verified
+
+                return result
 
             except json.JSONDecodeError as e:
                 raise FogisAPIRequestError(f"Failed to parse API response: {e}")
         else:
             raise FogisAPIRequestError(f"Failed to save match participant: {response.status_code}")
+
 
     def save_team_official(self, official_data: Dict[str, Any]) -> Dict[str, Any]:  # noqa: C901
         """

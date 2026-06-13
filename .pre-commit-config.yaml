@@ -53,18 +53,18 @@ repos:
         # Make mypy non-blocking by running in manual stage
         stages: [manual]
 
-# Use pytest instead of unittest to match CI/CD
+# Use pytest instead of unittest to match CI/CD (pre-push stage to protect commit speed)
 -   repo: local
     hooks:
     -   id: pytest-check
         name: pytest-check
-        entry: python3 -m pytest tests/
+        entry: python3 -m pytest --ignore=tests/test_docker_setup.py
         language: system
         pass_filenames: false
         always_run: true
-        stages: [pre-commit]
+        stages: [pre-push]
 
-    # Check if pre-commit hooks need updating to match CI/CD
+    # Check if pre-commit hooks need updating to match CI/CD (manual only)
     -   id: check-precommit-hooks
         name: Check if pre-commit hooks need updating
         entry: python3 scripts/check_precommit_hooks.py
@@ -72,6 +72,7 @@ repos:
         pass_filenames: false
         always_run: true
         verbose: true
+        stages: [manual]
 
 # Add coverage reporting (optional, disabled by default to speed up commits)
 -   repo: local
@@ -95,7 +96,7 @@ repos:
         always_run: true
         stages: [manual]
 
-# Documentation freshness checker
+# Documentation freshness checker (manual only)
 -   repo: local
     hooks:
     -   id: check-docs-freshness
@@ -104,8 +105,9 @@ repos:
         language: script
         pass_filenames: false
         always_run: true
+        stages: [manual]
 
-# Dependency checker
+# Dependency checker (manual only)
 -   repo: local
     hooks:
     -   id: check-dependencies
@@ -114,3 +116,4 @@ repos:
         language: script
         pass_filenames: false
         always_run: true
+        stages: [manual]

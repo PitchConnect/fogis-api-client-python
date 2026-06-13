@@ -3,7 +3,7 @@
 This package provides a client for interacting with the FOGIS API.
 """
 
-from fogis_api_client.api_contracts import (
+from fogis_api_client.internal.api_contracts import (
     ValidationConfig,
     convert_flat_to_nested_match_result,
     validate_request,
