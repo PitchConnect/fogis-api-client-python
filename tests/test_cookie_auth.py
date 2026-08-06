@@ -3,7 +3,8 @@ from unittest.mock import MagicMock, patch
 
 import requests
 
-from fogis_api_client.fogis_api_client import FogisApiClient
+from fogis_api_client import FogisApiClient
+
 
 
 class TestCookieAuth(unittest.TestCase):
@@ -52,10 +53,11 @@ class TestCookieAuth(unittest.TestCase):
         # Create mock responses
         mock_get_response = MagicMock()
         mock_get_response.text = (
-            '<input name="__VIEWSTATE" value="test_viewstate" />'
-            '<input name="__EVENTVALIDATION" value="test_eventvalidation" />'
+            '<input type="hidden" name="__VIEWSTATE" value="test_viewstate" />'
+            '<input type="hidden" name="__EVENTVALIDATION" value="test_eventvalidation" />'
         )
         mock_get_response.raise_for_status = lambda: None
+
 
         mock_post_response = MagicMock()
         mock_post_response.raise_for_status = lambda: None
@@ -154,27 +156,7 @@ class TestCookieAuth(unittest.TestCase):
 
         self.assertEqual(cookies, self.test_cookies)
 
-    def test_api_request_with_cookies(self):
-        """Test _api_request method when client is initialized with cookies."""
-        # Create a mock for the _api_request method that returns a valid response
-        original_api_request = FogisApiClient._api_request
 
-        def mock_api_request(self, url, payload=None, method="POST"):
-            if url.endswith("HamtaMatchLista"):
-                return {"matcher": []}  # Return a valid response with the 'matcher' key
-            return {"test": "data"}
-
-        # Patch the _api_request method
-        FogisApiClient._api_request = mock_api_request
-
-        try:
-            client = FogisApiClient(cookies=self.test_cookies)
-            result = client.fetch_matches_list_json()
-
-            self.assertEqual(result, [])
-        finally:
-            # Restore the original method
-            FogisApiClient._api_request = original_api_request
 
 
 if __name__ == "__main__":

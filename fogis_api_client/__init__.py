@@ -3,7 +3,7 @@
 This package provides a client for interacting with the FOGIS API.
 """
 
-from fogis_api_client.api_contracts import (
+from fogis_api_client.internal.api_contracts import (
     ValidationConfig,
     convert_flat_to_nested_match_result,
     validate_request,
@@ -21,7 +21,13 @@ from fogis_api_client.logging_config import (
 from fogis_api_client.match_list_filter import MatchListFilter
 
 # Import from the public API client for backward compatibility
-from fogis_api_client.public_api_client import FogisAPIRequestError, FogisDataError, FogisLoginError
+from fogis_api_client.public_api_client import (
+    FogisAPIRequestError,
+    FogisAuthServiceUnavailableError,
+    FogisDataError,
+    FogisInvalidCredentialsError,
+    FogisLoginError,
+)
 from fogis_api_client.public_api_client import PublicApiClient as FogisApiClient
 from fogis_api_client.types import (
     CookieDict,
@@ -41,6 +47,8 @@ __all__ = [
     "FogisApiClient",
     "MatchListFilter",
     "FogisLoginError",
+    "FogisInvalidCredentialsError",
+    "FogisAuthServiceUnavailableError",
     "FogisAPIRequestError",
     "FogisDataError",
     "EVENT_TYPES",

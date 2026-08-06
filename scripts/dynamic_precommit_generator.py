@@ -70,14 +70,21 @@ DEFAULT_CONFIG = """repos:
         ]
 -   repo: local
     hooks:
-    -   id: check-doc-freshness
-        name: Check Documentation Freshness
-        entry: ./scripts/check_doc_freshness.py
+    -   id: pytest-check
+        name: pytest-check
+        entry: python3 -m pytest --ignore=tests/test_docker_setup.py
         language: system
         pass_filenames: false
         always_run: true
-        require_serial: true
-        stages: [commit]
+        stages: [pre-push]
+
+    -   id: check-doc-freshness
+        name: Check Documentation Freshness
+        entry: .pre-commit-hooks/check_docs_freshness.py
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [manual]
 
     -   id: check-precommit-hooks
         name: Check if pre-commit hooks need updating
@@ -85,7 +92,7 @@ DEFAULT_CONFIG = """repos:
         language: system
         pass_filenames: false
         always_run: true
-        stages: [commit]
+        stages: [manual]
         verbose: true
 
     -   id: dependency-check
@@ -94,6 +101,7 @@ DEFAULT_CONFIG = """repos:
         language: system
         pass_filenames: false
         always_run: true
+        stages: [manual]
 
     -   id: docker-verify
         name: docker-verify

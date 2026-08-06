@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from fogis_api_client.public_api_client import (
+    FogisAPIRequestError,
     FogisLoginError,
     PublicApiClient,
 )
@@ -181,7 +182,9 @@ def test_fetch_match_json(mock_login):
     assert result["bortalag"] == "Away Team"
 
     # Test with string match_id
-    result = client.fetch_match_json("123456")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        result = client.fetch_match_json("123456")
     assert result["matchid"] == 123456
 
 
@@ -328,3 +331,304 @@ def test_endpoint_urls_comprehensive():
     assert call_args[0][0] == "POST"
     assert "/MatchWebMetoder.aspx/GetMatchresultatlista" in call_args[0][1]
     assert call_args[1]["json"] == {"matchid": 123456}
+
+
+def test_save_team_official_success():
+    """Test save_team_official success path."""
+    import json
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json = Mock(return_value={"d": json.dumps({"success": True, "matchlagledareid": 999})})
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    action_data = {
+        "matchid": "12345",
+        "lagid": "67890",
+        "personid": "54321",
+        "matchlagledaretypid": "2",
+        "minut": "65",
+    }
+    response = client.save_team_official(action_data)
+    assert response == {"success": True, "matchlagledareid": 999}
+
+    call_args = client._make_authenticated_request.call_args
+    assert call_args[0][0] == "POST"
+    assert "/MatchWebMetoder.aspx/SparaMatchlagledare" in call_args[0][1]
+    assert call_args[1]["json"] == {
+        "matchid": 12345,
+        "lagid": 67890,
+        "personid": 54321,
+        "matchlagledaretypid": 2,
+        "minut": 65,
+    }
+
+
+def test_save_team_official_error():
+    """Test save_team_official with HTTP error."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    mock_response = Mock()
+    mock_response.status_code = 500
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    action_data = {
+        "matchid": "12345",
+        "lagid": "67890",
+        "personid": "54321",
+        "matchlagledaretypid": "2",
+    }
+    with pytest.raises(FogisAPIRequestError) as excinfo:
+        client.save_team_official(action_data)
+    assert "Failed to save team official" in str(excinfo.value)
+
+
+def test_save_team_official_missing_fields():
+    """Test save_team_official raises ValueError on missing fields."""
+    client = PublicApiClient(username="test", password="test")
+    action_data = {
+        "matchid": "12345",
+        "lagid": "67890",
+    }
+    with pytest.raises(ValueError) as excinfo:
+        client.save_team_official(action_data)
+    assert "Missing required field" in str(excinfo.value)
+
+
+def test_save_match_participant_success():
+    """Test save_match_participant success and verification path."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    # Mock roster response matching requested details
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json = Mock(return_value={
+        "d": {
+            "spelare": [
+                {
+                    "matchdeltagareid": 46123762,
+                    "fornamn": "John",
+                    "efternamn": "Doe",
+                    "trojnummer": 92,
+                    "lagkapten": False,
+                    "ersattare": False,
+                }
+            ]
+        }
+    })
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    participant_data = {
+        "matchdeltagareid": "46123762",
+        "trojnummer": "92",
+        "lagdelid": "0",
+        "lagkapten": "false",
+        "ersattare": "false",
+        "positionsnummerhv": "0",
+        "arSpelandeLedare": "false",
+        "ansvarig": "false",
+    }
+    response = client.save_match_participant(participant_data)
+
+    assert response["success"] is True
+    assert response["verified"] is True
+    assert response["updated_player"]["matchdeltagareid"] == 46123762
+    assert response["updated_player"]["trojnummer"] == 92
+
+    call_args = client._make_authenticated_request.call_args
+    assert call_args[0][0] == "POST"
+    assert "/MatchWebMetoder.aspx/SparaMatchdeltagare" in call_args[0][1]
+    assert call_args[1]["json"] == {
+        "matchdeltagareid": 46123762,
+        "trojnummer": 92,
+        "lagdelid": 0,
+        "lagkapten": False,
+        "ersattare": False,
+        "positionsnummerhv": 0,
+        "arSpelandeLedare": False,
+        "ansvarig": False,
+    }
+
+
+def test_save_match_participant_verification_failure():
+    """Test save_match_participant when verification fails."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json = Mock(return_value={
+        "d": {
+            "spelare": [
+                {
+                    "matchdeltagareid": 46123762,
+                    "fornamn": "John",
+                    "efternamn": "Doe",
+                    "trojnummer": 7,  # requested 92
+                    "lagkapten": False,
+                    "ersattare": False,
+                }
+            ]
+        }
+    })
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    participant_data = {
+        "matchdeltagareid": "46123762",
+        "trojnummer": "92",
+        "lagdelid": "0",
+        "lagkapten": "false",
+        "ersattare": "false",
+        "positionsnummerhv": "0",
+        "arSpelandeLedare": "false",
+        "ansvarig": "false",
+    }
+    response = client.save_match_participant(participant_data)
+
+    assert response["success"] is True
+    assert response["verified"] is False
+    assert response["updated_player"]["trojnummer"] == 7
+
+
+def test_save_match_participant_spelareid_fallback():
+    """Test save_match_participant verification fallback via spelareid and jersey number."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json = Mock(return_value={
+        "d": {
+            "spelare": [
+                {
+                    "spelareid": 12345,
+                    "fornamn": "John",
+                    "efternamn": "Doe",
+                    "trojnummer": 92,
+                    "lagkapten": False,
+                    "ersattare": False,
+                }
+            ]
+        }
+    })
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    participant_data = {
+        "matchdeltagareid": "46123762",
+        "trojnummer": "92",
+        "lagdelid": "0",
+        "lagkapten": "false",
+        "ersattare": "false",
+        "positionsnummerhv": "0",
+        "arSpelandeLedare": "false",
+        "ansvarig": "false",
+    }
+    response = client.save_match_participant(participant_data)
+
+    assert response["success"] is True
+    assert response["verified"] is True
+    assert response["updated_player"]["trojnummer"] == 92
+
+
+def test_save_match_participant_error():
+    """Test save_match_participant HTTP failure path."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    mock_response = Mock()
+    mock_response.status_code = 500
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    participant_data = {
+        "matchdeltagareid": "46123762",
+        "trojnummer": "92",
+        "lagdelid": "0",
+        "lagkapten": "false",
+        "ersattare": "false",
+        "positionsnummerhv": "0",
+        "arSpelandeLedare": "false",
+        "ansvarig": "false",
+    }
+    with pytest.raises(FogisAPIRequestError) as excinfo:
+        client.save_match_participant(participant_data)
+    assert "Failed to save match participant" in str(excinfo.value)
+
+
+def test_delete_match_event_success():
+    """Test delete_match_event successful path."""
+    import json
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json = Mock(return_value={"d": json.dumps({"success": True})})
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    result = client.delete_match_event(123)
+    assert result is True
+
+    call_args = client._make_authenticated_request.call_args
+    assert call_args[0][0] == "POST"
+    assert "/MatchWebMetoder.aspx/RaderaMatchhandelse" in call_args[0][1]
+    assert call_args[1]["json"] == {"matchhandelseid": 123}
+
+
+def test_delete_match_event_error():
+    """Test delete_match_event failure path."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    # Simulate _make_authenticated_request raising FogisAPIRequestError
+    client._make_authenticated_request = Mock(side_effect=FogisAPIRequestError("API request failed"))
+
+    result = client.delete_match_event(123)
+    assert result is False
+
+
+def test_clear_match_events_success():
+    """Test clear_match_events successful path."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    mock_response = Mock()
+    mock_response.status_code = 200
+    mock_response.json = Mock(return_value={"d": {"success": True}})
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    response = client.clear_match_events(123456)
+    assert response == {"success": True}
+
+    call_args = client._make_authenticated_request.call_args
+    assert call_args[0][0] == "POST"
+    assert "/MatchWebMetoder.aspx/ClearMatchEvents" in call_args[0][1]
+    assert call_args[1]["json"] == {"matchid": 123456}
+
+
+def test_clear_match_events_error():
+    """Test clear_match_events failure path."""
+    client = PublicApiClient(username="test", password="test")
+    client.cookies = {"test": "cookie"}
+    client.authentication_method = "aspnet"
+
+    mock_response = Mock()
+    mock_response.status_code = 500
+    client._make_authenticated_request = Mock(return_value=mock_response)
+
+    with pytest.raises(FogisAPIRequestError) as excinfo:
+        client.clear_match_events(123456)
+    assert "Failed to clear match events" in str(excinfo.value)
+

@@ -1,16 +1,19 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
-from fogis_api_client.fogis_api_client import FogisApiClient
+from fogis_api_client import FogisApiClient
 
 
 class TestMatchResultFormats(unittest.TestCase):
-    """Test case for verifying both match result formats work."""
+    """Test case for verifying both match result formats work in PublicApiClient."""
 
     def setUp(self):
         """Set up test fixtures."""
         self.client = FogisApiClient(username="test", password="test")
-        self.client._api_request = MagicMock(return_value={"success": True})
+        self.mock_response = Mock()
+        self.mock_response.status_code = 200
+        self.mock_response.json = MagicMock(return_value={"d": '{"success": true}'})
+        self.client._make_authenticated_request = MagicMock(return_value=self.mock_response)
 
     def test_flat_format(self):
         """Test that the flat format works correctly."""
@@ -29,13 +32,15 @@ class TestMatchResultFormats(unittest.TestCase):
         self.assertEqual(response, {"success": True})
 
         # Verify the API was called with the correct nested structure
-
-        self.client._api_request.assert_called_once()
-        call_args = self.client._api_request.call_args[0]
-        self.assertEqual(call_args[0], f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista")
+        self.client._make_authenticated_request.assert_called_once()
+        call_args = self.client._make_authenticated_request.call_args
+        
+        # Verify method and URL
+        self.assertEqual(call_args.args[0], "POST")
+        self.assertEqual(call_args.args[1], f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista")
 
         # Check that the structure matches what we expect
-        actual_payload = call_args[1]
+        actual_payload = call_args.kwargs.get("json")
         self.assertIn("matchresultatListaJSON", actual_payload)
         self.assertEqual(len(actual_payload["matchresultatListaJSON"]), 2)
 
@@ -85,12 +90,15 @@ class TestMatchResultFormats(unittest.TestCase):
         self.assertEqual(response, {"success": True})
 
         # Verify the API was called with the correct nested structure (should be unchanged)
-        self.client._api_request.assert_called_once()
-        call_args = self.client._api_request.call_args[0]
-        self.assertEqual(call_args[0], f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista")
+        self.client._make_authenticated_request.assert_called_once()
+        call_args = self.client._make_authenticated_request.call_args
+        
+        # Verify method and URL
+        self.assertEqual(call_args.args[0], "POST")
+        self.assertEqual(call_args.args[1], f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista")
 
         # Check that the structure matches what we expect
-        actual_payload = call_args[1]
+        actual_payload = call_args.kwargs.get("json")
         self.assertIn("matchresultatListaJSON", actual_payload)
         self.assertEqual(len(actual_payload["matchresultatListaJSON"]), 2)
 

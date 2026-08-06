@@ -1,7 +1,7 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
-from fogis_api_client.fogis_api_client import FogisApiClient
+from fogis_api_client import FogisApiClient
 
 
 class TestAISafeMarkers(unittest.TestCase):
@@ -10,7 +10,10 @@ class TestAISafeMarkers(unittest.TestCase):
     def setUp(self):
         """Set up test fixtures."""
         self.client = FogisApiClient(username="test", password="test")
-        self.client._api_request = MagicMock(return_value={"success": True})
+        self.mock_response = Mock()
+        self.mock_response.status_code = 200
+        self.mock_response.json = MagicMock(return_value={"d": '{"success": true}'})
+        self.client._make_authenticated_request = MagicMock(return_value=self.mock_response)
 
     def test_report_match_result_with_ai_markers(self):
         """Test that report_match_result works correctly with AI-safe markers."""
@@ -29,22 +32,18 @@ class TestAISafeMarkers(unittest.TestCase):
         self.assertEqual(response, {"success": True})
 
         # Verify the API was called with the correct nested structure
-
-        self.client._api_request.assert_called_once()
+        self.client._make_authenticated_request.assert_called_once()
 
         # Get the call arguments
-        call_args = self.client._api_request.call_args
+        call_args = self.client._make_authenticated_request.call_args
 
-        # Extract URL and payload from kwargs
-        url = call_args.kwargs.get("url")
-        actual_payload = call_args.kwargs.get("payload")
+        # Extract HTTP method, URL, and payload from call_args
+        method = call_args.args[0]
+        url = call_args.args[1]
+        kwargs = call_args.kwargs
+        actual_payload = kwargs.get("json")
 
-        # If not in kwargs, try positional args
-        if url is None and len(call_args.args) > 0:
-            url = call_args.args[0]
-        if actual_payload is None and len(call_args.args) > 1:
-            actual_payload = call_args.args[1]
-
+        self.assertEqual(method, "POST")
         self.assertEqual(url, f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchresultatLista")
         self.assertIn("matchresultatListaJSON", actual_payload)
         self.assertEqual(len(actual_payload["matchresultatListaJSON"]), 2)
@@ -64,7 +63,7 @@ class TestAISafeMarkers(unittest.TestCase):
         self.assertEqual(halftime["matchlag2mal"], 0)
 
     def test_report_match_event_with_ai_markers(self):
-        """Test that report_match_event works correctly with AI-safe markers."""
+        """Test that report_match_event (mapped to save_match_event) works correctly with AI-safe markers."""
         # Create event data for a goal
         event_data = {
             "matchid": 12345,
@@ -77,27 +76,24 @@ class TestAISafeMarkers(unittest.TestCase):
             "bortamal": 0,
         }
 
-        response = self.client.report_match_event(event_data)
+        response = self.client.save_match_event(event_data)
 
         # Verify the result
         self.assertEqual(response, {"success": True})
 
         # Verify the API was called with the correct data
-        self.client._api_request.assert_called_once()
+        self.client._make_authenticated_request.assert_called_once()
 
         # Get the call arguments
-        call_args = self.client._api_request.call_args
+        call_args = self.client._make_authenticated_request.call_args
 
-        # Extract URL and payload from kwargs
-        url = call_args.kwargs.get("url")
-        actual_payload = call_args.kwargs.get("payload")
+        # Extract HTTP method, URL, and payload
+        method = call_args.args[0]
+        url = call_args.args[1]
+        kwargs = call_args.kwargs
+        actual_payload = kwargs.get("json")
 
-        # If not in kwargs, try positional args
-        if url is None and len(call_args.args) > 0:
-            url = call_args.args[0]
-        if actual_payload is None and len(call_args.args) > 1:
-            actual_payload = call_args.args[1]
-
+        self.assertEqual(method, "POST")
         self.assertEqual(url, f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchhandelse")
         self.assertEqual(actual_payload["matchid"], 12345)
         self.assertEqual(actual_payload["matchhandelsetypid"], 6)
@@ -113,7 +109,7 @@ class TestAISafeMarkers(unittest.TestCase):
         match_id = 12345
 
         # Reset the mock to ensure it's clean
-        self.client._api_request.reset_mock()
+        self.client._make_authenticated_request.reset_mock()
 
         response = self.client.mark_reporting_finished(match_id)
 
@@ -121,21 +117,18 @@ class TestAISafeMarkers(unittest.TestCase):
         self.assertEqual(response, {"success": True})
 
         # Verify the API was called with the correct data
-        self.client._api_request.assert_called_once()
+        self.client._make_authenticated_request.assert_called_once()
 
         # Get the call arguments
-        call_args = self.client._api_request.call_args
+        call_args = self.client._make_authenticated_request.call_args
 
-        # Extract URL and payload from kwargs
-        url = call_args.kwargs.get("url")
-        payload = call_args.kwargs.get("payload")
+        # Extract HTTP method, URL, and payload
+        method = call_args.args[0]
+        url = call_args.args[1]
+        kwargs = call_args.kwargs
+        payload = kwargs.get("json")
 
-        # If not in kwargs, try positional args
-        if url is None and len(call_args.args) > 0:
-            url = call_args.args[0]
-        if payload is None and len(call_args.args) > 1:
-            payload = call_args.args[1]
-
+        self.assertEqual(method, "POST")
         self.assertEqual(url, f"{FogisApiClient.BASE_URL}/MatchWebMetoder.aspx/SparaMatchGodkannDomarrapport")
         self.assertEqual(payload["matchid"], 12345)
 

@@ -21,6 +21,8 @@ class TestCommand(Command):
     Command to test endpoints.
     """
 
+    __test__ = False
+
     name = "test"
     help = "Test an endpoint"
     description = "Send a test request to an endpoint"

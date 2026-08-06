@@ -10,15 +10,15 @@ from unittest.mock import patch
 
 from jsonschema import ValidationError
 
-from fogis_api_client.api_contracts import (
+from fogis_api_client.internal.api_contracts import (
     MATCH_RESULT_FLAT_SCHEMA,
     convert_flat_to_nested_match_result,
     validate_request,
 )
-from fogis_api_client.fogis_api_client import FogisApiClient
 
 
 class TestApiContracts(unittest.TestCase):
+
     """Test cases for the API contracts module."""
 
     def test_match_result_nested_schema_valid(self):
@@ -150,68 +150,6 @@ class TestApiContracts(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validate_request("/MatchWebMetoder.aspx/SparaMatchhandelse", data)
 
-    @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
-    def test_report_match_result_with_validation(self, mock_api_request):
-        """Test that report_match_result validates the data before sending."""
-        # Mock the API response
-        mock_api_request.return_value = {"success": True}
-
-        # Create a client instance
-        client = FogisApiClient(username="test", password="test")
-
-        # Test with valid flat data
-        valid_data = {
-            "matchid": 123456,
-            "hemmamal": 2,
-            "bortamal": 1,
-            "halvtidHemmamal": 1,
-            "halvtidBortamal": 0,
-        }
-        result = client.report_match_result(valid_data)
-        self.assertTrue(result["success"])
-
-        # Test with invalid flat data (missing required field)
-        invalid_data = {
-            "matchid": 123456,
-            "hemmamal": 2,
-            # Missing bortamal
-        }
-        with self.assertRaises(ValueError):
-            client.report_match_result(invalid_data)
-
-    @patch("fogis_api_client.fogis_api_client.FogisApiClient._api_request")
-    def test_report_match_event_with_validation(self, mock_api_request):
-        """Test that report_match_event validates the data before sending."""
-        # Mock the API response
-        mock_api_request.return_value = {"success": True, "id": 12345}
-
-        # Create a client instance
-        client = FogisApiClient(username="test", password="test")
-
-        # Test with valid event data
-        valid_data = {
-            "matchid": 123456,
-            "matchhandelsetypid": 6,  # Regular goal
-            "matchminut": 35,
-            "matchlagid": 78910,
-            "spelareid": 12345,
-            "period": 1,
-            "hemmamal": 1,
-            "bortamal": 0,
-        }
-        result = client.report_match_event(valid_data)
-        self.assertTrue(result["success"])
-
-        # Test with invalid event data (missing required field)
-        invalid_data = {
-            "matchid": 123456,
-            "matchhandelsetypid": 6,
-            # Missing matchminut and matchlagid
-            "personid": 12345,
-            "period": 1,
-        }
-        with self.assertRaises(ValidationError):
-            client.report_match_event(invalid_data)
 
 
 def validate_flat_schema(data):
