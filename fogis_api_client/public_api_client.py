@@ -27,6 +27,21 @@ class FogisLoginError(Exception):
         super().__init__(self.message)
 
 
+class FogisInvalidCredentialsError(FogisLoginError):
+    """Exception raised when FOGIS authentication fails due to invalid credentials or rejected login session."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
+class FogisAuthServiceUnavailableError(FogisLoginError):
+    """Exception raised when FOGIS authentication fails due to an upstream service outage or network error."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
+
 class FogisAPIRequestError(Exception):
     """Exception raised when an API request to FOGIS fails."""
 
@@ -154,7 +169,7 @@ class PublicApiClient:
         if not (self.username and self.password):
             error_msg = "Login failed: No credentials provided and no existing authentication available"
             self.logger.error(error_msg)
-            raise FogisLoginError(error_msg)
+            raise FogisInvalidCredentialsError(error_msg)
 
         try:
             # Attempt authentication
@@ -174,20 +189,29 @@ class PublicApiClient:
                 self.logger.error("Unknown authentication result format")
                 raise FogisLoginError("Authentication completed but result format is unknown")
 
-        except FogisOAuthAuthenticationError as e:
-            error_msg = f"OAuth authentication failed: {e}"
-            self.logger.error(error_msg)
-            raise FogisLoginError(error_msg) from e
-
-        except FogisAuthenticationError as e:
+        except (FogisOAuthAuthenticationError, FogisAuthenticationError) as e:
             error_msg = f"Authentication failed: {e}"
             self.logger.error(error_msg)
-            raise FogisLoginError(error_msg) from e
+
+            # Check if this is an upstream network/service outage (500, 502, 503, 504, timeout, connection error)
+            cause = getattr(e, "__cause__", None)
+            is_service_outage = (
+                isinstance(cause, (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.Timeout))
+                or any(err in str(e) for err in ["500 Server Error", "502 Server Error", "503 Server Error", "504 Server Error", "Service Unavailable", "Internal Server Error", "Network error"])
+            )
+
+            if is_service_outage:
+                raise FogisAuthServiceUnavailableError(error_msg) from e
+            elif any(txt in str(e).lower() for txt in ["no session cookies", "invalid credentials", "login failed", "unauthorized"]):
+                raise FogisInvalidCredentialsError(error_msg) from e
+            else:
+                raise FogisLoginError(error_msg) from e
 
         except requests.exceptions.RequestException as e:
             error_msg = f"Login request failed: {e}"
             self.logger.error(error_msg)
-            raise FogisAPIRequestError(error_msg) from e
+            raise FogisAuthServiceUnavailableError(error_msg) from e
+
 
     def refresh_authentication(self) -> bool:
         """
@@ -403,7 +427,7 @@ class PublicApiClient:
             "datumTill": default_datum_till,
             "datumTyp": 0,  # INTEGER, not string
             "typ": "alla",
-            "status": ["avbruten", "uppskjuten", "installd"],
+            "status": [],
             "alderskategori": [1, 2, 3, 4, 5],
             "kon": [3, 2, 4],
             "sparadDatum": today,
@@ -1275,7 +1299,7 @@ class PublicApiClient:
         self.logger.info(f"Found {len(filtered_matches)} matches matching criteria")
         return filtered_matches
 
-    def get_matches_requiring_action(self) -> Dict[str, List[Dict[str, Any]]]:
+    def get_matches_requiring_action(self, start_date: Optional[str] = None, end_date: Optional[str] = None) -> Dict[str, List[Dict[str, Any]]]:
         """
         Get matches that require referee action or attention.
 
@@ -1296,8 +1320,8 @@ class PublicApiClient:
 
         # Get matches from recent past and near future
         today = datetime.now()
-        past_date = (today - timedelta(days=7)).strftime("%Y-%m-%d")
-        future_date = (today + timedelta(days=30)).strftime("%Y-%m-%d")
+        past_date = start_date or (today - timedelta(days=30)).strftime("%Y-%m-%d")
+        future_date = end_date or (today + timedelta(days=30)).strftime("%Y-%m-%d")
 
         filter_params = {"datumFran": past_date, "datumTill": future_date}
 
@@ -1309,16 +1333,29 @@ class PublicApiClient:
         today_str = today.strftime("%Y-%m-%d")
 
         for match in matches:
-            match_date = match.get("datum", "")
-            status = match.get("status", "").lower()
+            match_date = match.get("speldatum") or match.get("datum") or ""
+            
+            is_cancelled = (
+                match.get("avbruten") 
+                or match.get("uppskjuten") 
+                or match.get("installd")
+                or (isinstance(match.get("status"), str) and match.get("status").lower() in ["avbruten", "uppskjuten", "installd"])
+            )
+            
+            is_completed = (
+                match.get("matchrapportgodkandavdomare") 
+                or match.get("arslutresultat")
+                or (isinstance(match.get("status"), str) and match.get("status").lower() == "klar")
+            )
 
-            if status in ["avbruten", "uppskjuten"]:
+            if is_cancelled:
                 action_matches["cancelled"].append(match)
+            elif is_completed:
+                if match_date >= past_date:
+                    action_matches["recently_completed"].append(match)
             elif match_date > today_str:
                 action_matches["upcoming"].append(match)
-            elif status == "klar" and match_date >= (today - timedelta(days=3)).strftime("%Y-%m-%d"):
-                action_matches["recently_completed"].append(match)
-            elif status in ["pagar", "ej_pabörjad"] and match_date <= today_str:
+            else:
                 action_matches["needs_report"].append(match)
 
         # Log summary
