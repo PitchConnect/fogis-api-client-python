@@ -402,13 +402,21 @@ class PublicApiClient:
     # Placeholder for additional API methods
     def fetch_matches_list_json(self, filter_params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """
-        Fetch the list of matches for the logged-in referee.
+        Fetch the list of matches for the logged-in referee from the FOGIS API.
 
         Args:
-            filter_params: Optional filter parameters
+            filter_params: Optional dictionary overriding default filter payload keys.
+                Supported payload keys:
+                - `datumFran` (str): Start date formatted as 'YYYY-MM-DD'.
+                - `datumTill` (str): End date formatted as 'YYYY-MM-DD'.
+                - `status` (list[str]): List of status strings to EXCLUDE from results
+                  (e.g., `["avbruten", "uppskjuten", "installd"]` excludes cancelled matches,
+                  while `[]` returns matches regardless of status).
+                - `alderskategori` (list[int]): Allowed age category IDs to include.
+                - `kon` (list[int]): Allowed gender IDs to include.
 
         Returns:
-            List of match dictionaries
+            List of raw match dictionaries returned by FOGIS.
         """
         self.logger.info("Fetching matches list...")
 

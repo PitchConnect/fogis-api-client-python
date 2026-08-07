@@ -52,12 +52,12 @@ class MatchListFilter:
         return self
 
     def include_statuses(self, statuses: List[MatchStatus]) -> "MatchListFilter":
-        """Includes matches with any of the specified statuses in the filter."""
+        """Includes matches with any of the specified statuses (applied client-side after fetching)."""
         self._status_include = statuses
         return self
 
     def exclude_statuses(self, statuses: List[MatchStatus]) -> "MatchListFilter":
-        """Excludes matches with any of the specified statuses from the filter."""
+        """Excludes matches with any of the specified statuses (sent to Fogis server API as exclusion list)."""
         self._status_exclude = statuses
         return self
 
@@ -92,14 +92,14 @@ class MatchListFilter:
         return self
 
     def build_payload(self) -> Dict[str, Any]:
-        """Builds the MINIMAL filter payload dictionary.
+        """Builds the MINIMAL filter payload dictionary for the Fogis server API.
+
+        Note on Fogis Server API behavior:
+        - `status`: Specifies a list of statuses to EXCLUDE on the server side.
+          (e.g., ["avbruten", "uppskjuten", "installd"] excludes cancelled/postponed matches).
+        - `alderskategori` & `kon`: Lists of allowed age categories and genders to include.
 
         Includes ONLY server-side criteria that are actually configured.
-
-        Date range, status, alderskategori, and kon filters are COMPLETELY OMITTED
-        from the default server-side payload
-        if they are not explicitly configured using the builder methods,
-        for maximum efficiency and API clarity.
         """
         payload_filter: Dict[str, Any] = {}
 
@@ -109,7 +109,7 @@ class MatchListFilter:
         if self._datum_till:
             payload_filter["datumTill"] = self._datum_till
 
-        # --- Conditionally add status, alderskategori, kon filters (same logic as before) ---
+        # --- Conditionally add status, alderskategori, kon filters ---
         if self._status_include or self._status_exclude:
             status_values: List[str] = []
             if self._status_include:
