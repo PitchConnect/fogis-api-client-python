@@ -8,7 +8,7 @@ match the expected versions, especially for critical dependencies like marshmall
 import importlib.metadata
 import sys
 
-import pkg_resources
+from packaging import version
 
 # Define the minimum required versions for critical dependencies
 REQUIRED_VERSIONS = {
@@ -25,7 +25,7 @@ def check_dependency_versions():
     for package, min_version in REQUIRED_VERSIONS.items():
         try:
             installed_version = importlib.metadata.version(package)
-            if pkg_resources.parse_version(installed_version) < pkg_resources.parse_version(min_version):
+            if version.parse(installed_version) < version.parse(min_version):
                 errors.append(f"{package}: installed version {installed_version} is less than required version {min_version}")
         except importlib.metadata.PackageNotFoundError:
             errors.append(f"{package}: not installed")
