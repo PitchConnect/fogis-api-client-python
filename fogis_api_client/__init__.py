@@ -1,78 +1,70 @@
-"""FOGIS API Client package.
+"""Client for FOGIS, the Swedish Football Association's referee system.
 
-This package provides a client for interacting with the FOGIS API.
+How FOGIS actually behaves is documented in docs/FOGIS_API.md;
+this package follows that file, not the 0.x code.
 """
 
-from fogis_api_client.internal.api_contracts import (
-    ValidationConfig,
-    convert_flat_to_nested_match_result,
-    validate_request,
-    validate_response,
-)
-from fogis_api_client.event_types import EVENT_TYPES
-from fogis_api_client.logging_config import (
-    SensitiveFilter,
-    add_sensitive_filter,
-    configure_logging,
-    get_log_levels,
-    get_logger,
-    set_log_level,
-)
-from fogis_api_client.match_list_filter import MatchListFilter
+from importlib.metadata import version
 
-# Import from the public API client for backward compatibility
-from fogis_api_client.public_api_client import (
+from .checks import Problem, check_report
+from .client import FogisClient
+from .compat import FogisApiClient
+from .enums import AssignmentStatus, EventType, FootballType, ResultType
+from .errors import (
     FogisAPIRequestError,
     FogisAuthServiceUnavailableError,
     FogisDataError,
+    FogisError,
     FogisInvalidCredentialsError,
     FogisLoginError,
+    FogisRejectedError,
+    FogisSessionExpiredError,
 )
-from fogis_api_client.public_api_client import PublicApiClient as FogisApiClient
-from fogis_api_client.types import (
-    CookieDict,
-    EventDict,
-    MatchDict,
-    MatchListResponse,
-    MatchParticipantDict,
-    MatchResultDict,
-    OfficialActionDict,
-    OfficialDict,
-    PlayerDict,
-    TeamPlayersResponse,
+from .models import (
+    Assignment,
+    CautionRecord,
+    LineupChange,
+    LineupEntry,
+    Match,
+    MatchEvent,
+    MatchResult,
+    MatchTeam,
+    TeamOfficial,
 )
+from .session import FogisSession
+from .writes import DryRun, FogisWriteCancelled, next_score
+
+__version__ = version("fogis-api-client-timmyBird")
 
 __all__ = [
-    # API Client
-    "FogisApiClient",
-    "MatchListFilter",
-    "FogisLoginError",
-    "FogisInvalidCredentialsError",
-    "FogisAuthServiceUnavailableError",
+    "Assignment",
+    "AssignmentStatus",
+    "CautionRecord",
+    "DryRun",
+    "EventType",
     "FogisAPIRequestError",
+    "FogisApiClient",
+    "FogisAuthServiceUnavailableError",
+    "FogisClient",
     "FogisDataError",
-    "EVENT_TYPES",
-    # Type definitions
-    "CookieDict",
-    "EventDict",
-    "MatchDict",
-    "MatchListResponse",
-    "MatchParticipantDict",
-    "MatchResultDict",
-    "OfficialActionDict",
-    "OfficialDict",
-    "PlayerDict",
-    "TeamPlayersResponse",
-    # Logging utilities
-    "configure_logging",
-    "get_logger",
-    "set_log_level",
-    "get_log_levels",
-    "add_sensitive_filter",
-    "SensitiveFilter",
-    # Validation utilities
-    "ValidationConfig",
-    "validate_request",
-    "validate_response",
-    "convert_flat_to_nested_match_result",
+    "FogisError",
+    "FogisInvalidCredentialsError",
+    "FogisLoginError",
+    "FogisRejectedError",
+    "FogisSession",
+    "FogisSessionExpiredError",
+    "FogisWriteCancelled",
+    "FootballType",
+    "LineupChange",
+    "LineupEntry",
+    "Match",
+    "MatchEvent",
+    "MatchResult",
+    "MatchTeam",
+    "Problem",
+    "ResultType",
+    "TeamOfficial",
+    "__version__",
+    "check_report",
+    "next_score",
 ]

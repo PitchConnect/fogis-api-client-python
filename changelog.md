@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.0.0] - 2026-10-02
+
+A rewrite that follows only verified FOGIS behaviour ([docs/FOGIS_API.md](docs/FOGIS_API.md)). Most of the 0.x surface
+changed: **see [docs/MIGRATION.md](docs/MIGRATION.md)** for every old name and its replacement. Requires Python 3.12+;
+the only dependency is `requests`. Pin `<1.0` to stay on 0.x.
+
+### Kept
+- `FogisApiClient` with its constructor, `login()`, `get_cookies()`, `fetch_matches_list_json()`, `get_match_details()`
+  and the deprecated `fetch_match_json()`; the five exceptions, now under a common `FogisError`.
+
+### Added
+- `FogisClient` with typed models for matches, events, line-ups, team officials, results, the line-up change log,
+  earlier matches and accumulated cautions; complete match lists beyond FOGIS's 100-match cap.
+- A session that renews itself (without the password when possible), timeouts on every request, a persistable cookie jar.
+- All 40 event types; `timeline` helpers (inferred periods, paired substitutions, running score, special events, team-
+  official sanctions on the timeline); `check_report()` before submitting.
+- Writes with the app's exact payloads: events, substitutions (and in-place edits), results, attendance, referee note,
+  line-up entries, team-official discipline including `clear_official_discipline()`; `dry_run` and `confirm` hooks.
+- `FogisRejectedError` carrying FOGIS's own message.
+
+### Changed (breaking)
+- Write methods take models instead of dicts and return FOGIS's answer instead of `{"success": ...}`; old-style calls
+  raise a `TypeError` pointing to the migration guide.
+- `mark_reporting_finished(match, *, confirm_match_id)` submits the report (cannot be undone) and refuses while
+  `check_report()` finds errors.
+- Event types 1, 7 and 2 can't be saved; 3 and 33 need `allow_untested=True`.
+- `enums` has new content (`EventType`, `ResultType`, `FootballType` with FOGIS's member names, `AssignmentStatus`).
+
+### Removed
+- Mock server, API gateway, swagger UI, CLI, OAuth-token login, `MatchListFilter`, `EVENT_TYPES`, the TypedDicts, the
+  logging and validation helpers, `clear_match_events()` and the convenience read helpers. Removed `FogisApiClient`
+  methods raise an `AttributeError` naming their replacement.
+
 ## [0.5.0] - 2025-05-23
 
 ### Added

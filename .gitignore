@@ -52,3 +52,12 @@ coverage.xml
 htmlcov/
 .pytest_cache/
 .tox/
+
+# Claude Code (local settings, agent worktrees)
+.claude/
+
+# Write-verification output (snapshots, responses, reports) — contains personal data
+.verify/
+
+# Browser recordings: contain session cookies and personal data
+*.har

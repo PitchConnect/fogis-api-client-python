@@ -1,655 +1,160 @@
-# FOGIS API Client for Python
+# fogis-api-client
 
-[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
-[![PyPI version](https://badge.fury.io/py/fogis-api-client-timmyBird.svg)](https://badge.fury.io/py/fogis-api-client-timmyBird)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+A Python client for [FOGIS](https://fogis.svenskfotboll.se/mdk/), the Swedish Football Association's system for
+match reporting, as used by referees through the mobile referee client.
 
-A comprehensive Python client library for interacting with the FOGIS API (Swedish Football Association). This library provides a simple, intuitive interface for referees and match officials to access match data, report results, manage events, and handle all aspects of match administration through the FOGIS system.
+It logs in like the app does, keeps the session alive, reads your matches, events, line-ups, team officials and
+results as typed objects, helps interpret what FOGIS stores (periods, substitutions, scores, server-made events), and
+writes events and results with exactly the payloads the app sends.
 
-## 🎯 What is FOGIS?
-
-FOGIS (Fotbollens Organisations- och Informationssystem) is the official system used by the Swedish Football Association (Svensk Fotboll) for managing football matches, referee assignments, and match reporting. This Python client provides programmatic access to FOGIS functionality.
-
-## ✨ Key Features
-
-- **🔐 Secure Authentication** - Support for both username/password and cookie-based authentication
-- **⚽ Match Management** - Fetch match lists, get match details, and report results
-- **📊 Advanced Filtering** - Powerful filtering system for matches by date, status, age category, gender, and more
-- **🎯 Event Reporting** - Report goals, cards, substitutions, and other match events
-- **👥 Team & Player Data** - Access team rosters, player information, and official details
-- **🔄 Real-time Updates** - Mark matches as finished and update match status
-- **🛡️ Type Safety** - Full type hints and TypedDict definitions for better IDE support
-- **📝 Comprehensive Logging** - Built-in logging with sensitive data filtering
-- **🧪 Testing Support** - Includes mock server for testing and development
-- **🐳 Docker Ready** - Full Docker support for containerized deployments
-
-## 🚀 Quick Start
-
-### Installation
-
-```bash
-# Install from PyPI
-pip install fogis-api-client-timmyBird
-
-# Or install with development dependencies
-pip install fogis-api-client-timmyBird[dev]
-
-# Or install with mock server support
-pip install fogis-api-client-timmyBird[mock-server]
-```
-
-### Basic Usage
-
-```python
-from fogis_api_client import FogisApiClient, configure_logging
-
-# Configure logging (optional)
-configure_logging(level="INFO")
-
-# Initialize the client
-client = FogisApiClient(username="your_username", password="your_password")
-
-# Fetch your assigned matches
-matches = client.fetch_matches_list_json()
-print(f"Found {len(matches)} matches")
-
-# Display upcoming matches
-for match in matches[:3]:
-    print(f"{match['datum']} {match['tid']}: {match['hemmalag']} vs {match['bortalag']}")
-```
-
-### Using Filters for Historic Data
-
-```python
-from fogis_api_client import FogisApiClient, MatchListFilter
-from fogis_api_client.enums import MatchStatus, AgeCategory
-from datetime import datetime, timedelta
-
-client = FogisApiClient(username="your_username", password="your_password")
-
-# Create a filter for historic data
-filter = MatchListFilter()
-last_month = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
-today = datetime.now().strftime('%Y-%m-%d')
-
-# Fetch completed matches from the last month
-historic_matches = (filter
-    .start_date(last_month)
-    .end_date(today)
-    .include_statuses([MatchStatus.COMPLETED])
-    .fetch_filtered_matches(client))
-
-print(f"Found {len(historic_matches)} completed matches in the last month")
-```
-
-
-## 📖 Table of Contents
-
-- [Installation](#-installation)
-- [Authentication](#-authentication)
-- [Basic Usage](#-basic-usage)
-- [Advanced Filtering](#-advanced-filtering)
-- [Match Management](#-match-management)
-- [Event Reporting](#-event-reporting)
-- [Error Handling](#-error-handling)
-- [Docker Support](#-docker-support)
-- [Development](#-development)
-- [API Reference](#-api-reference)
-- [Contributing](#-contributing)
-- [License](#-license)
-
-## 🔧 Installation
-
-### From PyPI (Recommended)
+> **Verified against live FOGIS.** Reading, and writing events, substitutions, results, attendance, line-up entries,
+> team-official discipline and submitting were checked on real reports in September 2026, with payloads identical to
+> the referee app's. Still untested: event types 3 and 33 (opt-in) and most of the rules FOGIS applies at submission.
+> Coming from 0.x? See [docs/MIGRATION.md](docs/MIGRATION.md), or pin `fogis-api-client-timmyBird<1.0`.
 
 ```bash
 pip install fogis-api-client-timmyBird
 ```
 
-### From Source
+Requires Python 3.12 or newer. The only dependency is `requests`.
 
-```bash
-git clone https://github.com/PitchConnect/fogis-api-client-python.git
-cd fogis-api-client-python
-pip install -e .
-```
-
-### Development Installation
-
-```bash
-git clone https://github.com/PitchConnect/fogis-api-client-python.git
-cd fogis-api-client-python
-pip install -e ".[dev]"
-```
-
-## 🔐 Authentication
-
-The FOGIS API Client supports two authentication methods:
-
-### 1. Username and Password (Recommended for Development)
+## Reading
 
 ```python
-from fogis_api_client import FogisApiClient
+from datetime import date
+from fogis_api_client import FogisClient
 
-client = FogisApiClient(username="your_username", password="your_password")
-# Authentication happens automatically on first API call (lazy login)
+client = FogisClient("username", "password", cookie_file="~/.fogis-cookies.json")
+
+for match in client.matches(date(2026, 1, 1), date(2026, 12, 31)):
+    print(match.kickoff, match.home.name, "-", match.away.name, match.home_goals, match.away_goals)
+
+match = ...  # one of the matches above
+events = client.events(match.match_id)
+home_lineup = client.lineup(match.home.match_team_id)
+away_officials = client.officials(match.away.match_team_id)
+results = client.results(match.match_id)
 ```
 
-### 2. Cookie-based Authentication (Recommended for Production)
+- **Login is lazy** and the session renews itself. With `cookie_file`, the session survives restarts and
+  password logins become rare (FOGIS keeps a "remember me" cookie for 14 days).
+- **Any date range works.** FOGIS returns at most 100 matches per request and silently drops the rest; the client
+  splits the range until nothing is cut off.
+- **Models keep everything.** Each object has typed fields and the original FOGIS record in `.raw`. FOGIS's
+  placeholder values (0 ids, −1 numbers) become `None`, and `/Date(…)/` becomes a Swedish-time `datetime`.
+- Also available: `lineup_changes()`, `earlier_matches()` (a team's earlier matches in a competition),
+  `player_cautions()` and `official_cautions()` (accumulated cautions, for players and officials in your own matches).
+
+## Making sense of events
+
+FOGIS stores events as they were typed, not as they happened. `fogis_api_client.timeline` interprets them:
 
 ```python
-# First, get cookies from a logged-in session
-client = FogisApiClient(username="your_username", password="your_password")
-cookies = client.login()  # Explicitly authenticate and get cookies
+from fogis_api_client.timeline import build_timeline
 
-# Save cookies securely for later use
-# Later, use saved cookies (more secure - no credentials in memory)
-client = FogisApiClient(cookies=cookies)
-
-# Validate cookies before use
-if client.validate_cookies():
-    matches = client.fetch_matches_list_json()
-else:
-    print("Cookies expired, need to re-authenticate")
+officials = client.officials(match.home.match_team_id) + client.officials(match.away.match_team_id)
+for entry in build_timeline(match, events, officials):
+    print(
+        entry.period,
+        entry.minute,
+        entry.added_minutes,
+        entry.kind,
+        entry.event or entry.official,
+        "ORPHAN" if entry.orphan else "",
+        "SCORE?" if entry.score_mismatch else "",
+    )
 ```
 
-## 🎯 Basic Usage
+- **Period 0** (unknown) is inferred from the minute, and such events sort into place instead of first.
+- **Substitutions** are paired off/on, including pre-2024 data where FOGIS didn't link them.
+- **The running score** is computed from the goals and compared with the score the reporter typed, which FOGIS
+  never checks.
+- **Special events** are recognised: the sending-off FOGIS adds on a second caution (and the orphan it leaves when
+  the caution is deleted), and the "penalty awarded" that live reporters enter before a penalty's outcome.
+- **Team-official cautions and sending-offs**, which FOGIS keeps outside the event list, appear on the timeline.
 
-### Fetching Matches
-
-```python
-from fogis_api_client import FogisApiClient, FogisLoginError, FogisAPIRequestError
-
-try:
-    client = FogisApiClient(username="your_username", password="your_password")
-
-    # Get all assigned matches
-    matches = client.fetch_matches_list_json()
-    print(f"Found {len(matches)} matches")
-
-    # Display match information
-    for match in matches:
-        print(f"Match {match['matchid']}: {match['hemmalag']} vs {match['bortalag']}")
-        print(f"Date: {match['datum']} {match['tid']}")
-        print(f"Venue: {match['arena']}")
-        print("---")
-
-except FogisLoginError as e:
-    print(f"Authentication failed: {e}")
-except FogisAPIRequestError as e:
-    print(f"API request failed: {e}")
-```
-
-### Reporting Match Results
+## Writing
 
 ```python
-# Report a match result
-result = {
-    "matchid": 123456,
-    "hemmamal": 2,        # Home team goals
-    "bortamal": 1,        # Away team goals
-    "halvtidHemmamal": 1, # Half-time home goals
-    "halvtidBortamal": 0  # Half-time away goals
-}
+from fogis_api_client import EventType, FogisClient, ResultType, next_score
 
-response = client.report_match_result(result)
-if response.get('success'):
-    print("Match result reported successfully!")
-```
+client = FogisClient("username", "password", dry_run=True)  # nothing is sent; payloads are returned
 
-### Getting Match Details
-
-```python
-# Get detailed information about a specific match
-match_id = 123456
-match_details = client.get_match(match_id)
-players = client.get_team_players(match_details['hemmalagid'])
-officials = client.get_match_officials(match_id)
-```
-
-## 🔍 Advanced Filtering
-
-The FOGIS API Client includes a powerful filtering system for querying matches with specific criteria. See the [Filter Documentation](docs/filter_guide.md) for comprehensive examples.
-
-### Basic Date Range Filtering
-
-```python
-from fogis_api_client import MatchListFilter
-from datetime import datetime, timedelta
-
-# Create a filter for the last 7 days
-filter = MatchListFilter()
-week_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
-today = datetime.now().strftime('%Y-%m-%d')
-
-matches = (filter
-    .start_date(week_ago)
-    .end_date(today)
-    .fetch_filtered_matches(client))
-```
-
-### Status and Category Filtering
-
-```python
-from fogis_api_client.enums import MatchStatus, AgeCategory, Gender
-
-# Filter for completed youth matches
-matches = (MatchListFilter()
-    .include_statuses([MatchStatus.COMPLETED])
-    .include_age_categories([AgeCategory.YOUTH])
-    .include_genders([Gender.MALE])
-    .fetch_filtered_matches(client))
-```
-
-### Complex Filtering Examples
-
-```python
-# Get all postponed or cancelled matches from last month
-last_month = (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d')
-
-problematic_matches = (MatchListFilter()
-    .start_date(last_month)
-    .end_date(today)
-    .include_statuses([MatchStatus.POSTPONED, MatchStatus.CANCELLED])
-    .fetch_filtered_matches(client))
-
-# Exclude veteran matches, include only outdoor football
-outdoor_non_veteran = (MatchListFilter()
-    .exclude_age_categories([AgeCategory.VETERANS])
-    .include_football_types([FootballType.FOOTBALL])
-    .fetch_filtered_matches(client))
-```
-
-## ⚽ Match Management
-
-### Getting Match Information
-
-```python
-# Get a specific match by ID
-match = client.get_match(123456)
-print(f"Match: {match['hemmalag']} vs {match['bortalag']}")
-print(f"Status: {match['status']}")
-
-# Get match result details
-result = client.get_match_result(123456)
-print(f"Score: {result['hemmamal']}-{result['bortamal']}")
-
-# Get match officials
-officials = client.get_match_officials(123456)
-for official in officials:
-    print(f"{official['roll']}: {official['fornamn']} {official['efternamn']}")
-```
-
-### Team and Player Information
-
-```python
-# Get team players
-team_id = 12345
-players = client.get_team_players(team_id)
-for player in players:
-    print(f"#{player['trojnummer']} {player['fornamn']} {player['efternamn']}")
-
-# Get team officials
-team_officials = client.get_team_officials(team_id)
-```
-
-### Match Status Management
-
-```python
-# Mark a match report as finished
-response = client.mark_reporting_finished(123456)
-if response.get('success'):
-    print("Match reporting marked as complete")
-```
-
-## 🎯 Event Reporting
-
-### Reporting Goals and Cards
-
-```python
-from fogis_api_client import EVENT_TYPES
-
-# Report a goal
-goal_event = {
-    "matchid": 123456,
-    "handelsekod": 6,  # Regular goal (see EVENT_TYPES)
-    "minut": 25,       # 25th minute
-    "lagid": 12345,    # Team ID
-    "personid": 67890, # Player ID
-    "resultatHemma": 1,
-    "resultatBorta": 0
-}
-
-response = client.report_match_event(goal_event)
-
-# Report a yellow card
-card_event = {
-    "matchid": 123456,
-    "handelsekod": 20,  # Yellow card
-    "minut": 42,
-    "lagid": 12345,
-    "personid": 67890
-}
-
-response = client.report_match_event(card_event)
-```
-
-### Available Event Types
-
-```python
-from fogis_api_client import EVENT_TYPES
-
-# Print all available event types
-for code, details in EVENT_TYPES.items():
-    print(f"Code {code}: {details['name']} (Goal: {details.get('goal', False)})")
-```
-
-### Managing Match Events
-
-```python
-# Get all events for a match
-events = client.get_match_events(123456)
-
-# Clear all events for a match (use with caution!)
-response = client.clear_match_events(123456)
-```
-
-## 🛡️ Error Handling
-
-The library provides specific exception types for different error scenarios:
-
-```python
-from fogis_api_client import (
-    FogisApiClient,
-    FogisLoginError,
-    FogisAPIRequestError,
-    FogisDataError
+player = home_lineup[0]
+client.save_match_event(match, EventType.VARNING, "34", team_id=match.home.match_team_id, player=player)
+client.save_match_event(
+    match,
+    EventType.SPELMAL,
+    "45+2",
+    team_id=match.home.match_team_id,
+    player=player,
+    score=next_score(events, match, match.home.match_team_id),
 )
-
-try:
-    client = FogisApiClient(username="user", password="pass")
-    matches = client.fetch_matches_list_json()
-
-except FogisLoginError as e:
-    # Authentication failed - check credentials
-    print(f"Login failed: {e}")
-
-except FogisAPIRequestError as e:
-    # Network or server error
-    print(f"API request failed: {e}")
-
-except FogisDataError as e:
-    # Data parsing or validation error
-    print(f"Data error: {e}")
-
-except Exception as e:
-    # Unexpected error
-    print(f"Unexpected error: {e}")
+client.substitute(match, "60", team_id=match.home.match_team_id, player_in=home_lineup[12], player_out=player)
+client.report_match_result(
+    match.match_id, {ResultType.SLUTRESULTAT: (2, 1), ResultType.HALVTIDSRESULTAT: (1, 0)}
+)
 ```
 
-### Common Error Scenarios
+- **Times are typed as in the app** ("23", "45+2", "12:30") and converted exactly as the app converts them.
+- **Fix mistakes in place:** `save_match_event(..., event_id=…)` edits an event, `edit_substitution(match, sub,
+  time=…, player_in=…, player_out=…)` corrects a substitution (from `timeline.pair_substitutions()`), and
+  `save_match_participant(player, shirt_number=…, substitute=…)` fixes a line-up entry. Only what you pass changes.
+- **Don't save the sending-off for a second caution yourself**: FOGIS adds it. Deleting a second caution does not
+  remove it; delete that one too.
+- **Team-official discipline** is `save_official_discipline(official, minute=…, caution=…, sending_off="minor"|"major")`.
+  Pass a freshly read official: FOGIS overwrites the whole record.
+- Instead of `dry_run`, pass `confirm=` a callback `(method, payload) -> bool` to approve each write.
+- **Before submitting, run `client.check_report(match)`.** FOGIS checks nothing; this finds a final or half-time
+  result that doesn't match the goals, duplicate events, events without a minute or period, typed scores that don't
+  add up, leftover automatic sending-offs, half substitutions and a missing responsible official.
+- **To remove a team official's caution or sending-off use `clear_official_discipline(official)`.** FOGIS ignores
+  every attempt to remove discipline from the record; this removes the official and adds them again, cleanly.
 
-- **FogisLoginError**: Invalid credentials, expired session, account locked
-- **FogisAPIRequestError**: Network issues, server downtime, rate limiting
-- **FogisDataError**: Invalid response format, missing required fields
+## ⚠️ Calls that cannot be undone
 
-## 📝 Logging
+Two methods lock the match in FOGIS. There is no way back from either, through this library or the app:
 
-The library includes comprehensive logging with sensitive data filtering:
+| Method | FOGIS method | After the call |
+|---|---|---|
+| `mark_reporting_finished(match, confirm_match_id=...)` | `SparaMatchGodkannDomarrapport` | **The referee report is submitted.** You can no longer add, edit or delete events, results, line-ups or team-official discipline. |
+| `end_live_reporting(match, confirm_match_id=...)` | `SparaMatchAvslutaLiveRapportering` | **No more events or results** can be added. |
 
-```python
-from fogis_api_client import configure_logging, get_logger
+Both require the match id to be repeated as `confirm_match_id`, refuse a match without a reported final result
+(unless `allow_missing_result=True`), and respect `dry_run` and the `confirm` callback like every other write.
+`mark_reporting_finished` also refuses while `check_report()` finds errors, unless `ignore_problems=True`.
+Postponing a match (`SkjutUppMatch`) is not implemented at all.
 
-# Configure logging for the entire library
-configure_logging(level="INFO")
+## Coming from 0.x
 
-# Get a logger for your module
-logger = get_logger("my_module")
-logger.info("This will be logged")
+1.0 is a rewrite. `FogisApiClient` still exists for existing code and keeps its constructor,
+`fetch_matches_list_json(filter_params)`, `get_match_details()`, `login()`, `get_cookies()` and the three login
+exceptions (`FogisLoginError`, `FogisInvalidCredentialsError`, `FogisAuthServiceUnavailableError`). It returns raw
+dicts as before, but match lists longer than 100 now come back complete. `fetch_match_json()` still works but is
+deprecated: it fetches the whole match list on every call.
 
-# Sensitive information is automatically filtered
-logger.info("Password: secret123")  # Logs as "Password: ********"
-```
+Removed: the mock server, API gateway, swagger UI, CLI, OAuth-token login (FOGIS sessions are cookie-only),
+`clear_match_events()` (FOGIS has no such method) and the convenience helpers. `mark_reporting_finished` now takes the
+match and a `confirm_match_id`. **[docs/MIGRATION.md](docs/MIGRATION.md) lists every 0.x name and its 1.0 replacement**;
+old-style calls fail with a message pointing there.
 
-### Available Log Levels
+## How FOGIS behaves
 
-```python
-from fogis_api_client import get_log_levels
+[docs/FOGIS_API.md](docs/FOGIS_API.md) records what is known about the API: login and session lifetime, every method the
+referee app calls, the enums, how events really behave, and what is still unverified. The library follows that document.
 
-levels = get_log_levels()
-print(levels)  # {'DEBUG': 10, 'INFO': 20, 'WARNING': 30, 'ERROR': 40, 'CRITICAL': 50}
-```
-## 🐳 Docker Support
-
-The library includes comprehensive Docker support for both development and production use.
-
-### Production Deployment
-
-1. Create a `.env` file with your credentials:
-   ```env
-   FOGIS_USERNAME=your_fogis_username
-   FOGIS_PASSWORD=your_fogis_password
-   ```
-
-2. Start the service:
-   ```bash
-   docker compose up -d
-   ```
-
-3. Access the API gateway at http://localhost:8080
-
-### Development Environment
+## Development
 
 ```bash
-# Start development environment with hot reload
-./dev.sh
-
-# Run integration tests in Docker
-./run_integration_tests.sh
-
-# Build and test Docker images
-./scripts/verify_docker_build.sh
+uv sync
+uv run pytest                                  # unit tests
+uv run --env-file .env pytest -m live          # read-only checks against FOGIS (FOGIS_USERNAME / FOGIS_PASSWORD)
+uv run ruff check && uv run ruff format --check && uv run mypy
 ```
 
-### Available Docker Images
+`tools/verify/` holds the write-verification runner and a comparison tool for browser recordings (HAR). Test fixtures
+in `tests/fixtures/` are real FOGIS responses, anonymized.
 
-- **Production**: Optimized for deployment
-- **Development**: Includes dev tools and hot reload
-- **Testing**: Configured for running tests
-- **Mock Server**: Standalone mock FOGIS API
+## License
 
-### Docker Compose Services
-
-```yaml
-services:
-  fogis-api-client:    # Main API client service
-  mock-server:         # Mock FOGIS API for testing
-  integration-tests:   # Test runner service
-```
-## 🧪 Development & Testing
-
-### Setting Up Development Environment
-
-```bash
-# Clone the repository
-git clone https://github.com/PitchConnect/fogis-api-client-python.git
-cd fogis-api-client-python
-
-# Set up development environment
-./scripts/setup_dev_env.sh  # On macOS/Linux
-# or
-.\scripts\setup_dev_env.ps1  # On Windows PowerShell
-```
-
-### Running Tests
-
-```bash
-# Run unit tests
-python -m pytest tests/
-
-# Run integration tests with mock server
-python scripts/run_integration_tests_with_mock.py
-
-# Run all tests with coverage
-python -m pytest --cov=fogis_api_client
-
-# Run specific test file
-python -m pytest tests/test_match_list_filter.py -v
-```
-
-### Mock Server for Development
-
-The library includes a mock FOGIS API server for development and testing:
-
-```bash
-# Start mock server
-python -m fogis_api_client.cli.mock_server
-
-# Use mock server in your code
-client = FogisApiClient(username="test", password="test")
-# Point to mock server (automatically detected in test environment)
-```
-
-### Pre-commit Hooks
-
-```bash
-# Install pre-commit hooks
-pre-commit install
-
-# Run hooks manually
-pre-commit run --all-files
-
-# Update hooks to match CI/CD
-./update_precommit_hooks.sh
-```
-
-### Code Quality
-
-The project maintains high code quality standards:
-
-- **Type hints**: Full type annotations throughout
-- **Linting**: flake8, black, isort
-- **Testing**: pytest with comprehensive coverage
-- **Documentation**: Comprehensive docstrings and examples
-## 📚 API Reference
-
-### Core Classes
-
-- **`FogisApiClient`**: Main client class for API interactions
-- **`MatchListFilter`**: Advanced filtering for match queries
-- **`EVENT_TYPES`**: Dictionary of available match event types
-
-### Exception Classes
-
-- **`FogisLoginError`**: Authentication failures
-- **`FogisAPIRequestError`**: API request failures
-- **`FogisDataError`**: Data parsing/validation failures
-
-### Type Definitions
-
-- **`MatchDict`**: Match data structure
-- **`PlayerDict`**: Player information structure
-- **`EventDict`**: Match event structure
-- **`OfficialDict`**: Official information structure
-
-### Enums
-
-- **`MatchStatus`**: Match status values (COMPLETED, CANCELLED, etc.)
-- **`AgeCategory`**: Age categories (YOUTH, SENIOR, etc.)
-- **`Gender`**: Gender categories (MALE, FEMALE, MIXED)
-- **`FootballType`**: Football types (FOOTBALL, FUTSAL)
-
-For detailed API documentation, see:
-- [API Reference](docs/api_reference.md)
-- [Getting Started Guide](docs/getting_started.md)
-- [Filter Guide](docs/filter_guide.md)
-- [Architecture Overview](docs/architecture.md)
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-### Quick Start for Contributors
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-feature-name`
-3. Set up development environment: `./scripts/setup_dev_env.sh`
-4. Make your changes and add tests
-5. Run pre-merge check: `./pre-merge-check.sh`
-6. Commit and push your changes
-7. Create a pull request
-
-### Development Guidelines
-
-- Follow PEP 8 style guidelines
-- Add type hints to all functions
-- Write comprehensive tests
-- Update documentation for new features
-- Ensure all tests pass before submitting PR
-
-## 🔧 Troubleshooting
-
-### Common Issues and Solutions
-
-#### Authentication Problems
-```python
-# Problem: FogisLoginError
-# Solution: Check credentials and account status
-try:
-    client = FogisApiClient(username="user", password="pass")
-    client.login()  # Test authentication explicitly
-except FogisLoginError as e:
-    print(f"Check your credentials: {e}")
-```
-
-#### Network and API Issues
-```python
-# Problem: FogisAPIRequestError
-# Solution: Implement retry logic and check connectivity
-import time
-from fogis_api_client import FogisAPIRequestError
-
-def fetch_with_retry(client, max_retries=3):
-    for attempt in range(max_retries):
-        try:
-            return client.fetch_matches_list_json()
-        except FogisAPIRequestError as e:
-            if attempt < max_retries - 1:
-                time.sleep(2 ** attempt)  # Exponential backoff
-                continue
-            raise e
-```
-
-#### Data Validation Issues
-```python
-# Problem: FogisDataError
-# Solution: Validate data before sending
-def safe_report_result(client, result_data):
-    required_fields = ['matchid', 'hemmamal', 'bortamal']
-    if not all(field in result_data for field in required_fields):
-        raise ValueError(f"Missing required fields: {required_fields}")
-
-    return client.report_match_result(result_data)
-```
-
-For more detailed troubleshooting, see [docs/troubleshooting.md](docs/troubleshooting.md).
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE.txt](LICENSE.txt) file for details.
-
-## 🙏 Acknowledgments
-
-- Swedish Football Association (Svensk Fotboll) for providing the FOGIS system
-- All contributors who have helped improve this library
-- The Python community for excellent tools and libraries
-
-## 📞 Support
-
-- **Documentation**: [docs/](docs/)
-- **Issues**: [GitHub Issues](https://github.com/PitchConnect/fogis-api-client-python/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/PitchConnect/fogis-api-client-python/discussions)
-
----
-
-**Made with ⚽ for the Swedish football community**
+MIT — see [LICENSE.txt](LICENSE.txt).

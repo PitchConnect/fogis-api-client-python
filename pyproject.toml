@@ -1,20 +1,57 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fogis-api-client-timmyBird"
+version = "1.0.0"
+description = "Client for FOGIS, the Swedish Football Association's referee system"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE.txt"]
+authors = [{ name = "Bartek Svaberg", email = "bartek.svaberg@gmail.com" }]
+requires-python = ">=3.12"
+dependencies = ["requests>=2.31", "tzdata; sys_platform == 'win32'"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Typing :: Typed",
+]
+
+[project.urls]
+Homepage = "https://github.com/PitchConnect/fogis-api-client-python"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "responses>=0.25",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-requests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["fogis_api_client"]
+
+[tool.hatch.build.targets.sdist]
+include = ["fogis_api_client", "tests", "README.md", "LICENSE.txt", "changelog.md"]
 
 [tool.pytest.ini_options]
-plugins = ["integration_tests.pytest_plugin"]
-python_files = "test_*.py"
-python_classes = "Test*"
-python_functions = "test_*"
-testpaths = ["tests", "integration_tests"]
+testpaths = ["tests"]
+pythonpath = ["."]
+markers = ["live: talks to production FOGIS (read-only); deselected by default"]
+addopts = "-m 'not live'"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
 
 [tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-ignore_missing_imports = true
-exclude = [
-    "scripts/dynamic_precommit_generator.py"
-]
+python_version = "3.12"
+strict = true
+packages = ["fogis_api_client"]
