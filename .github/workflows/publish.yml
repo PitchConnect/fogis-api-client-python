@@ -1,0 +1,21 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Check tag matches package version
+        run: |
+          VERSION=$(uv version --short)
+          if [ "v$VERSION" != "${{ github.event.release.tag_name }}" ]; then
+            echo "Tag ${{ github.event.release.tag_name }} does not match version $VERSION" >&2
+            exit 1
+          fi
+      - run: uv build
+      - run: uv publish --token ${{ secrets.PYPI_API_TOKEN }}

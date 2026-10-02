@@ -1,0 +1,23 @@
+[
+ {
+  "__type": "Svenskfotboll.Fogis.Web.FogisMobilDomarKlient.MatchlagledareJSON",
+  "matchlagledareid": 8504478,
+  "matchid": 91000554,
+  "matchlagid": 92001104,
+  "personid": 8106158,
+  "fornamn": "Vilgot",
+  "efternamn": "Videlycka",
+  "matchlagnamn": "Lag I IK",
+  "lagrollid": 0,
+  "lagrollnamn": "",
+  "avvisadmatchminut": 0,
+  "avvisadlindrig": false,
+  "avvisadgrov": false,
+  "varnad": false,
+  "varnadmatchminut": 0,
+  "ansvarig": false,
+  "foreningid": 94184,
+  "ledareAntalAckumuleradeVarningar": 0,
+  "ledareAvstangningBeskrivning": ""
+ }
+]
