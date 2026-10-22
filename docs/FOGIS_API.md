@@ -214,7 +214,10 @@ How the app fills these [js] (ported in `fogis_api_client/writes.py`):
   stores `matchminut: 90`, `period: 2`, `tidsangivelse: "90+5"`; the "+5" exists in no numeric field. Confirmed live:
   "45+2" → period 1, minute 45, "45+2"; "47" → period 2; "45" → period 1; "90+3" → period 2, minute 90; "91" → **period 0**. Other rules of the app's converter, reproduced by `matchtime.py`:
   - a minute past the last period ("91" in a 90-minute match) gets **period 0**;
-  - a substitution at exactly the end of a period belongs to the next period (half-time substitution);
+  - a substitution at exactly the end of a period: the app puts it in the next period in every time mode ("45" →
+    period 2). **This library departs on purpose [referee, 2026-10-22]:** in whole minutes "45"/"90"/"105"/"120" stay in
+    their period (interval substitutions are recorded at 46/91/106); with high-resolution time 20:00 still goes to the
+    next period, as in the app;
   - with high-resolution time (`tavlinganvanderhogupplosttid`), "12" means 11:00 and "12:30" is taken literally.
   The port reproduces the stored period of more than 99% of events saved since 2019 [history]. The exceptions are
   explained: substitutions at exactly 90:00 were stored in period 3 until 2023 (the app changed in 2024); mm:ss times in
