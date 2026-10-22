@@ -40,10 +40,38 @@ def test_extra_time_periods() -> None:
     assert encode_match_time("121", CUP, GOAL) == MatchTime(0, 121, 0)
 
 
-def test_substitution_at_period_end_belongs_to_the_next_period() -> None:
-    assert encode_match_time("45", FOOTBALL, EventType.BYTE_IN).period == 2
-    assert encode_match_time("90", FOOTBALL, EventType.BYTE_IN).period == 2  # app behaviour since 2024
-    assert encode_match_time("105", CUP, EventType.BYTE_UT).period == 4  # the app's index quirk, kept
+@pytest.mark.parametrize("sub", [EventType.BYTE_IN, EventType.BYTE_UT])
+@pytest.mark.parametrize(
+    ("match", "text", "period"),
+    [
+        (FOOTBALL, "45", 1),
+        (FOOTBALL, "46", 2),
+        (FOOTBALL, "90", 2),
+        (CUP, "90", 2),
+        (CUP, "91", 3),
+        (CUP, "105", 3),
+        (CUP, "106", 4),
+        (CUP, "120", 4),
+    ],
+)
+def test_whole_minute_substitution_at_period_end_stays_in_its_period(
+    match: Match, text: str, period: int, sub: EventType
+) -> None:
+    """A deliberate departure from the app, which would put "45" in period 2 (owner, 2026-10-22)."""
+    assert encode_match_time(text, match, sub) == MatchTime(period, int(text), 0)
+
+
+def test_other_events_at_period_end_unchanged() -> None:
+    assert encode_match_time("45", FOOTBALL, GOAL).period == 1
+    assert encode_match_time("45", FOOTBALL, EventType.VARNING).period == 1
+    assert encode_match_time("45+2", FOOTBALL, EventType.BYTE_IN) == MatchTime(1, 47, 0)
+
+
+def test_high_resolution_substitution_at_period_end_belongs_to_the_next_period() -> None:
+    assert encode_match_time("20:00", FUTSAL_HIGH_RES, EventType.BYTE_IN) == MatchTime(2, 20, 0)
+    assert encode_match_time("19:59", FUTSAL_HIGH_RES, EventType.BYTE_UT) == MatchTime(1, 19, 59)
+    assert encode_match_time("21", FUTSAL_HIGH_RES, EventType.BYTE_IN) == MatchTime(2, 20, 0)
+    assert encode_match_time("20", FUTSAL_HIGH_RES, EventType.BYTE_IN) == MatchTime(2, 19, 0)  # app quirk
 
 
 def test_period_start_at_period_end_starts_the_next_period() -> None:

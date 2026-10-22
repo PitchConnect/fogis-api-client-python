@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1] - 2026-10-22
+
+### Changed
+- `encode_match_time()`: in whole minutes, a substitution at a period's last minute ("45", "90", "105", "120") now stays
+  in that period instead of the next; interval substitutions are recorded at 46, 91 or 106. This departs on purpose
+  from the referee app, which would file "45" under period 2. With high-resolution time a substitution at exactly a
+  period's end (20:00) still goes to the next period, as in the app.
+
 ## [1.0.0] - 2026-10-02
 
 A rewrite that follows only verified FOGIS behaviour ([docs/FOGIS_API.md](docs/FOGIS_API.md)). Most of the 0.x surface

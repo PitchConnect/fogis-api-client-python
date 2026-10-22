@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fogis-api-client-timmyBird"
-version = "1.0.0"
+version = "1.0.1"
 description = "Client for FOGIS, the Swedish Football Association's referee system"
 readme = "README.md"
 license = "MIT"
