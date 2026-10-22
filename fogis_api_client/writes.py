@@ -474,9 +474,12 @@ class WriteMethods:
     ) -> Any:
         """END LIVE REPORTING (SparaMatchAvslutaLiveRapportering). THIS CANNOT BE UNDONE.
 
-        After this, no more events or results can be added to the match. The app warns:
-        "När du avslutat matchrapporteringen kan du inte lägga in fler händelser eller resultat."
-        This is not the same as submitting the report (mark_reporting_finished).
+        Sets liverapporteringAvslutad and locks the club's live reporters ("Resultatrapportör") out of
+        the match. The referee can still add and edit events and results, and then sees "OBS! Matchen
+        har liverapporterats av förening" (FOGIS_API.md §5). Not verified live yet. The app's warning
+        "När du avslutat matchrapporteringen kan du inte lägga in fler händelser eller resultat." is
+        most likely meant for the club reporter. Only submitting the report (mark_reporting_finished)
+        stops the referee from changing anything.
 
         Guards as for mark_reporting_finished.
         """
