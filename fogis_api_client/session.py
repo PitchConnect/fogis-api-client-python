@@ -19,7 +19,7 @@ import logging
 import os
 import threading
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from http.cookiejar import Cookie
 from pathlib import Path
 from typing import Any
@@ -48,6 +48,8 @@ IDENTITY_COOKIE = ".AspNetCore.Identity.Application"
 
 DEFAULT_TIMEOUT = (10.0, 30.0)  # (connect, read) seconds
 
+Password = str | Callable[[], str] | None
+
 _API_HEADERS = {
     "Content-Type": "application/json; charset=utf-8",
     "Accept": "application/json, text/javascript, */*; q=0.01",
@@ -62,7 +64,8 @@ class FogisSession:
 
     Args:
         username, password: FOGIS credentials. Optional if a still-valid cookie jar is supplied; without a
-            password an expired session raises FogisSessionExpiredError instead of logging in.
+            password an expired session raises FogisSessionExpiredError instead of logging in. `password`
+            may be a function returning it (e.g. from a keychain), called only when a login needs it.
         cookie_file: Where to keep the cookie jar between runs (JSON, mode 0600). Loaded if it exists and
             written whenever FOGIS sets new cookies. Keeping it makes password logins rare.
         timeout: (connect, read) timeout in seconds for every request.
@@ -73,7 +76,7 @@ class FogisSession:
     def __init__(
         self,
         username: str | None = None,
-        password: str | None = None,
+        password: Password = None,
         *,
         cookie_file: str | os.PathLike[str] | None = None,
         timeout: float | tuple[float, float] = DEFAULT_TIMEOUT,
@@ -148,7 +151,10 @@ class FogisSession:
 
     def login(self) -> None:
         """Log in with username and password (RememberMe=true, so later renewals need no password)."""
-        if not (self._username and self._password):
+        if callable(self._password) and self._username:
+            self._password = self._password()
+        password = self._password
+        if not (self._username and isinstance(password, str) and password):
             raise FogisSessionExpiredError("FOGIS session expired and no username/password was given")
         try:
             page = self._request("GET", LOGIN_URL, allow_redirects=True)
@@ -162,7 +168,7 @@ class FogisSession:
             fields = {
                 **form.fields,
                 "Username": self._username,
-                "Password": self._password,
+                "Password": password,
                 "RememberMe": "true",
             }
             result = self._request("POST", urljoin(page.url, form.action), data=fields, allow_redirects=True)

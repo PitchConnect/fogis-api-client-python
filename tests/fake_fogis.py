@@ -59,6 +59,9 @@ class FakeFogis:
     def close(self) -> None:
         pass
 
+    def _GetMatchdeltagareAndringForMatch(self, payload: dict[str, Any]) -> list[dict[str, Any]]:
+        return []
+
     # ---------------------------------------------------------------- writes
 
     def _new_id(self) -> int:

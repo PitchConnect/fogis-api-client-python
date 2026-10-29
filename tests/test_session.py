@@ -293,3 +293,31 @@ def test_business_rule_refusal_is_a_rejected_error_with_fogis_text() -> None:
         FogisSession().call("SparaMatchGodkannDomarrapport", {"matchid": 1})
     assert exc.value.server_message == text and exc.value.status_code == 500
     assert isinstance(exc.value, FogisAPIRequestError)
+
+
+def test_password_function_is_called_only_when_a_login_needs_it() -> None:
+    asked: list[bool] = []
+
+    def password() -> str:
+        asked.append(True)
+        return "hemligt"
+
+    with responses.RequestsMock() as rsps:
+        rsps.post(f"{API}/GetMatchresultatlista", json={"d": []})
+        session = FogisSession(username="Anna Domare", password=password)
+        assert session.call("GetMatchresultatlista", {"matchid": 1}) == []
+    assert asked == []
+
+    with responses.RequestsMock(registry=OrderedRegistry) as rsps:
+        rsps.get(LOGIN_URL, status=302, headers={"Location": LOGIN_PAGE})
+        rsps.get(LOGIN_PAGE, status=200, body=LOGIN_FORM_HTML)
+        rsps.post(
+            "https://auth.fogis.se/Account/Login?returnurl=%2Fconnect%2Fauthorize%2Fcallback",
+            status=302,
+            headers={"Location": SIGNIN},
+        )
+        add_mdk_landing(rsps)
+        session.login()
+        login_post = next(c for c in rsps.calls if c.request.method == "POST")
+    assert parse_qs(str(login_post.request.body))["Password"] == ["hemligt"]
+    assert asked == [True]

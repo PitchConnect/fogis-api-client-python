@@ -19,7 +19,7 @@ from .models import (
     MatchResult,
     TeamOfficial,
 )
-from .session import FogisSession
+from .session import FogisSession, Password
 from .writes import Confirm, WriteMethods
 
 log = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class FogisClient(WriteMethods):
     def __init__(
         self,
         username: str | None = None,
-        password: str | None = None,
+        password: Password = None,
         *,
         cookie_file: str | os.PathLike[str] | None = None,
         session: FogisSession | None = None,
