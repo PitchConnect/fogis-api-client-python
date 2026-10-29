@@ -99,6 +99,23 @@ with the password. Password logins become rare, which lowers the lockout risk.
 
 The first nine and the two caution searches have been called live, for matches the account is assigned to.
 
+- **`lagengagemangid` comes only from match-list records; one seed match crawls a whole competition [live]:** the only
+  methods that expose a team's `lagengagemangid` are `GetMatcherAttRapportera` and `hamtaTidigareMatcherForLag` (via
+  `lag{1,2}lagengagemangid`). The match-scoped reads (events, results, line-ups) give `matchlagid`, never
+  `lagengagemangid`, so a bare `matchid` is not enough. There is **no** method mapping a `lagid` to its engagements, so
+  you cannot jump from a team's engagement in one competition to its engagement in another (e.g. division → a parallel
+  cup). What you *can* do: from any single match record in competition X you get both sides' `lagengagemangid` and X's
+  `tavlingid`; `hamtaTidigareMatcherForLag` then expands each team's matches in X, and every record reveals the opponents'
+  engagements — recursing across the whole field. So one seed match in a competition (typically one you were appointed to)
+  unlocks the rest of it, but with no seed from competition X there is no path into X.
+- **Consequence — we cannot claim "all matches for team T".** Friendlies, cups and parallel series each need their own
+  seed; without one they are invisible. What we *can* reconstruct reliably is the matches of a competition we hold a seed
+  for — including an earlier leg between the same two teams. Combined with a match's format fields (`antalhalvlekar`,
+  `antalforlangningsperioder`, `tidperforlangningsperiod`, shoot-out via `shootout_period`), the first-leg result lets a
+  timekeeping aid reason about whether a second leg is level and should go to extra time / penalties. Note: aggregate and
+  away-goals **regulations** are not known to be in the match data — they still come from the competition's rules, not
+  this API. [unverified for two-leg/aggregate fields]
+
 ### Writes (17)
 
 | Method | Payload |
@@ -254,6 +271,9 @@ How the app fills these [js] (ported in `fogis_api_client/writes.py`):
   <YYYY-MM-DD>"}`; the row count matches `spelare/ledareAntalAckumuleradeVarningar`. An empty list means no cautions.
 - **`lagengagemangid` [history]:** one team's entry in one competition. No id is shared by two teams or two competitions;
   a team in several competitions has one per competition. Cup placeholders with the same `lagid` on both sides get one per side.
+- **`tavlingid` shares the public web's competition-id namespace [live]:** the id in a match record is the same id the public
+  site uses (e.g. `123264` = Div 3 Mellersta Götaland herr 2025), so a competition id read off a public match/standings page
+  is directly usable as `tavlingsId`. Confirmed 2026-10-11.
 - **Line-up rows [history]:** `byte1`/`byte2` are substitution minutes (0 = none); `utvisning` is '' or a code ('L', 'M' seen);
   `lagdelid` 0–5 (meaning unknown); `positionsnummerhv` is 0.
 - **Official rows [history]:** `varnadmatchminut` is filled when `varnad` is set; a sending-off can be saved with minute 0.
