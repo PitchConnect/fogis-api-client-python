@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.1.0] - 2026-10-29
 
 ### Added
 - A read-only `fogis` command: `login`, `matches`, `match`, `events`, `results`, `timeline`, `lineup`, `officials`,
@@ -8,6 +8,11 @@
   from the macOS Keychain (one item, service `fogis`) or `FOGIS_USERNAME`/`FOGIS_PASSWORD`; the cookie jar in
   `~/.config/fogis/`; approved reports cached in `~/.cache/fogis/`. No new dependencies.
 - `FogisSession`/`FogisClient` accept a function as `password`, called only when a password login is needed.
+
+### Fixed
+- Docs of `end_live_reporting()` (README and docstring): it locks the club's live reporters out of the match, not the
+  referee, who can still add and edit events and results (not verified live yet). Only `mark_reporting_finished()`
+  locks the report for the referee.
 
 ## [1.0.1] - 2026-10-22
 

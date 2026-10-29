@@ -221,7 +221,7 @@ wheels = [
 
 [[package]]
 name = "fogis-api-client-timmybird"
-version = "1.0.1"
+version = "1.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "requests" },
