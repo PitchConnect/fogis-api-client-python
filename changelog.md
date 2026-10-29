@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- A read-only `fogis` command: `login`, `matches`, `match`, `events`, `results`, `timeline`, `lineup`, `officials`,
+  `check`, `bundle` and `cache`. JSON by default, `--table` for people, `--raw` for FOGIS's own records. Credentials
+  from the macOS Keychain (one item, service `fogis`) or `FOGIS_USERNAME`/`FOGIS_PASSWORD`; the cookie jar in
+  `~/.config/fogis/`; approved reports cached in `~/.cache/fogis/`. No new dependencies.
+- `FogisSession`/`FogisClient` accept a function as `password`, called only when a password login is needed.
+
 ## [1.0.1] - 2026-10-22
 
 ### Changed

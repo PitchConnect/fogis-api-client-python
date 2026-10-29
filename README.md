@@ -36,7 +36,8 @@ away_officials = client.officials(match.away.match_team_id)
 results = client.results(match.match_id)
 ```
 
-- **Login is lazy** and the session renews itself. With `cookie_file`, the session survives restarts and
+- **Login is lazy** and the session renews itself. `password` may also be a function (e.g. reading a keychain),
+  called only when a password login is needed. With `cookie_file`, the session survives restarts and
   password logins become rare (FOGIS keeps a "remember me" cookie for 14 days).
 - **Any date range works.** FOGIS returns at most 100 matches per request and silently drops the rest; the client
   splits the range until nothing is cut off.
@@ -72,6 +73,40 @@ for entry in build_timeline(match, events, officials):
 - **Special events** are recognised: the sending-off FOGIS adds on a second caution (and the orphan it leaves when
   the caution is deleted), and the "penalty awarded" that live reporters enter before a penalty's outcome.
 - **Team-official cautions and sending-offs**, which FOGIS keeps outside the event list, appear on the timeline.
+
+## Command line
+
+The package installs a read-only `fogis` command, so you can get at your matches without writing a script. It
+prints JSON (pipe it to `jq`); add `--table` for a readable view. It never changes anything in FOGIS.
+
+```bash
+fogis login                              # check the saved session, logging in if needed
+fogis matches --season 2026 --table      # default: 30 days back to 30 days ahead
+fogis timeline 6536172 --table           # what happened, in order, with running score
+fogis bundle 6536172 > match.json        # match, results, events, timeline, substitutions, line-ups, officials
+```
+
+Also `match`, `events`, `results`, `lineup`, `officials` (both with `--team home|away`), `check` and `cache`;
+`--raw` gives the records exactly as FOGIS returns them. `fogis COMMAND --help` lists each command's options.
+
+**Credentials.** On macOS, keep them in one Keychain item: the username as its account, the password as its secret.
+The command asks for the password, so it stays out of your shell history (quote a username with spaces):
+
+```bash
+security add-generic-password -s fogis -a "Your FOGIS Username" -w
+```
+
+Use `-U` before `-w` to change the password later. The Keychain is read only when FOGIS needs a password login;
+the first time, macOS asks whether `security` may use the item (choose Always Allow). Elsewhere, or to override the
+Keychain, set `FOGIS_USERNAME` and `FOGIS_PASSWORD`.
+
+**Files.** The cookie jar is kept in `~/.config/fogis/` and approved match reports are cached in `~/.cache/fogis/`,
+so asking about a finished match again needs no FOGIS calls (`--refresh` fetches anyway, `fogis cache clear` empties
+it). `FOGIS_CONFIG_DIR` and `FOGIS_CACHE_DIR` move them. To have `fogis` on your PATH in every project:
+
+```bash
+uv tool install fogis-api-client-timmyBird
+```
 
 ## Writing
 

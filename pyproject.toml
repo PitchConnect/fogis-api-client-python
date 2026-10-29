@@ -20,6 +20,9 @@ classifiers = [
     "Typing :: Typed",
 ]
 
+[project.scripts]
+fogis = "fogis_api_client.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/PitchConnect/fogis-api-client-python"
 
