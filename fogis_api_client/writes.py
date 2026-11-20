@@ -476,7 +476,10 @@ class WriteMethods:
 
         Sets liverapporteringAvslutad and locks the club's live reporters ("Resultatrapportör") out of
         the match. The referee can still add and edit events and results, and then sees "OBS! Matchen
-        har liverapporterats av förening" (FOGIS_API.md §5). Not verified live yet. The app's warning
+        har liverapporterats av förening" (FOGIS_API.md §5). Verified live for the referee's login
+        (2026-11-20): only liverapporteringAvslutad changed, and results and events saved and read
+        back afterwards. FOGIS accepts the call even when club live reporting wasn't allowed. The
+        club reporter's side is not verified. The app's warning
         "När du avslutat matchrapporteringen kan du inte lägga in fler händelser eller resultat." is
         most likely meant for the club reporter. Only submitting the report (mark_reporting_finished)
         stops the referee from changing anything.

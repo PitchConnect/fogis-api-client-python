@@ -150,6 +150,14 @@ How the app fills these [js] (ported in `fogis_api_client/writes.py`):
 - **Ending live reporting ("Stäng rapportering") [js][live]** sets `liverapporteringAvslutad`; it locks out the club
   reporters (the "Resultatrapportör" roles), not the referee, who can still edit events and results and then sees
   "OBS! Matchen har liverapporterats av förening". The app has no call to reopen it.
+  - **For the referee [live, 2026-11-20]:** called by the referee after full time on a futsal match with a final result
+    and the report not submitted, where club live reporting was **not** allowed (`liverapporteringTillaten: false`,
+    never started). FOGIS accepted it and answered with the match record. Read back, only `liverapporteringAvslutad`
+    changed (false → true); `liverapporteringTillaten`, `…Paborjad`, `…AktorTypId`, `matchrapportgodkandavdomare` and
+    `domarrapporteringTillaten` stayed as they were. Afterwards the same login overwrote the Slutresultat row and a period
+    end event (same ids, read back), and added a new Halvtidsresultat row. So it is not the referee's lock: only
+    `SparaMatchGodkannDomarrapport` is.
+  - **Unverified:** what a club reporter sees after it, an AR's login, and calling it before kickoff with no result.
 - **Submitting (`SparaMatchGodkannDomarrapport`) [live, 2026-09-27]:** returns the updated match (all 85 fields,
   `matchrapportgodkandavdomare: true`, a `matchrapportgodkandavdomaredatum`). **The server validates at this point:** a team
   without a captain is refused with HTTP 500, `ExceptionType: System.ApplicationException`, `Message: "Bortalagets

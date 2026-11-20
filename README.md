@@ -153,7 +153,7 @@ Two methods cannot be undone, through this library or the app. Only the first lo
 | Method | FOGIS method | After the call |
 |---|---|---|
 | `mark_reporting_finished(match, confirm_match_id=...)` | `SparaMatchGodkannDomarrapport` | **The referee report is submitted.** You can no longer add, edit or delete events, results, line-ups or team-official discipline. |
-| `end_live_reporting(match, confirm_match_id=...)` | `SparaMatchAvslutaLiveRapportering` | **Club live reporting ends.** The club's live reporters can no longer add events or results; the referee still can (not verified live yet). |
+| `end_live_reporting(match, confirm_match_id=...)` | `SparaMatchAvslutaLiveRapportering` | **Club live reporting ends.** The club's live reporters can no longer add events or results; the referee still can (verified live 2026-11-20). |
 
 Both require the match id to be repeated as `confirm_match_id`, refuse a match without a reported final result
 (unless `allow_missing_result=True`), and respect `dry_run` and the `confirm` callback like every other write.

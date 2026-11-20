@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+- Docs of `end_live_reporting()` (README, docstring, FOGIS_API.md §5): verified live for the referee's login. After it the
+  referee still saved results and events; only `liverapporteringAvslutad` changed. The club reporter's side is still
+  unverified.
+
 ## [1.1.0] - 2026-10-29
 
 ### Added
